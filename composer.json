@@ -11,7 +11,7 @@
 			"email": "frankmullenger@gmail.com"
 		}
 	],
-	repositories: [
+	"repositories": [
 		{
 			"type": "vcs", "url": "git@github.com:/ocular-nz/silverstripe-payment.git"
 		}
