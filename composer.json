@@ -11,11 +11,15 @@
 			"email": "frankmullenger@gmail.com"
 		}
 	],
+	repositories: [
+		{
+			"type": "vcs", "url": "git@github.com:/ocular-nz/silverstripe-payment.git"
+		}
+	]
 	"require":
 	{
-		"silverstripe/framework": "~3.1",
-		"silverstripe/cms": "~3.1",
-		"silverstripe/payment": "1.0.*",
+		"silverstripe/recipe-cms": "^4.7",
+		"silverstripe/payment": "1.1.*",
 		"pelago/emogrifier": "0.1.1"
 	},
 	"require-dev": 
