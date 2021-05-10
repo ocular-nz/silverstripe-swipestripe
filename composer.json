@@ -19,7 +19,7 @@
 	"require":
 	{
 		"silverstripe/recipe-cms": "^4.7",
-		"silverstripe/payment": "^1.1.0-dev",
+		"silverstripe-ocular/payment": "^1.1.0-dev",
 		"pelago/emogrifier": "0.1.1"
 	},
 	"require-dev": 
