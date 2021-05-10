@@ -13,7 +13,7 @@
 	],
 	"repositories": [
 		{
-			"type": "vcs", "url": "git@github.com:/ocular-nz/silverstripe-payment.git"
+			"type": "vcs", "url": "git@github.com:ocular-nz/silverstripe-payment.git"
 		}
 	],
 	"require":
