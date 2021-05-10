@@ -15,7 +15,7 @@
 		{
 			"type": "vcs", "url": "git@github.com:/ocular-nz/silverstripe-payment.git"
 		}
-	]
+	],
 	"require":
 	{
 		"silverstripe/recipe-cms": "^4.7",
