@@ -1,4 +1,7 @@
 <?php
+
+use SilverStripe\Dev\BuildTask;
+
 /**
  * Remove abandoned carts that have not been active for a certain period of time
  * So that stock that is tied up in the carts can be released back if the customers
@@ -14,8 +17,8 @@
  * @package swipestripe
  * @subpackage tasks
  */
-class RemoveAbandonedCartsTask extends QuarterHourlyTask {
-	
+class RemoveAbandonedCartsTask extends BuildTask 
+{	
 	/**
 	 * Remove {@link Order}s that have not been active for a certain period of time,
 	 * do not have a {@link Payment} attached and have the status of 'Cart'.
@@ -23,7 +26,7 @@ class RemoveAbandonedCartsTask extends QuarterHourlyTask {
 	 * @see Order::delete_abandoned()
 	 * @see CliController::process()
 	 */
-	function process() {
+	function run($request) {
 		date_default_timezone_set('Pacific/Auckland');
 		Order::delete_abandoned();
 	} 

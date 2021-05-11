@@ -1,4 +1,7 @@
 <?php
+
+use SilverStripe\Dev\BuildTask;
+
 /**
  * Remove orders that were placed while the site was in 'dev' mode. Useful for cleaning up after
  * testing a new site.
@@ -9,8 +12,8 @@
  * @subpackage tasks
  */
 
-class RemoveDevOrdersTask extends BuildTask {
-	
+class RemoveDevOrdersTask extends BuildTask
+{	
 	protected $title = "Remove testing orders";
 	
 	protected $description = "Remove orders that were placed while website was in 'dev' mode.";
