@@ -1,4 +1,7 @@
 <?php
+
+use SilverStripe\ORM\DataObject;
+
 /**
  * An Item for an {@link Order}.
  */

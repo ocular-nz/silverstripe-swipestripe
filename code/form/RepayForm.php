@@ -1,4 +1,18 @@
 <?php
+
+use SilverStripe\Control\Session;
+use SilverStripe\Dev\Debug;
+use SilverStripe\Forms\CompositeField;
+use SilverStripe\Forms\DropdownField;
+use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\Form;
+use SilverStripe\Forms\FormAction;
+use SilverStripe\Forms\HeaderField;
+use SilverStripe\Forms\LiteralField;
+use SilverStripe\Forms\RequiredFields;
+use SilverStripe\ORM\DataObject;
+use SilverStripe\View\Requirements;
+
 /**
  * Form for displaying on the {@link CheckoutPage} with all the necessary details 
  * for a visitor to complete their order and pass off to the {@link Payment} gateway class.
@@ -74,7 +88,7 @@ class RepayForm extends Form {
 		$paymentFields = CompositeField::create(
 			new HeaderField(_t('CheckoutPage.PAYMENT',"Payment"), 3),
 			LiteralField::create('RepayLit', "<p>Process a payment for the oustanding amount: $outstanding</p>"),
-			DropDownField::create(
+			DropdownField::create(
 				'PaymentMethod',
 				_t('CheckoutPage.SELECTPAYMENT',"Select Payment Method"),
 				$source

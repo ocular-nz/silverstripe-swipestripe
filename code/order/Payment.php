@@ -1,4 +1,10 @@
 <?php
+
+use SilverStripe\Core\Extension;
+use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\TextField;
+use SilverStripe\ORM\DataExtension;
+
 /**
  * Mixin to augment the {@link Payment} class.
  * Payment statuses: Incomplete,Success,Failure,Pending

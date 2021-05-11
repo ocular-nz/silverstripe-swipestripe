@@ -1,4 +1,9 @@
 <?php
+
+use SilverStripe\Core\ClassInfo;
+use SilverStripe\ORM\ArrayList;
+use SilverStripe\ORM\DataObject;
+
 /**
  * Modification for the {@link Order}, saves data that is set by {@link Modifier}s 
  * e.g: shipping, tax, vouchers etc. Instead of linking to a {@link Modifier} it takes the Amount

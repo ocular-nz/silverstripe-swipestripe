@@ -1,4 +1,8 @@
 <?php
+
+use SilverStripe\Forms\DropdownField;
+use SilverStripe\Forms\HiddenField;
+
 /**
  * For displaying a {@link Modifier} on the {@link CheckoutPage} which will inject details
  * into {@link Order} {@link Modifications}.

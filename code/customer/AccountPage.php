@@ -37,7 +37,7 @@ class AccountPage extends Page {
 	 * @see SiteTree::canCreate()
 	 * @return Boolean Always returns false
 	 */
-	function canCreate($member = null) {
+	function canCreate($member = null, $context = []) {
 		$extended = $this->extendedCan(__FUNCTION__, $member);
 		if($extended !== null) {
 			return $extended;

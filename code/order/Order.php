@@ -1,4 +1,8 @@
 <?php
+
+use SilverStripe\ORM\DataObject;
+use SilverStripe\Security\PermissionProvider;
+
 /**
  * Order, created as soon as a user adds a {@link Product} to their cart, the cart is
  * actually an Order with status of 'Cart'. Has many {@link Item}s and can have {@link Modification}s
@@ -239,7 +243,7 @@ class Order extends DataObject implements PermissionProvider {
 	 * @see DataObject::canCreate()
 	 * @return Boolean False always
 	 */
-	public function canCreate($member = null) {
+	public function canCreate($member = null, $context = []) {
 		$extended = $this->extendedCan(__FUNCTION__, $member);
 		if($extended !== null) {
 			return $extended;

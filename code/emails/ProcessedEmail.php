@@ -1,4 +1,7 @@
 <?php
+
+use SilverStripe\Control\Email\Email;
+
 /**
  * Same as the normal system email class, but runs the content through
  * Emogrifier to merge css rules inline before sending.
