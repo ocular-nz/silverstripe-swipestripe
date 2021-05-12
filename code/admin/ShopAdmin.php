@@ -1,4 +1,32 @@
 <?php
+
+use SilverStripe\Admin\ModelAdmin;
+use SilverStripe\Control\Controller;
+use SilverStripe\Control\PjaxResponseNegotiator;
+use SilverStripe\Core\ClassInfo;
+use SilverStripe\Core\Config\Config;
+use SilverStripe\Core\Extension;
+use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\Form;
+use SilverStripe\Forms\FormAction;
+use SilverStripe\Forms\GridField\GridField;
+use SilverStripe\Forms\GridField\GridFieldButtonRow;
+use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
+use SilverStripe\Forms\GridField\GridFieldExportButton;
+use SilverStripe\Forms\HiddenField;
+use SilverStripe\Forms\LiteralField;
+use SilverStripe\Forms\NumericField;
+use SilverStripe\Forms\RequiredFields;
+use SilverStripe\Forms\Tab;
+use SilverStripe\Forms\TabSet;
+use SilverStripe\Forms\TextareaField;
+use SilverStripe\Forms\TextField;
+use SilverStripe\ORM\ArrayList;
+use SilverStripe\Security\Member;
+use SilverStripe\Security\Permission;
+use SilverStripe\View\ArrayData;
+use SilverStripe\View\Requirements;
+
 /**
  * Shop admin area for managing orders, customers and shop settings.
  * 
