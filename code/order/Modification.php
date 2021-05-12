@@ -1,5 +1,7 @@
 <?php
 
+namespace SwipeStripe\Order;
+
 use SilverStripe\Core\ClassInfo;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DataObject;

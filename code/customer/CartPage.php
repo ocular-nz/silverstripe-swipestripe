@@ -1,4 +1,13 @@
 <?php
+
+namespace SwipeStripe\Customer;
+
+use Page;
+use Page_Controller;
+use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\DB;
+use SilverStripe\Security\Security;
+
 /**
  * A cart page for the frontend to display contents of a cart to a visitor.
  * Automatically created on install of the shop module, cannot be deleted by admin user
@@ -60,7 +69,7 @@ class CartPage extends Page {
 	}
 
 	public function delete() {
-		if ($this->canDelete(Member::currentUser())) {
+		if ($this->canDelete(Security::getCurrentUser())) {
 			parent::delete();
 		}
 	}

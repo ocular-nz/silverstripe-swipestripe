@@ -1,4 +1,10 @@
 <?php
+
+namespace SwipeStripe\Admin;
+
+use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\DB;
+
 /**
  * Shop configuration object for containing all the shop settings.
  * 

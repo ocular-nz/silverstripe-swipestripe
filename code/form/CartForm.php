@@ -1,5 +1,7 @@
 <?php
 
+namespace SwipeStripe\Form;
+
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\Form;
 use SilverStripe\Forms\FormAction;

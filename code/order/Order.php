@@ -1,5 +1,7 @@
 <?php
 
+namespace SwipeStripe\Order;
+
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\PermissionProvider;
 

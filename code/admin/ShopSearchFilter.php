@@ -1,4 +1,11 @@
 <?php
+
+namespace SwipeStripe\Admin;
+
+use SilverStripe\Core\Convert;
+use SilverStripe\ORM\DataQuery;
+use SilverStripe\ORM\Filters\SearchFilter;
+
 /**
  * Search filter for option sets, used for searching {@link Order} statuses in the CMS.
  * 

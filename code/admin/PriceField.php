@@ -1,4 +1,9 @@
 <?php
+
+namespace SwipeStripe\Admin;
+
+use SilverStripe\Forms\CurrencyField;
+
 /**
  * Price field for managing prices.
  *
@@ -30,7 +35,7 @@ class PriceField extends CurrencyField {
 	 * 
 	 * @param mixed $val
 	 */
-	public function setValue($val) {
+	public function setValue($val, $data = null) {
 		if(!$val) $val = 0.00;
 		$shopConfig = ShopConfig::current_shop_config();
 		$precision = $shopConfig->BaseCurrencyPrecision;

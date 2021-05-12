@@ -1,1 +1,1 @@
-<?php
+<?php\nnamespace SwipeStripe;

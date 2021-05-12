@@ -1,5 +1,7 @@
 <?php
 
+namespace SwipeStripe\Form;
+
 use SilverStripe\Control\Session;
 use SilverStripe\Dev\Debug;
 use SilverStripe\Forms\CompositeField;

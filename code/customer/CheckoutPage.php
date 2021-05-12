@@ -1,4 +1,12 @@
 <?php
+
+namespace SwipeStripe\Customer;
+
+use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\DB;
+use SilverStripe\Security\Member;
+use SilverStripe\View\Requirements;
+
 /**
  * A checkout page for displaying the checkout form to a visitor.
  * Automatically created on install of the shop module, cannot be deleted by admin user
@@ -37,7 +45,7 @@ class CheckoutPage extends Page {
 	 * @see SiteTree::canCreate()
 	 * @return Boolean Always returns false
 	 */
-	function canCreate($member = null) {
+	function canCreate($member = null, $context = []) {
 		$extended = $this->extendedCan(__FUNCTION__, $member);
 		if($extended !== null) {
 			return $extended;

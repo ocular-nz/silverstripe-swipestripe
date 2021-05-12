@@ -1,4 +1,12 @@
 <?php
+
+namespace SwipeStripe\Customer;
+
+use SilverStripe\Control\Director;
+use SilverStripe\Control\Session;
+use SilverStripe\Core\Extension;
+use SilverStripe\ORM\DataObject;
+
 /**
  * Extends {@link Page_Controller} adding some functions to retrieve the current cart, 
  * and link to the cart.
@@ -15,7 +23,7 @@ class Cart extends Extension {
 	 * 
 	 * @return Order The current order (cart)
 	 */
-	function Cart() {
+	public function __construct() {
 		$order = self::get_current_order();
 		$order->Items();
 		$order->Total;

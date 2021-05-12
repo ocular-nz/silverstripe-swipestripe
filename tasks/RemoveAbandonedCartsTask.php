@@ -1,6 +1,9 @@
 <?php
 
+namespace SwipeStripe\Tasks;
+
 use SilverStripe\Dev\BuildTask;
+use SwipeStripe\Order\Order;
 
 /**
  * Remove abandoned carts that have not been active for a certain period of time

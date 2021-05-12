@@ -1,5 +1,7 @@
 <?php
 
+namespace SwipeStripe\Order;
+
 use SilverStripe\Core\Extension;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\TextField;

@@ -1,4 +1,4 @@
-<?php
+<?php\nnamespace SwipeStripe;
 /**
  * Testing {@link Product} attributes and options on product pages.
  * 

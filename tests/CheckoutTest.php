@@ -1,4 +1,4 @@
-<?php
+<?php\nnamespace SwipeStripe;
 /**
  * Testing {@link Order} modifiers at checkout.
  * 

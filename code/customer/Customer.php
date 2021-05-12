@@ -1,4 +1,20 @@
 <?php
+
+namespace SwipeStripe\Customer;
+
+use SilverStripe\Forms\ConfirmedPasswordField;
+use SilverStripe\Forms\EmailField;
+use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\Tab;
+use SilverStripe\Forms\TabSet;
+use SilverStripe\Forms\TextField;
+use SilverStripe\ORM\DataObject;
+use SilverStripe\Security\Group;
+use SilverStripe\Security\Member;
+use SilverStripe\Security\Permission;
+use SilverStripe\Security\Security;
+use SwipeStripe\Order\Order;
+
 /**
  * Represents a {@link Customer}, a type of {@link Member}.
  * 
@@ -46,7 +62,7 @@ class Customer extends Member {
 	}
 
 	public function delete() {
-		if ($this->canDelete(Member::currentUser())) {
+		if ($this->canDelete(Security::getCurrentUser())) {
 			parent::delete();
 		}
 	}
@@ -123,9 +139,6 @@ class Customer extends Member {
 	 *                     user or FALSE.
 	 */
 	static function currentUser() {
-		$id = Member::currentUserID();
-		if($id) {
-			return DataObject::get_one("Customer", "\"Member\".\"ID\" = $id");
-		}
+		return Security::getCurrentUser() ?? false;
 	}
 }

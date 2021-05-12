@@ -1,4 +1,9 @@
 <?php
+
+namespace SwipeStripe\Admin;
+
+use SilverStripe\Forms\DropdownField;
+
 /**
  * For {@link Product} {@link Option} fields to be displayed on the {@link Product} page.
  * 

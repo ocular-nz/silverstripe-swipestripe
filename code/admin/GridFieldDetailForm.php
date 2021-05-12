@@ -1,4 +1,15 @@
 <?php
+
+namespace SwipeStripe\Admin;
+
+use SilverStripe\Admin\LeftAndMain;
+use SilverStripe\Control\Controller;
+use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\Form;
+use SilverStripe\Forms\FormAction;
+use SilverStripe\Forms\GridField\GridFieldDetailForm_ItemRequest;
+use SilverStripe\Forms\LiteralField;
+
 /**
  * Grid field detail form
  *

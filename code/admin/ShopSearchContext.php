@@ -1,4 +1,9 @@
 <?php
+
+namespace SwipeStripe\Admin;
+
+use SilverStripe\ORM\Search\SearchContext;
+
 /**
  * Search context for orders.
  * 

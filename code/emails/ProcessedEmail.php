@@ -1,5 +1,7 @@
 <?php
 
+namespace SwipeStripe\Emails;
+
 use SilverStripe\Control\Email\Email;
 
 /**

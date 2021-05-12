@@ -1,4 +1,7 @@
 <?php
+
+namespace SwipeStripe\Product;
+
 /**
  * Represents a Product, which is a type of a {@link Page}. Products are managed in a seperate
  * admin area {@link ShopAdmin}. A product can have {@link Variation}s, in fact if a Product

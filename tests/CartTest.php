@@ -1,4 +1,4 @@
-<?php
+<?php\nnamespace SwipeStripe;
 /**
  * Testing {@link Product}s added and removed from {@link Order}s.
  * 

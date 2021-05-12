@@ -1,4 +1,9 @@
 <?php
+
+namespace SwipeStripe\Order;
+
+use SilverStripe\ORM\DataObject;
+
 /**
  * An option for an {@link Item} in the {@link Order}. Items can have many ItemOptions.
  * 

@@ -1,4 +1,7 @@
 <?php
+
+namespace SwipeStripe\Product;
+
 /**
  * Represents a Variation for a Product. A variation needs to have a valid Option set for each
  * Attribute that the product has e.g Size:Medium, Color:Red, Material:Cotton. Variations are Versioned

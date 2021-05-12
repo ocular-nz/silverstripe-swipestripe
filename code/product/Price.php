@@ -1,4 +1,7 @@
 <?php
+
+namespace SwipeStripe\Product;
+
 require_once 'Zend/Locale/Math.php';
 
 class Price extends Money {

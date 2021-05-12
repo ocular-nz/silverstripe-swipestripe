@@ -1,4 +1,20 @@
 <?php
+
+namespace SwipeStripe\Product;
+
+use SilverStripe\Forms\DropdownField;
+use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\GridField\GridField;
+use SilverStripe\Forms\HeaderField;
+use SilverStripe\Forms\HiddenField;
+use SilverStripe\Forms\Tab;
+use SilverStripe\Forms\TabSet;
+use SilverStripe\Forms\TextField;
+use SilverStripe\ORM\DataObject;
+use SilverStripe\Security\Permission;
+use SilverStripe\Security\PermissionProvider;
+use SilverStripe\View\Requirements;
+
 /**
  * Represents a {@link Product} Attribute, e.g: Size, Color, Material etc.
  * Attributes are created in the {@link ShopAdmin} where they can be set with default 
@@ -97,7 +113,7 @@ class Attribute extends DataObject implements PermissionProvider {
 		return Permission::check('EDIT_ATTRIBUTES');
 	}
 
-	public function canCreate($member = null) {
+	public function canCreate($member = null, $context = []) {
 		$extended = $this->extendedCan(__FUNCTION__, $member);
 		if($extended !== null) {
 			return $extended;

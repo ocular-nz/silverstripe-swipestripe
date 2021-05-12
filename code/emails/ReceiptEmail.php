@@ -1,4 +1,12 @@
 <?php
+
+namespace SwipeStripe\Emails;
+
+use SilverStripe\Control\Email\Email;
+use SilverStripe\Security\Member;
+use SwipeStripe\Admin\ShopConfig;
+use SwipeStripe\Order\Order;
+
 /**
  * A receipt email that is sent to the customer after they have completed their {@link Order}.
  * 

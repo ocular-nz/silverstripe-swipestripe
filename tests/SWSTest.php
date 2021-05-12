@@ -1,4 +1,4 @@
-<?php
+<?php\nnamespace SwipeStripe;
 /**
  * Common functions for SwipeStripe testing.
  * 

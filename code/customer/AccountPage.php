@@ -1,4 +1,19 @@
 <?php
+
+namespace SwipeStripe\Customer;
+
+use Page;
+use Page_Controller;
+use SilverStripe\Control\Director;
+use SilverStripe\Core\Convert;
+use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\DB;
+use SilverStripe\Security\Member;
+use SilverStripe\Security\Permission;
+use SilverStripe\Security\Security;
+use SilverStripe\View\Requirements;
+use SwipeStripe\Order\Order;
+
 /**
  * An account page which displays the order history for any given {@link Member} and displays an individual {@link Order}.
  * Automatically created on install of the shop module, cannot be deleted by admin user
@@ -60,7 +75,7 @@ class AccountPage extends Page {
 	}
 
 	public function delete() {
-		if ($this->canDelete(Member::currentUser())) {
+		if ($this->canDelete(Security::getCurrentUser())) {
 			parent::delete();
 		}
 	}
@@ -150,7 +165,7 @@ class AccountPage_Controller extends Page_Controller {
 			'Content' => $this->Content, 
 			'Form' => $this->Form,
 			'Orders' => Order::get()
-				->where("MemberID = " . Convert::raw2sql(Member::currentUserID()))
+				->where("MemberID = " . Convert::raw2sql(Security::getCurrentUser()->ID))
 				->sort('Created DESC'),
 			'Customer' => Customer::currentUser()
 		);

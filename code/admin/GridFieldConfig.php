@@ -1,4 +1,20 @@
 <?php
+
+namespace SwipeStripe\Admin;
+
+use SilverStripe\Forms\GridField\GridFieldAddNewButton;
+use SilverStripe\Forms\GridField\GridFieldButtonRow;
+use SilverStripe\Forms\GridField\GridFieldConfig;
+use SilverStripe\Forms\GridField\GridFieldDataColumns;
+use SilverStripe\Forms\GridField\GridFieldDeleteAction;
+use SilverStripe\Forms\GridField\GridFieldDetailForm;
+use SilverStripe\Forms\GridField\GridFieldEditButton;
+use SilverStripe\Forms\GridField\GridFieldFilterHeader;
+use SilverStripe\Forms\GridField\GridFieldPageCount;
+use SilverStripe\Forms\GridField\GridFieldPaginator;
+use SilverStripe\Forms\GridField\GridFieldSortableHeader;
+use SilverStripe\Forms\GridField\GridFieldToolbarHeader;
+
 /**
  * Grid field basic configuration
  *
@@ -96,7 +112,7 @@ class GridFieldConfig_HasManyRelationEditor extends GridFieldConfig {
 	 * 
 	 * @param Int $itemsPerPage How many items on each page to display
 	 */
-	public function __construct($itemsPerPage=null) {
+	public function __construct($itemsPerPage = null) {
 		
 		$this->addComponent(new GridFieldButtonRow('before'));
 		$this->addComponent(new GridFieldAddNewButton('buttons-before-left'));

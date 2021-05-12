@@ -1,4 +1,7 @@
 <?php
+
+namespace SwipeStripe\Product;
+
 /**
  * Represents an Option for an Attribute, e.g: Small, Medium, Large, Red etc.
  * Default Options can be created for Attributes, they are pre populated and duplicated into the Product

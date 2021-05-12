@@ -1,5 +1,7 @@
 <?php
 
+namespace SwipeStripe\Admin;
+
 use SilverStripe\Admin\ModelAdmin;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\PjaxResponseNegotiator;

@@ -1,4 +1,4 @@
-<?php
+<?php\nnamespace SwipeStripe;
 /**
  * 
  * @author Frank Mullenger <frankmullenger@gmail.com>

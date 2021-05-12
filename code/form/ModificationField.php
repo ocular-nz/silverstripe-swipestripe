@@ -1,5 +1,7 @@
 <?php
 
+namespace SwipeStripe\Form;
+
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\HiddenField;
 

@@ -1,6 +1,9 @@
 <?php
 
+namespace SwipeStripe\Tasks;
+
 use SilverStripe\Dev\BuildTask;
+use SwipeStripe\Order\Order;
 
 /**
  * Remove orders that were placed while the site was in 'dev' mode. Useful for cleaning up after
