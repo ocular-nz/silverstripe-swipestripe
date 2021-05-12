@@ -3,6 +3,7 @@
 namespace SwipeStripe\Order;
 
 use SilverStripe\ORM\DataObject;
+use SwipeStripe\Product\Price;
 
 /**
  * An Item for an {@link Order}.

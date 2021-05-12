@@ -2,6 +2,8 @@
 
 namespace SwipeStripe\Customer;
 
+use Page;
+use Page_Controller;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use SilverStripe\Security\Member;

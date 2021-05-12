@@ -2,6 +2,10 @@
 
 namespace SwipeStripe\Product;
 
+use SilverStripe\ORM\DataObject;
+use SilverStripe\Security\Permission;
+use SilverStripe\Security\PermissionProvider;
+
 /**
  * Represents an Option for an Attribute, e.g: Small, Medium, Large, Red etc.
  * Default Options can be created for Attributes, they are pre populated and duplicated into the Product
@@ -80,7 +84,7 @@ class Option extends DataObject implements PermissionProvider {
 		return Permission::check('EDIT_OPTIONS');
 	}
 
-	public function canCreate($member = null) {
+	public function canCreate($member = null, $context = []) {
 		$extended = $this->extendedCan(__FUNCTION__, $member);
 		if($extended !== null) {
 			return $extended;

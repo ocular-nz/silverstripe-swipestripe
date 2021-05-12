@@ -2,6 +2,18 @@
 
 namespace SwipeStripe\Product;
 
+use SilverStripe\Forms\DropdownField;
+use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\Tab;
+use SilverStripe\Forms\TabSet;
+use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\ValidationResult;
+use SilverStripe\Security\Permission;
+use SilverStripe\Security\PermissionProvider;
+use SwipeStripe\Admin\OptionField;
+use SwipeStripe\Admin\PriceField;
+use SwipeStripe\Admin\ShopConfig;
+
 /**
  * Represents a Variation for a Product. A variation needs to have a valid Option set for each
  * Attribute that the product has e.g Size:Medium, Color:Red, Material:Cotton. Variations are Versioned
@@ -125,7 +137,7 @@ class Variation extends DataObject implements PermissionProvider {
 		return Permission::check('EDIT_VARIATIONS');
 	}
 
-	public function canCreate($member = null) {
+	public function canCreate($member = null, $context = []) {
 		$extended = $this->extendedCan(__FUNCTION__, $member);
 		if($extended !== null) {
 			return $extended;
