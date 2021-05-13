@@ -2,6 +2,8 @@
 
 namespace SwipeStripe\Form;
 
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\Form;
 use SilverStripe\Forms\FormAction;
@@ -9,6 +11,10 @@ use SilverStripe\Forms\RequiredFields;
 use SilverStripe\Forms\TextField;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\View\Requirements;
+use SwipeStripe\Customer\Cart;
+use SwipeStripe\Order\Item;
+use SilverStripe\Control\RequestHandler;
+use SwipeStripe\Customer\CheckoutPage;
 
 /**
  * Form to display the {@link Order} contents on the {@link CartPage}.
@@ -18,7 +24,9 @@ use SilverStripe\View\Requirements;
  * @package swipestripe
  * @subpackage form
  */
-class CartForm extends Form {
+class CartForm extends Form implements LoggerAwareInterface {
+
+	use LoggerAwareTrait;
 	
 	/**
 	 * The current {@link Order} (cart).
@@ -30,14 +38,14 @@ class CartForm extends Form {
 	/**
 	 * Construct the form, set the current order and the template to be used for rendering.
 	 * 
-	 * @param Controller $controller
+	 * @param RequestHandler $controller
 	 * @param String $name
 	 * @param FieldList $fields
 	 * @param FieldList $actions
 	 * @param Validator $validator
 	 * @param Order $currentOrder
 	 */
-	function __construct($controller, $name) {
+	function __construct($controller = null, $name = SELF::DEFAULT_NAME) {
 
 		parent::__construct($controller, $name, FieldList::create(), FieldList::create(), null);
 
@@ -135,7 +143,7 @@ class CartForm extends Form {
 
 		$this->saveCart($data, $form);
 		
-		if ($checkoutPage = DataObject::get_one('CheckoutPage')) {
+		if ($checkoutPage = DataObject::get_one(CheckoutPage::class)) {
 			$this->controller->redirect($checkoutPage->AbsoluteLink());
 		}
 		else Debug::friendlyError(500);
@@ -145,10 +153,10 @@ class CartForm extends Form {
 	/**
 	 * Save the cart, update the order item quantities and the order total.
 	 * 
-	 * @param Array $data Data submitted from the form via POST
+	 * @param array $data Data submitted from the form via POST
 	 * @param Form $form Form that data was submitted from
 	 */
-	private function saveCart(Array $data, Form $form) {
+	private function saveCart(array $data, Form $form) {
 		$currentOrder = Cart::get_current_order();
 		$quantities = (isset($data['Quantity'])) ?$data['Quantity'] :null;
 
@@ -157,7 +165,7 @@ class CartForm extends Form {
 			if ($item = $currentOrder->Items()->find('ID', $itemID)) {
 				if ($quantity == 0) {
 
-					SS_Log::log(new Exception(print_r($item->toMap(), true)), SS_Log::NOTICE);
+					$this->logger->notice(new \Exception(print_r($item->toMap(), true)), []);
 
 					$item->delete();
 				}

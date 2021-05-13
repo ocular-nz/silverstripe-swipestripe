@@ -2,6 +2,8 @@
 
 namespace SwipeStripe\Form;
 
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 use SilverStripe\Control\Session;
 use SilverStripe\Dev\Debug;
 use SilverStripe\Forms\CompositeField;
@@ -19,7 +21,9 @@ use SilverStripe\View\Requirements;
  * Form for displaying on the {@link CheckoutPage} with all the necessary details 
  * for a visitor to complete their order and pass off to the {@link Payment} gateway class.
  */
-class RepayForm extends Form {
+class RepayForm extends Form implements LoggerAwareInterface {
+
+	use LoggerAwareTrait;
 
 	protected $order;
 	protected $customer;
@@ -202,15 +206,15 @@ class RepayForm extends Form {
 			$paymentProcessor->setRedirectURL($order->Link());
 			$paymentProcessor->capture($paymentData);
 		}
-		catch (Exception $e) {
+		catch (\Exception $e) {
 
 			//This is where we catch gateway validation or gateway unreachable errors
 			$result = $paymentProcessor->gateway->getValidationResult();
 			$payment = $paymentProcessor->payment;
 
 			//TODO: Need to get errors and save for display on order page
-			SS_Log::log(new Exception(print_r($result->message(), true)), SS_Log::NOTICE);
-			SS_Log::log(new Exception(print_r($e->getMessage(), true)), SS_Log::NOTICE);
+			$this->logger->notice($e, []);
+			$this->logger->notice($result->message(), []);
 
 			$this->controller->redirect($order->Link());
 		}

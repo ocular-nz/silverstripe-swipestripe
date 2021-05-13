@@ -3,6 +3,7 @@
 namespace SwipeStripe\Order;
 
 use SilverStripe\ORM\DataObject;
+use SwipeStripe\Product\Price;
 
 /**
  * An option for an {@link Item} in the {@link Order}. Items can have many ItemOptions.
@@ -20,7 +21,7 @@ class ItemOption extends DataObject {
 	 * @var Array
 	 */
 	private static $has_one = array(
-		'Item' => 'Item'
+		'Item' => Item::class
 	);
 
 	/**

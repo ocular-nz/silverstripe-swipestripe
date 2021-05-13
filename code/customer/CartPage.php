@@ -27,7 +27,7 @@ class CartPage extends Page {
 	function requireDefaultRecords() {
 		parent::requireDefaultRecords();
 
-		if(!DataObject::get_one('CartPage')) {
+		if(!DataObject::get_one(CartPage::class)) {
 			$page = new CartPage();
 			$page->Title = 'Cart';
 			$page->Content = '';

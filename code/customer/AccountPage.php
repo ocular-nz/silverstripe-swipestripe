@@ -33,7 +33,7 @@ class AccountPage extends Page {
 	function requireDefaultRecords() {
 		parent::requireDefaultRecords();
 
-		if (!DataObject::get_one('AccountPage')) {
+		if (!DataObject::get_one(AccountPage::class)) {
 			$page = new AccountPage();
 			$page->Title = 'Account';
 			$page->Content = '';

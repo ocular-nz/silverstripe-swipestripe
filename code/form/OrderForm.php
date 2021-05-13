@@ -2,6 +2,8 @@
 
 namespace SwipeStripe\Form;
 
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 use SilverStripe\Control\Session;
 use SilverStripe\Core\Convert;
 use SilverStripe\Dev\Debug;
@@ -20,12 +22,17 @@ use SilverStripe\Forms\RequiredFields;
 use SilverStripe\Forms\TextareaField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\View\Requirements;
+use SilverStripe\Control\RequestHandler;
+use SwipeStripe\Customer\Cart;
+use SwipeStripe\Customer\Customer;
 
 /**
  * Form for displaying on the {@link CheckoutPage} with all the necessary details 
  * for a visitor to complete their order and pass off to the {@link Payment} gateway class.
  */
-class OrderForm extends Form {
+class OrderForm extends Form implements LoggerAwareInterface {
+
+	use LoggerAwareTrait;
 
 	protected $order;
 	protected $customer;
@@ -40,7 +47,7 @@ class OrderForm extends Form {
 	 * the fields are passed in an associative array so that the fields can be grouped into sets 
 	 * making it easier for the template to grab certain fields for different parts of the form.
 	 * 
-	 * @param Controller $controller
+	 * @param RequestHandler $controller
 	 * @param String $name
 	 * @param Array $groupedFields Associative array of fields grouped into sets
 	 * @param FieldList $actions
@@ -354,15 +361,16 @@ class OrderForm extends Form {
 			$paymentProcessor->setRedirectURL($order->Link());
 			$paymentProcessor->capture($paymentData);
 		}
-		catch (Exception $e) {
+		catch (\Exception $e) {
 
 			//This is where we catch gateway validation or gateway unreachable errors
 			$result = $paymentProcessor->gateway->getValidationResult();
 			$payment = $paymentProcessor->payment;
 
 			//TODO: Need to get errors and save for display on order page
-			SS_Log::log(new Exception(print_r($result->message(), true)), SS_Log::NOTICE);
-			SS_Log::log(new Exception(print_r($e->getMessage(), true)), SS_Log::NOTICE);
+			$this->logger->notice($result->message(), []);
+			$this->logger->notice($e, []);
+
 
 			$this->controller->redirect($order->Link());
 		}

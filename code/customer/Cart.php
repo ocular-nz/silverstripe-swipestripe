@@ -41,10 +41,10 @@ class Cart extends Extension {
 	function CartLink($type = 'Cart') {
 		switch ($type) {
 			case 'Account':
-				if ($page = DataObject::get_one('AccountPage')) return $page->Link();
+				if ($page = DataObject::get_one(AccountPage::class)) return $page->Link();
 				else break;
 			case 'Checkout':
-				if ($page = DataObject::get_one('CheckoutPage')) return $page->Link();
+				if ($page = DataObject::get_one(CheckoutPage::class)) return $page->Link();
 				else break;
 			case 'Login':
 				return Director::absoluteBaseURL() . 'Security/login';
@@ -54,7 +54,7 @@ class Cart extends Extension {
 				break;
 			case 'Cart':
 			default:
-				if ($page = DataObject::get_one('CartPage')) return $page->Link();
+				if ($page = DataObject::get_one(CartPage::class)) return $page->Link();
 				else break;
 		}
 	}

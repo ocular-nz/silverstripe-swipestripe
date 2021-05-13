@@ -15,6 +15,7 @@ use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\View\Requirements;
+use SwipeStripe\Customer\CartPage;
 
 /**
  * Form for adding items to the cart from a {@link Product} page.
@@ -204,7 +205,7 @@ class ProductForm extends Form {
 		
 		//Show feedback if redirecting back to the Product page
 		if (!$this->getRequest()->requestVar('Redirect')) {
-			$cartPage = DataObject::get_one('CartPage');
+			$cartPage = DataObject::get_one(CartPage::class);
 			$message = _t('ProductForm.PRODUCT_ADDED', 'The product was added to your cart.');
 			if ($cartPage->exists()) {
 				$message = _t(

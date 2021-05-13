@@ -14,6 +14,7 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
 use SilverStripe\View\Requirements;
+use SwipeStripe\Admin\ShopConfig;
 
 /**
  * Represents a {@link Product} Attribute, e.g: Size, Color, Material etc.
@@ -57,8 +58,8 @@ class Attribute extends DataObject implements PermissionProvider {
 	);
 
 	private static $has_one = array(
-		'Product' => 'Product',
-		'DefaultAttribute' => 'Attribute_Default'
+		'Product' => Product::class,
+		'DefaultAttribute' => Attribute_Default::class
 	);
 	
 	/**
@@ -303,7 +304,7 @@ class Attribute_Default extends Attribute {
 	private static $plural_name = 'Attributes';
 
 	private static $has_one = array(
-		'ShopConfig' => 'ShopConfig'
+		'ShopConfig' => ShopConfig::class
 	);
 
 	public function onBeforeWrite() {

@@ -3,7 +3,11 @@
 namespace SwipeStripe\Order;
 
 use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\ValidationResult;
+use SilverStripe\Versioned\Versioned;
 use SwipeStripe\Product\Price;
+use SwipeStripe\Product\Product;
+use SwipeStripe\Product\Variation;
 
 /**
  * An Item for an {@link Order}.
@@ -61,9 +65,9 @@ class Item extends DataObject {
 	 * @var Array
 	 */
 	private static $has_one = array(
-		'Order' => 'Order',
-		'Product' => 'Product',
-		'Variation' => 'Variation'
+		'Order' => Order::class,
+		'Product' => Product::class,
+		'Variation' => Variation::class
 	);
 	
 	/**
@@ -72,7 +76,7 @@ class Item extends DataObject {
 	 * @var Array
 	 */
 	private static $has_many = array(
-		'ItemOptions' => 'ItemOption'
+		'ItemOptions' => ItemOption::class
 	);
 	
 	/**
@@ -92,7 +96,7 @@ class Item extends DataObject {
 	public function onBeforeDelete() {
 		parent::onBeforeDelete();
 		
-		$itemOptions = DataObject::get('ItemOption', 'ItemID = '.$this->ID);
+		$itemOptions = DataObject::get(ItemOption::class, 'ItemID = '.$this->ID);
 		if ($itemOptions && $itemOptions->exists()) foreach ($itemOptions as $itemOption) {
 			$itemOption->delete();
 			$itemOption->destroy();
@@ -161,7 +165,7 @@ class Item extends DataObject {
 	 * @return Mixed Variation if it exists, otherwise null
 	 */
 	function Variation() {
-		return ($this->VariationID) ? Versioned::get_version('Variation', $this->VariationID, $this->VariationVersion) : null;
+		return ($this->VariationID) ? Versioned::get_version(Variation::class, $this->VariationID, $this->VariationVersion) : null;
 	}
 	
 	/**
@@ -170,7 +174,7 @@ class Item extends DataObject {
 	 * @return Mixed Product if it exists, otherwise null
 	 */
 	function Product() {
-		return Versioned::get_version('Product', $this->ProductID, $this->ProductVersion);
+		return Versioned::get_version(Product::class, $this->ProductID, $this->ProductVersion);
 	}
 	
 	/**

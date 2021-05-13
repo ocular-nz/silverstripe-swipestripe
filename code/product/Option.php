@@ -39,8 +39,8 @@ class Option extends DataObject implements PermissionProvider {
 	 * @var Array
 	 */
 	private static $has_one = array(
-		'Attribute' => 'Attribute',
-		'Product' => 'Product'
+		'Attribute' => Attribute::class,
+		'Product' => Product::class
 	);
 	
 	/**
@@ -49,7 +49,7 @@ class Option extends DataObject implements PermissionProvider {
 	 * @var Array
 	 */
 	private static $belongs_many_many = array(
-		'Variations' => 'Variation'
+		'Variations' => Variation::class
 	);
 
 	private static $default_sort = 'SortOrder';

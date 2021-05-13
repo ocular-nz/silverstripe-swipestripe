@@ -41,7 +41,7 @@ class Modification extends DataObject {
 	 * @var Array
 	 */
 	private static $has_one = array(
-		'Order' => 'Order'
+		'Order' => Order::class
 	);
 
 	private static $default_sort = 'SortOrder ASC';

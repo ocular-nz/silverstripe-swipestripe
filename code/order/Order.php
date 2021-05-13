@@ -2,15 +2,51 @@
 
 namespace SwipeStripe\Order;
 
+use DateInterval;
+use DateTime;
+use Payment;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
+use SilverStripe\Control\Controller;
+use SilverStripe\Control\Director;
+use SilverStripe\Core\Convert;
+use SilverStripe\Forms\CheckboxSetField;
+use SilverStripe\Forms\DropdownField;
+use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\GridField\GridField;
+use SilverStripe\Forms\HiddenField;
+use SilverStripe\Forms\LiteralField;
+use SilverStripe\Forms\TabSet;
+use SilverStripe\Forms\Tab;
+use SilverStripe\ORM\ArrayList;
+use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\DB;
+use SilverStripe\ORM\FieldType\DBDatetime;
+use SilverStripe\ORM\ValidationResult;
+use SilverStripe\Security\Member;
+use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
+use SilverStripe\Security\Security;
+use SwipeStripe\Admin\GridFieldConfig_Basic;
+use SwipeStripe\Admin\ShopConfig;
+use SwipeStripe\Admin\ShopSearchContext_Order;
+use SwipeStripe\Customer\AccountPage;
+use SwipeStripe\Customer\Customer;
+use SwipeStripe\Emails\NotificationEmail;
+use SwipeStripe\Emails\ReceiptEmail;
+use SwipeStripe\Product\Price;
+use SwipeStripe\Product\Product;
+use SwipeStripe\Product\Variation;
 
 /**
  * Order, created as soon as a user adds a {@link Product} to their cart, the cart is
  * actually an Order with status of 'Cart'. Has many {@link Item}s and can have {@link Modification}s
  * which might represent a {@link Modifier} like shipping, tax, coupon codes.
  */
-class Order extends DataObject implements PermissionProvider {
+class Order extends DataObject implements PermissionProvider, LoggerAwareInterface {
+
+	use LoggerAwareTrait;
 
 	/**
 	 * Order status once Order has been made, waiting for payment to clear/be approved
@@ -48,8 +84,8 @@ class Order extends DataObject implements PermissionProvider {
 		'BaseCurrency' => 'Varchar(3)',
 		'BaseCurrencySymbol' => 'Varchar(10)',
 
-		'OrderedOn' => 'SS_Datetime',
-		'LastActive' => 'SS_Datetime',
+		'OrderedOn' => 'Datetime',
+		'LastActive' => 'Datetime',
 		'Env' => 'Varchar(10)',
 	);
 
@@ -131,7 +167,7 @@ class Order extends DataObject implements PermissionProvider {
 	 * @var Array
 	 */
 	private static $has_one = array(
-		'Member' => 'Customer'
+		'Member' => Customer::class
 	);
 
 	/*
@@ -140,10 +176,10 @@ class Order extends DataObject implements PermissionProvider {
 	 * @var Array
 	 */
 	private static $has_many = array(
-		'Items' => 'Item',
-		'Payments' => 'Payment',
-		'Modifications' => 'Modification',
-		'Updates' => 'Order_Update'
+		'Items' => Item::class,
+		'Payments' => Payment::class,
+		'Modifications' => Modification::class,
+		'Updates' => Order_Update::class
 	);
 
 	/**
@@ -214,7 +250,7 @@ class Order extends DataObject implements PermissionProvider {
 			return $extended;
 		}
 
-		if ($member == null && !$member = Member::currentUser()) return false;
+		if ($member == null && !$member = Security::getCurrentUser()) return false;
 
 		$administratorPerm = Permission::check('ADMIN') && Permission::check('VIEW_ORDER', 'any', $member);
 		$customerPerm = Permission::check('VIEW_ORDER', 'any', $member) && $member->ID == $this->MemberID;
@@ -275,10 +311,10 @@ class Order extends DataObject implements PermissionProvider {
 	 */
 	public function delete() {
 
-		if ($this->canDelete(Member::currentUser())) {
+		if ($this->canDelete(Security::getCurrentUser())) {
 			try {
 
-				DB::getConn()->transactionStart();
+				DB::get_conn()->transactionStart();
 
 				$payments = $this->Payments();
 				if ($payments && $payments->exists()) foreach ($payments as $payment) {
@@ -305,12 +341,13 @@ class Order extends DataObject implements PermissionProvider {
 				}
 
 				parent::delete();
-				DB::getConn()->transactionEnd();
+				DB::get_conn()->transactionEnd();
 
 			}
-			catch (Exception $e) {
-				DB::getConn()->transactionRollback();
-				SS_Log::log(new Exception(print_r($e->getMessage(), true)), SS_Log::NOTICE);
+			catch (\Exception $e) {
+				DB::get_conn()->transactionRollback();
+
+				$this->logger->notice($e, []);
 				user_error("$this->class could not be deleted.", E_USER_ERROR);
 			}
 		}
@@ -362,7 +399,7 @@ class Order extends DataObject implements PermissionProvider {
 	 */
 	public function onBeforeWrite() {
 		parent::onBeforeWrite();
-		if (!$this->ID) $this->LastActive = SS_Datetime::now()->getValue();
+		if (!$this->ID) $this->LastActive = DBDatetime::now()->getValue();
 
 		//Set the base currency
 		if (!$this->BaseCurrency || !$this->BaseCurrencySymbol) {
@@ -475,7 +512,7 @@ class Order extends DataObject implements PermissionProvider {
 	 */
 	public function Link() {
 		//get the account page and go to it
-		$account = DataObject::get_one('AccountPage');
+		$account = DataObject::get_one(AccountPage::class);
 		$link = $account->Link()."order/$this->ID";
 		$this->extend('updateLink', $link);
 		return $link;
@@ -569,7 +606,7 @@ class Order extends DataObject implements PermissionProvider {
 		}
 		else {
 
-			DB::getConn()->transactionStart();
+			DB::get_conn()->transactionStart();
 			try {
 
 				$item = new Item();
@@ -598,13 +635,13 @@ class Order extends DataObject implements PermissionProvider {
 					$option->write();
 				}
 			}
-			catch (Exception $e) {
+			catch (\Exception $e) {
 
-				DB::getConn()->transactionRollback();
-				SS_Log::log(new Exception(print_r($e->getMessage(), true)), SS_Log::NOTICE);
+				DB::get_conn()->transactionRollback();
+				$this->logger->notice($e, []);
 				throw $e;
 			}
-			DB::getConn()->transactionEnd();
+			DB::get_conn()->transactionEnd();
 
 		}
 
@@ -882,8 +919,8 @@ class Order_Update extends DataObject {
 	 * @var Array
 	 */
 	private static $has_one = array(
-		'Order' => 'Order',
-		'Member' => 'Member'
+		'Order' => Order::class,
+		'Member' => Member::class
 	);
 
 	private static $summary_fields = array(
@@ -899,7 +936,7 @@ class Order_Update extends DataObject {
 	}
 
 	public function delete() {
-		if ($this->canDelete(Member::currentUser())) {
+		if ($this->canDelete(Security::getCurrentUser())) {
 			parent::delete();
 		}
 	}
@@ -933,7 +970,7 @@ class Order_Update extends DataObject {
 		))->setRightTitle('Should this update be visible to the customer?');
 		$fields->replaceField('Visible', $visibleField);
 
-		$memberField = HiddenField::create('MemberID', 'Member', Member::currentUserID());
+		$memberField = HiddenField::create('MemberID', 'Member', Security::getCurrentUser()->ID);
 		$fields->replaceField('MemberID', $memberField);
 		$fields->removeByName('OrderID');
 

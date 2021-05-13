@@ -1,4 +1,10 @@
-<?php\nnamespace SwipeStripe;
+<?php
+namespace SwipeStripe;
+
+use SwipeStripe\Order\Order;
+use SwipeStripe\Customer\AccountPage;
+use SwipeStripe\Customer\Customer;
+
 /**
  * Testing {@link Product} attributes and options on product pages.
  * 
@@ -7,20 +13,20 @@
  * @package swipestripe
  * @subpackage tests
  */
-class SWS_AccountTest extends SWS_Test {
+class SWS_AccountTest extends \SWS_Test {
 	
 	public function setUp() {
 		parent::setUp();
 		
 		$this->loginAs('admin');
-		$this->objFromFixture('AccountPage', 'account')->doPublish();
+		$this->objFromFixture(AccountPage::class, 'account')->doPublish();
 		$this->logOut();
 	}
 
 	public function testCustomerCanViewAccount() {
 
 		$buyer = $this->objFromFixture('Customer', 'buyer');
-		$accountPage = $this->objFromFixture('AccountPage', 'account');
+		$accountPage = $this->objFromFixture(AccountPage::class, 'account');
 
 		$this->loginAs($buyer);
 		$this->get(Director::makeRelative($accountPage->Link()));
@@ -32,7 +38,7 @@ class SWS_AccountTest extends SWS_Test {
 
 	public function testAdminCanViewAccount() {
 
-		$accountPage = $this->objFromFixture('AccountPage', 'account');
+		$accountPage = $this->objFromFixture(AccountPage::class, 'account');
 
 		$this->loginAs('admin');
 		$this->get(Director::makeRelative($accountPage->Link()));
@@ -44,7 +50,7 @@ class SWS_AccountTest extends SWS_Test {
 
 	public function testAnonCannotViewAccount() {
 
-		$accountPage = $this->objFromFixture('AccountPage', 'account');
+		$accountPage = $this->objFromFixture(AccountPage::class, 'account');
 
 		$this->get(Director::makeRelative($accountPage->Link()));
 		$this->assertPartialMatchBySelector('h1', array(
@@ -54,8 +60,8 @@ class SWS_AccountTest extends SWS_Test {
 
 	public function testCustomerCanViewOrder() {
 
-		$buyer = $this->objFromFixture('Customer', 'buyer');
-		$order = $this->objFromFixture('Order', 'orderOne');
+		$buyer = $this->objFromFixture(Customer::class, 'buyer');
+		$order = $this->objFromFixture(Order::class, 'orderOne');
 
 		$this->loginAs($buyer);
 		$this->get(Director::makeRelative($order->Link()));

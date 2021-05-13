@@ -19,7 +19,7 @@ use SilverStripe\ORM\DataExtension;
 class Payment_Extension extends DataExtension {
 
 	private static $has_one = array(
-		'Order' => 'Order' //Need to add Order here for ModelAdmin
+		'Order' => Order::class //Need to add Order here for ModelAdmin
 	);
 
 	private static $summary_fields = array(

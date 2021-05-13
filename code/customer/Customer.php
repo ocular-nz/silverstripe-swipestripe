@@ -36,7 +36,7 @@ class Customer extends Member {
 	 * @var Array
 	 */
 	private static $has_many = array(
-		'Orders' => 'Order'
+		'Orders' => Order::class
 	);
 
 	private static $searchable_fields = array(
@@ -71,7 +71,7 @@ class Customer extends Member {
 		parent::requireDefaultRecords();
 
 		//Create a new group for customers
-		$allGroups = DataObject::get('Group');
+		$allGroups = DataObject::get(Group::class);
 		$existingCustomerGroup = $allGroups->find('Title', 'Customers');
 		if (!$existingCustomerGroup) {
 			

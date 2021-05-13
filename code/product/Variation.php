@@ -10,6 +10,7 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
+use SilverStripe\Versioned\Versioned;
 use SwipeStripe\Admin\OptionField;
 use SwipeStripe\Admin\PriceField;
 use SwipeStripe\Admin\ShopConfig;
@@ -68,7 +69,7 @@ class Variation extends DataObject implements PermissionProvider {
 	 * @var Array
 	 */
 	private static $has_one = array(
-		'Product' => 'Product'
+		'Product' => Product::class
 	);
 	
 	/**
@@ -77,7 +78,7 @@ class Variation extends DataObject implements PermissionProvider {
 	 * @var Array
 	 */
 	private static $many_many = array(
-		'Options' => 'Option'
+		'Options' => Option::class
 	);
 	
 	/**
@@ -98,7 +99,7 @@ class Variation extends DataObject implements PermissionProvider {
 	 * @var Array
 	 */
 	private static $extensions = array(
-		"Versioned('Live')",
+		Versioned::class . "('Live')",
 	);
 
 	private static $defaults = array(
@@ -501,7 +502,7 @@ class Variation extends DataObject implements PermissionProvider {
 class Variation_Options extends DataObject {
 
 	private static $has_one = array(
-		'Variation' => 'Variation',
-		'Option' => 'Option'
+		'Variation' => Variation::class,
+		'Option' => Option::class
 	);
 }

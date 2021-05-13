@@ -18,7 +18,7 @@ Security:
 
 Payment:
   extensions: 
-    - 'Payment_Extension'
+    - 'SwipeStripe\Order\Payment_Extension'
 PaymentProcessor:
   extensions: 
     - 'Payment_ProcessorExtension'
