@@ -17,6 +17,8 @@ use SwipeStripe\Form\ProductForm;
  * details about the Product.
  */
 class Product extends Page {
+
+	private static $table_name = 'Product';
 	
 	/**
 	 * Flag for denoting if this is the first time this Product is being written.

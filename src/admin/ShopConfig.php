@@ -15,6 +15,8 @@ use SilverStripe\ORM\DB;
  */
 class ShopConfig extends DataObject {
 
+	private static $table_name = 'ShopConfig';
+
 	private static $singular_name = 'Settings';
 	private static $plural_name = 'Settings';
 

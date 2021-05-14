@@ -48,6 +48,8 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 
 	use LoggerAwareTrait;
 
+	private static $table_name = 'Order';
+
 	/**
 	 * Order status once Order has been made, waiting for payment to clear/be approved
 	 *
@@ -903,6 +905,8 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 }
 
 class Order_Update extends DataObject {
+
+	private static $table_name = 'Order_Update';
 
 	private static $singular_name = 'Update';
 	private static $plural_name = 'Updates';

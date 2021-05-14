@@ -25,6 +25,8 @@ use SwipeStripe\Order\Order;
  */
 class Customer extends Member {
 
+	private static $table_name = 'Customer';
+
 	private static $db = array(
 		'Phone' => 'Text',
 		'Code' => 'Int' //Just to trigger creating a Customer table

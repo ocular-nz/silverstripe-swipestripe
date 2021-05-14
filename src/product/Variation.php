@@ -28,6 +28,8 @@ use SwipeStripe\Admin\ShopConfig;
  */
 class Variation extends DataObject implements PermissionProvider {
 
+	private static $table_name = 'Variation';
+
 	/**
 	 * DB fields for a Variation
 	 * 

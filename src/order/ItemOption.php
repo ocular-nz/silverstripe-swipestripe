@@ -15,6 +15,8 @@ use SwipeStripe\Product\Price;
  */
 class ItemOption extends DataObject {
 
+	private static $table_name = 'ItemOption';
+
 	/**
 	 * Relations for this class
 	 * 

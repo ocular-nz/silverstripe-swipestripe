@@ -34,6 +34,8 @@ class Attribute extends DataObject implements PermissionProvider {
 	private static $singular_name = 'Attribute';
 	private static $plural_name = 'Attributes';
 
+	private static $table_name = 'Attribute';
+
 	public $firstWrite = false;
 
 	/**

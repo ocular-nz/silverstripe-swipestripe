@@ -14,6 +14,8 @@ use SwipeStripe\Product\Variation;
  */
 class Item extends DataObject {
 
+	private static $table_name = 'Item';
+
 	/**
 	 * DB fields for an Item, the object this Item represents (e.g. {@link Product}
 	 * has a version ID saved as well, so if price is changed or something then 

@@ -22,6 +22,8 @@ class Option extends DataObject implements PermissionProvider {
 	private static $singular_name = 'Option';
 	private static $plural_name = 'Options';
 
+	private static $table_name = 'Option';
+
 	/**
 	 * DB fields for this Option
 	 * 
