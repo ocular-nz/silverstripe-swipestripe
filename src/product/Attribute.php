@@ -317,6 +317,7 @@ class Attribute_OptionField extends DropdownField
 
 class Attribute_Default extends Attribute
 {
+	private static $table_name = 'Attribute_Default';
 
 	private static $singular_name = 'Attribute';
 	private static $plural_name = 'Attributes';

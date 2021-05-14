@@ -18,16 +18,18 @@ use SilverStripe\Security\Security;
  * @package swipestripe
  * @subpackage customer
  */
-class CartPage extends Page {
-	
+class CartPage extends Page
+{
+
 	/**
 	 * Automatically create a CheckoutPage if one is not found
 	 * on the site at the time the database is built (dev/build).
 	 */
-	function requireDefaultRecords() {
+	function requireDefaultRecords()
+	{
 		parent::requireDefaultRecords();
 
-		if(!DataObject::get_one(CartPage::class)) {
+		if (!DataObject::get_one(CartPage::class)) {
 			$page = new CartPage();
 			$page->Title = 'Cart';
 			$page->Content = '';
@@ -39,41 +41,44 @@ class CartPage extends Page {
 			DB::alteration_message("Cart page 'Cart' created", 'created');
 		}
 	}
-	
+
 	/**
 	 * Prevent CMS users from creating another cart page.
 	 * 
 	 * @see SiteTree::canCreate()
 	 * @return Boolean Always returns false
 	 */
-	function canCreate($member = null, $context = []) {
+	function canCreate($member = null, $context = [])
+	{
 		$extended = $this->extendedCan(__FUNCTION__, $member);
-		if($extended !== null) {
+		if ($extended !== null) {
 			return $extended;
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Prevent CMS users from deleting the cart page.
 	 * 
 	 * @see SiteTree::canDelete()
 	 * @return Boolean Always returns false
 	 */
-	function canDelete($member = null) {
+	function canDelete($member = null)
+	{
 		$extended = $this->extendedCan(__FUNCTION__, $member);
-		if($extended !== null) {
+		if ($extended !== null) {
 			return $extended;
 		}
 		return false;
 	}
 
-	public function delete() {
+	public function delete()
+	{
 		if ($this->canDelete(Security::getCurrentUser())) {
 			parent::delete();
 		}
 	}
-	
+
 	/**
 	 * Prevent CMS users from unpublishing the cart page.
 	 * 
@@ -81,14 +86,15 @@ class CartPage extends Page {
 	 * @see CartPage::getCMSActions()
 	 * @return Boolean Always returns false
 	 */
-	function canDeleteFromLive($member = null) {
+	function canDeleteFromLive($member = null)
+	{
 		$extended = $this->extendedCan(__FUNCTION__, $member);
-		if($extended !== null) {
+		if ($extended !== null) {
 			return $extended;
 		}
 		return false;
 	}
-	
+
 	/**
 	 * To remove the unpublish button from the CMS, as this page must always be published
 	 * 
@@ -96,19 +102,21 @@ class CartPage extends Page {
 	 * @see CartPage::canDeleteFromLive()
 	 * @return FieldList Actions fieldset with unpublish action removed
 	 */
-	function getCMSActions() {
+	function getCMSActions()
+	{
 		$actions = parent::getCMSActions();
 		$actions->removeByName('action_unpublish');
 		return $actions;
 	}
-	
+
 	/**
 	 * Remove page type dropdown to prevent users from changing page type.
 	 * 
 	 * @see Page::getCMSFields()
 	 * @return FieldList
 	 */
-	function getCMSFields() {
+	function getCMSFields()
+	{
 		$fields = parent::getCMSFields();
 		$fields->removeByName('ClassName');
 		return $fields;
@@ -123,42 +131,44 @@ class CartPage extends Page {
  * @package swipestripe
  * @subpackage customer
  */
-class CartPage_Controller extends Page_Controller {
+class CartPage_Controller extends Page_Controller
+{
 
-	private static $allowed_actions = array (
+	private static $allowed_actions = array(
 		'index',
 		'CartForm'
 	);
-	
+
 	/**
 	 * Include some CSS for the cart page.
 	 * 
 	 * @return Array Contents for page rendering
 	 */
-	function index() {
-		
+	function index()
+	{
+
 		//Update stock levels
 		//Order::delete_abandoned();
 
 		Requirements::css('swipestripe/css/Shop.css');
 
-		return array( 
-			 'Content' => $this->Content, 
-			 'Form' => $this->Form 
+		return array(
+			'Content' => $this->Content,
+			'Form' => $this->Form
 		);
 	}
-	
+
 	/**
 	 * Form including quantities for items for displaying on the cart page.
 	 * 
 	 * @return CartForm A new cart form
 	 */
-	function CartForm() {
+	function CartForm()
+	{
 
 		return CartForm::create(
-			$this, 
+			$this,
 			'CartForm'
 		)->disableSecurityToken();
 	}
-
 }

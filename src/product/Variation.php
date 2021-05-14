@@ -531,6 +531,7 @@ class Variation extends DataObject implements PermissionProvider
 
 class Variation_Options extends DataObject
 {
+	private static $table_name = 'Variation_Options';
 
 	private static $has_one = array(
 		'Variation' => Variation::class,

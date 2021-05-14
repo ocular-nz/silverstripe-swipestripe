@@ -7,6 +7,7 @@ use Page_Controller;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use SilverStripe\Security\Member;
+use SilverStripe\Security\Security;
 use SilverStripe\View\Requirements;
 
 /**
@@ -19,13 +20,15 @@ use SilverStripe\View\Requirements;
  * @package swipestripe
  * @subpackage customer
  */
-class CheckoutPage extends Page {
-	
+class CheckoutPage extends Page
+{
+
 	/**
 	 * Automatically create a CheckoutPage if one is not found
 	 * on the site at the time the database is built (dev/build).
 	 */
-	function requireDefaultRecords() {
+	function requireDefaultRecords()
+	{
 		parent::requireDefaultRecords();
 
 		if (!DataObject::get_one(CheckoutPage::class)) {
@@ -40,41 +43,44 @@ class CheckoutPage extends Page {
 			DB::alteration_message('Checkout page \'Checkout\' created', 'created');
 		}
 	}
-	
+
 	/**
 	 * Prevent CMS users from creating another checkout page.
 	 * 
 	 * @see SiteTree::canCreate()
 	 * @return Boolean Always returns false
 	 */
-	function canCreate($member = null, $context = []) {
+	function canCreate($member = null, $context = [])
+	{
 		$extended = $this->extendedCan(__FUNCTION__, $member);
-		if($extended !== null) {
+		if ($extended !== null) {
 			return $extended;
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Prevent CMS users from deleting the checkout page.
 	 * 
 	 * @see SiteTree::canDelete()
 	 * @return Boolean Always returns false
 	 */
-	function canDelete($member = null) {
+	function canDelete($member = null)
+	{
 		$extended = $this->extendedCan(__FUNCTION__, $member);
-		if($extended !== null) {
+		if ($extended !== null) {
 			return $extended;
 		}
 		return false;
 	}
 
-	public function delete() {
-		if ($this->canDelete(Member::currentUser())) {
+	public function delete()
+	{
+		if ($this->canDelete(Security::getCurrentUser())) {
 			parent::delete();
 		}
 	}
-	
+
 	/**
 	 * Prevent CMS users from unpublishing the checkout page.
 	 * 
@@ -82,14 +88,15 @@ class CheckoutPage extends Page {
 	 * @see CheckoutPage::getCMSActions()
 	 * @return Boolean Always returns false
 	 */
-	function canDeleteFromLive($member = null) {
+	function canDeleteFromLive($member = null)
+	{
 		$extended = $this->extendedCan(__FUNCTION__, $member);
-		if($extended !== null) {
+		if ($extended !== null) {
 			return $extended;
 		}
 		return false;
 	}
-	
+
 	/**
 	 * To remove the unpublish button from the CMS, as this page must always be published
 	 * 
@@ -97,19 +104,21 @@ class CheckoutPage extends Page {
 	 * @see CheckoutPage::canDeleteFromLive()
 	 * @return FieldList Actions fieldset with unpublish action removed
 	 */
-	function getCMSActions() {
+	function getCMSActions()
+	{
 		$actions = parent::getCMSActions();
 		$actions->removeByName('action_unpublish');
 		return $actions;
 	}
-	
+
 	/**
 	 * Remove page type dropdown to prevent users from changing page type.
 	 * 
 	 * @see Page::getCMSFields()
 	 * @return FieldList
 	 */
-	function getCMSFields() {
+	function getCMSFields()
+	{
 		$fields = parent::getCMSFields();
 		$fields->removeByName('ClassName');
 		return $fields;
@@ -125,15 +134,16 @@ class CheckoutPage extends Page {
  * @package swipestripe
  * @subpackage customer
  */
-class CheckoutPage_Controller extends Page_Controller {
+class CheckoutPage_Controller extends Page_Controller
+{
 
 	protected $orderProcessed = false;
 
-	private static $allowed_actions = array (
+	private static $allowed_actions = array(
 		'index',
 		'OrderForm'
 	);
-	
+
 	/**
 	 * Include some CSS and javascript for the checkout page
 	 * 
@@ -141,26 +151,28 @@ class CheckoutPage_Controller extends Page_Controller {
 	 * 
 	 * @return Array Contents for page rendering
 	 */
-	function index() {
-		
+	function index()
+	{
+
 		//Update stock levels
 		//Order::delete_abandoned();
 
 		Requirements::css('swipestripe/css/Shop.css');
 
-		return array( 
-			 'Content' => $this->Content, 
-			 'Form' => $this->OrderForm()
+		return array(
+			'Content' => $this->Content,
+			'Form' => $this->OrderForm()
 		);
 	}
 
-	function OrderForm() {
+	function OrderForm()
+	{
 
 		$order = Cart::get_current_order();
 		$member = Customer::currentUser() ? Customer::currentUser() : singleton('Customer');
 
 		$form = OrderForm::create(
-			$this, 
+			$this,
 			'OrderForm'
 		)->disableSecurityToken();
 
@@ -169,5 +181,4 @@ class CheckoutPage_Controller extends Page_Controller {
 
 		return $form;
 	}
-
 }

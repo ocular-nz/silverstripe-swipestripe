@@ -23,13 +23,15 @@ use SwipeStripe\Order\Order;
  * @package swipestripe
  * @subpackage customer
  */
-class AccountPage extends Page {
+class AccountPage extends Page
+{
 
 	/**
 	 * Automatically create an AccountPage if one is not found
 	 * on the site at the time the database is built (dev/build).
 	 */
-	function requireDefaultRecords() {
+	function requireDefaultRecords()
+	{
 		parent::requireDefaultRecords();
 
 		if (!DataObject::get_one(AccountPage::class)) {
@@ -44,41 +46,44 @@ class AccountPage extends Page {
 			DB::alteration_message('Account page \'Account\' created', 'created');
 		}
 	}
-	
+
 	/**
 	 * Prevent CMS users from creating another account page.
 	 * 
 	 * @see SiteTree::canCreate()
 	 * @return Boolean Always returns false
 	 */
-	function canCreate($member = null, $context = []) {
+	function canCreate($member = null, $context = [])
+	{
 		$extended = $this->extendedCan(__FUNCTION__, $member);
-		if($extended !== null) {
+		if ($extended !== null) {
 			return $extended;
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Prevent CMS users from deleting the account page.
 	 * 
 	 * @see SiteTree::canDelete()
 	 * @return Boolean Always returns false
 	 */
-	function canDelete($member = null) {
+	function canDelete($member = null)
+	{
 		$extended = $this->extendedCan(__FUNCTION__, $member);
-		if($extended !== null) {
+		if ($extended !== null) {
 			return $extended;
 		}
 		return false;
 	}
 
-	public function delete() {
+	public function delete()
+	{
 		if ($this->canDelete(Security::getCurrentUser())) {
 			parent::delete();
 		}
 	}
-	
+
 	/**
 	 * Prevent CMS users from unpublishing the account page.
 	 * 
@@ -86,14 +91,15 @@ class AccountPage extends Page {
 	 * @see AccountPage::getCMSActions()
 	 * @return Boolean Always returns false
 	 */
-	function canDeleteFromLive($member = null) {
+	function canDeleteFromLive($member = null)
+	{
 		$extended = $this->extendedCan(__FUNCTION__, $member);
-		if($extended !== null) {
+		if ($extended !== null) {
 			return $extended;
 		}
 		return false;
 	}
-	
+
 	/**
 	 * To remove the unpublish button from the CMS, as this page must always be published
 	 * 
@@ -101,19 +107,21 @@ class AccountPage extends Page {
 	 * @see AccountPage::canDeleteFromLive()
 	 * @return FieldList Actions fieldset with unpublish action removed
 	 */
-	function getCMSActions() {
+	function getCMSActions()
+	{
 		$actions = parent::getCMSActions();
 		$actions->removeByName('action_unpublish');
 		return $actions;
 	}
-	
+
 	/**
 	 * Remove page type dropdown to prevent users from changing page type.
 	 * 
 	 * @see Page::getCMSFields()
 	 * @return FieldList
 	 */
-	function getCMSFields() {
+	function getCMSFields()
+	{
 		$fields = parent::getCMSFields();
 		$fields->removeByName('ClassName');
 		return $fields;
@@ -128,40 +136,43 @@ class AccountPage extends Page {
  * @package swipestripe
  * @subpackage customer
  */
-class AccountPage_Controller extends Page_Controller {
-	
+class AccountPage_Controller extends Page_Controller
+{
+
 	/**
 	 * Allowed actions that can be invoked.
 	 * 
 	 * @var Array Set of actions
 	 */
-	private static $allowed_actions = array (
+	private static $allowed_actions = array(
 		'index',
 		'order',
 		'repay',
 		'RepayForm'
 	);
-	
-	public function init() {
+
+	public function init()
+	{
 		parent::init();
 
-		if(!Permission::check('VIEW_ORDER')) {
+		if (!Permission::check('VIEW_ORDER')) {
 			return $this->redirect(Director::absoluteBaseURL() . 'Security/login?BackURL=' . urlencode($this->getRequest()->getVar('url')));
 		}
 	}
-	
+
 	/**
 	 * Check access permissions for account page and return content for displaying the 
 	 * default page.
 	 * 
 	 * @return Array Content data for displaying the page.
 	 */
-	function index() {
-		
+	function index()
+	{
+
 		Requirements::css('swipestripe/css/Shop.css');
 
-		return array( 
-			'Content' => $this->Content, 
+		return array(
+			'Content' => $this->Content,
 			'Form' => $this->Form,
 			'Orders' => Order::get()
 				->where("MemberID = " . Convert::raw2sql(Security::getCurrentUser()->ID))
@@ -175,12 +186,13 @@ class AccountPage_Controller extends Page_Controller {
 	 * 
 	 * @return Array Content for displaying the page
 	 */
-	function order($request) {
+	function order($request)
+	{
 
 		Requirements::css('swipestripe/css/Shop.css');
 
 		if ($orderID = $request->param('ID')) {
-			
+
 			$member = Customer::currentUser();
 			$order = Order::get()
 				->where("\"Order\".\"ID\" = " . Convert::raw2sql($orderID))
@@ -197,18 +209,18 @@ class AccountPage_Controller extends Page_Controller {
 			return array(
 				'Order' => $order
 			);
-		}
-		else {
+		} else {
 			return $this->httpError(403, _t('AccountPage.NO_ORDER_EXISTS', 'Order does not exist.'));
 		}
 	}
-	
-	function repay($request) {
+
+	function repay($request)
+	{
 
 		Requirements::css('swipestripe/css/Shop.css');
 
 		if ($orderID = $request->param('ID')) {
-			
+
 			$member = Customer::currentUser();
 			$order = Order::get()
 				->where("\"Order\".\"ID\" = " . Convert::raw2sql($orderID))
@@ -221,26 +233,26 @@ class AccountPage_Controller extends Page_Controller {
 			if (!$order->canView($member)) {
 				return $this->httpError(403, _t('AccountPage.CANNOT_VIEW_ORDER', 'You cannot view orders that do not belong to you.'));
 			}
-			
+
 			Session::set('Repay', array(
 				'OrderID' => $order->ID
 			));
 			Session::save();
-			
+
 			return array(
 				'Order' => $order,
 				'RepayForm' => $this->RepayForm()
 			);
-		}
-		else {
+		} else {
 			return $this->httpError(403, _t('AccountPage.NO_ORDER_EXISTS', 'Order does not exist.'));
 		}
 	}
 
-	function RepayForm() {
+	function RepayForm()
+	{
 
 		$form = RepayForm::create(
-			$this, 
+			$this,
 			'RepayForm'
 		)->disableSecurityToken();
 
@@ -249,5 +261,4 @@ class AccountPage_Controller extends Page_Controller {
 
 		return $form;
 	}
-	
 }
