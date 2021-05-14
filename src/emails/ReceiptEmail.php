@@ -2,7 +2,9 @@
 
 namespace SwipeStripe\Emails;
 
+use SilverStripe\Control\Director;
 use SilverStripe\Control\Email\Email;
+use SilverStripe\Core\Config\Config;
 use SilverStripe\Security\Member;
 use SwipeStripe\Admin\ShopConfig;
 use SwipeStripe\Order\Order;
@@ -15,7 +17,8 @@ use SwipeStripe\Order\Order;
  * @package swipestripe
  * @subpackage emails
  */
-class ReceiptEmail extends ProcessedEmail {
+class ReceiptEmail extends ProcessedEmail
+{
 
 	/**
 	 * Create the new receipt email.
@@ -30,26 +33,37 @@ class ReceiptEmail extends ProcessedEmail {
 	 * @param String $cc
 	 * @param String $bcc
 	 */
-	public function __construct(Member $customer, Order $order, $from = null, $to = null, $subject = null, $body = null, $bounceHandlerURL = null, $cc = null, $bcc = null) {
+	public function __construct(Member $customer, Order $order, $from = null, $to = null, $subject = null, $body = null, $bounceHandlerURL = null, $cc = null, $bcc = null)
+	{
 
 		$siteConfig = ShopConfig::get()->first();
-		if ($customer->Email) $this->to = $customer->Email; 
-		if ($siteConfig->ReceiptSubject) $this->subject = $siteConfig->ReceiptSubject . ' - Order #'.$order->ID;
-		if ($siteConfig->ReceiptBody) $this->body = $siteConfig->ReceiptBody;
+		if ($customer->Email) {
+			$this->to = $customer->Email;
+		}
+		if ($siteConfig->ReceiptSubject) {
+			$this->subject = $siteConfig->ReceiptSubject . ' - Order #' . $order->ID;
+		}
+		if ($siteConfig->ReceiptBody) {
+			$this->body = $siteConfig->ReceiptBody;
+		}
 		
-		if ($siteConfig->ReceiptFrom) $this->from = $siteConfig->ReceiptFrom;
-		elseif (Email::getAdminEmail()) $this->from = Email::getAdminEmail();
-		else $this->from = 'no-reply@' . $_SERVER['HTTP_HOST'];
-		
+		$adminEmail = Config::inst()->get(Email::class, 'admin_email');
+		if ($siteConfig->ReceiptFrom) {
+			$this->from = $siteConfig->ReceiptFrom;
+		} elseif ($adminEmail) {
+			$this->from = $adminEmail;
+		} else {
+			$this->from = 'no-reply@' . $_SERVER['HTTP_HOST'];
+		}
+
 		if ($siteConfig->EmailSignature) $this->signature = $siteConfig->EmailSignature;
 
 		//Get css for Email by reading css file and put css inline for emogrification
 		$this->setTemplate('Order_ReceiptEmail');
-		
-		if (file_exists(Director::getAbsFile($this->ThemeDir().'/css/ShopEmail.css'))) {
-			$css = file_get_contents(Director::getAbsFile($this->ThemeDir().'/css/ShopEmail.css'));
-		}
-		else {
+
+		if (file_exists(Director::getAbsFile($this->ThemeDir() . '/css/ShopEmail.css'))) {
+			$css = file_get_contents(Director::getAbsFile($this->ThemeDir() . '/css/ShopEmail.css'));
+		} else {
 			$css = file_get_contents(Director::getAbsFile('swipestripe/css/ShopEmail.css'));
 		}
 
@@ -65,5 +79,4 @@ class ReceiptEmail extends ProcessedEmail {
 
 		parent::__construct($from, null, $subject, $body, $bounceHandlerURL, $cc, $bcc);
 	}
-
 }

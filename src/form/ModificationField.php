@@ -11,8 +11,9 @@ use SilverStripe\Forms\HiddenField;
  * 
  * The hidden field stores the {@link Modifier} ID.
  */
-class ModificationField_Hidden extends HiddenField {
-	
+class ModificationField_Hidden extends HiddenField
+{
+
 	/**
 	 * Template for rendering
 	 *
@@ -26,8 +27,8 @@ class ModificationField_Hidden extends HiddenField {
 	 * 
 	 * @var Object
 	 */
-	protected $modifier;	
-	
+	protected $modifier;
+
 	/**
 	 * Creates a new optionset field for order modifers with the naming convention
 	 * Modifiers[ClassName] where ClassName is name of modifier class.
@@ -38,61 +39,66 @@ class ModificationField_Hidden extends HiddenField {
 	 * @param value The current value
 	 * @param form The parent form
 	 */
-	function __construct($modifier, $title = null, $value = "", $maxLength = null, $form = null) {
-		
+	function __construct($modifier, $title = null, $value = "", $maxLength = null, $form = null)
+	{
+
 		$name = "Modifiers[" . get_class($modifier) . "]";
 		$this->modifier = $modifier;
 
 		parent::__construct($name, $title, $value, $maxLength, $form);
 	}
-	
+
 	/**
 	 * Render field with the appropriate template.
 	 * 
 	 * @see FormField::FieldHolder()
 	 * @return String
 	 */
-	function FieldHolder($properties = array()) {
+	function FieldHolder($properties = array())
+	{
 		return $this->renderWith($this->template);
 	}
-	
+
 	/**
 	 * Validation is not currently done on this field at this point.
 	 * 
 	 * @see FormField::validate()
 	 */
-	function validate($validator) {
+	function validate($validator)
+	{
 		return true;
 	}
-	
+
 	/**
 	 * Get the modifier e.g: FlatFeeShipping
 	 * 
 	 * @return Object Mixed object
 	 */
-	function getModifier() {
+	function getModifier()
+	{
 		return $this->modifier;
 	}
-	
+
 	/**
 	 * A description to show alongside the hidden field on the {@link CheckoutForm}.
 	 * For instance, this might be a calculated value.
 	 * 
 	 * @return String Description of the modifier e.g: a calculated value of tax
 	 */
-	function Description() {
+	function Description()
+	{
 		return;
 	}
-	
+
 	/**
 	 * Does not modify {@link Order} sub total by default.
 	 * 
 	 * @return Boolean False
 	 */
-	function modifiesSubTotal() {
+	function modifiesSubTotal()
+	{
 		return false;
 	}
-	
 }
 
 /**
@@ -104,8 +110,9 @@ class ModificationField_Hidden extends HiddenField {
  * @package swipestripe
  * @subpackage form
  */
-class ModificationField_Dropdown extends DropdownField {
-	
+class ModificationField_Dropdown extends DropdownField
+{
+
 	/**
 	 * Template for rendering
 	 *
@@ -119,8 +126,8 @@ class ModificationField_Dropdown extends DropdownField {
 	 * 
 	 * @var Object
 	 */
-	protected $modifier;	
-	
+	protected $modifier;
+
 	/**
 	 * Creates a new optionset field for order modifers with the naming convention
 	 * Modifiers[ClassName] where ClassName is name of modifier class.
@@ -131,7 +138,8 @@ class ModificationField_Dropdown extends DropdownField {
 	 * @param value The current value
 	 * @param form The parent form
 	 */
-	function __construct($modifier, $title = "", $source = array(), $value = "", $form = null) {
+	function __construct($modifier, $title = "", $source = array(), $value = "", $form = null)
+	{
 
 		$className = get_class($modifier);
 		$name = "Modifiers[$className]";
@@ -139,42 +147,45 @@ class ModificationField_Dropdown extends DropdownField {
 
 		parent::__construct($name, $title, $source, $value, $form);
 	}
-	
+
 	/**
 	 * Render field with the appropriate template.
 	 * 
 	 * @see FormField::FieldHolder()
 	 * @return String
 	 */
-	function FieldHolder($properties = array()) {
+	function FieldHolder($properties = array())
+	{
 		return $this->renderWith($this->template);
 	}
-	
+
 	/**
 	 * Validation is not currently done on this field at this point.
 	 * 
 	 * @see FormField::validate()
 	 */
-	function validate($validator) {
+	function validate($validator)
+	{
 		return true;
 	}
-	
+
 	/**
 	 * Get the modifier e.g: FlatFeeShipping
 	 * 
 	 * @return Object Mixed object
 	 */
-	function getModifier() {
+	function getModifier()
+	{
 		return $this->modifier;
 	}
-	
+
 	/**
 	 * Does not modify {@link Order} sub total by default.
 	 * 
 	 * @return Boolean False
 	 */
-	function modifiesSubTotal() {
+	function modifiesSubTotal()
+	{
 		return false;
 	}
-	
 }

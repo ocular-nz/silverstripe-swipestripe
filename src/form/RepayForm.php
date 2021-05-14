@@ -2,6 +2,9 @@
 
 namespace SwipeStripe\Form;
 
+use Exception;
+use Payment\PaymentFactory;
+use Payment\PaymentProcessor;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use SilverStripe\Control\Session;
@@ -16,18 +19,20 @@ use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\RequiredFields;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\View\Requirements;
+use SwipeStripe\Customer\Customer;
 
 /**
  * Form for displaying on the {@link CheckoutPage} with all the necessary details 
  * for a visitor to complete their order and pass off to the {@link Payment} gateway class.
  */
-class RepayForm extends Form implements LoggerAwareInterface {
+class RepayForm extends Form implements LoggerAwareInterface
+{
 
 	use LoggerAwareTrait;
 
 	protected $order;
 	protected $customer;
-	
+
 	/**
 	 * Construct the form, get the grouped fields and set the fields for this form appropriately,
 	 * the fields are passed in an associative array so that the fields can be grouped into sets 
@@ -40,7 +45,8 @@ class RepayForm extends Form implements LoggerAwareInterface {
 	 * @param Validator $validator
 	 * @param Order $currentOrder
 	 */
-	function __construct($controller, $name) {
+	function __construct($controller, $name)
+	{
 
 		parent::__construct($controller, $name, FieldList::create(), FieldList::create(), null);
 
@@ -67,7 +73,8 @@ class RepayForm extends Form implements LoggerAwareInterface {
 	 * Set up current form errors in session to
 	 * the current form if appropriate.
 	 */
-	public function setupFormErrors() {
+	public function setupFormErrors()
+	{
 
 		//Only run when fields exist
 		if ($this->fields->exists()) {
@@ -75,7 +82,8 @@ class RepayForm extends Form implements LoggerAwareInterface {
 		}
 	}
 
-	public function createFields() {
+	public function createFields()
+	{
 
 		$order = $this->order;
 		$member = $this->customer;
@@ -88,17 +96,17 @@ class RepayForm extends Form implements LoggerAwareInterface {
 			$methodConfig = PaymentFactory::get_factory_config($methodName);
 			$source[$methodName] = $methodConfig['title'];
 		}
-		
+
 		$outstanding = $order->TotalOutstanding()->Nice();
 
 		$paymentFields = CompositeField::create(
-			new HeaderField(_t('CheckoutPage.PAYMENT',"Payment"), 3),
+			new HeaderField(_t('CheckoutPage.PAYMENT', "Payment"), 3),
 			LiteralField::create('RepayLit', "<p>Process a payment for the oustanding amount: $outstanding</p>"),
 			DropdownField::create(
 				'PaymentMethod',
-				_t('CheckoutPage.SELECTPAYMENT',"Select Payment Method"),
+				_t('CheckoutPage.SELECTPAYMENT', "Select Payment Method"),
 				$source
-			)->setCustomValidationMessage(_t('CheckoutPage.SELECT_PAYMENT_METHOD',"Please select a payment method."))
+			)->setCustomValidationMessage(_t('CheckoutPage.SELECT_PAYMENT_METHOD', "Please select a payment method."))
 		)->setName('PaymentFields');
 
 
@@ -111,9 +119,10 @@ class RepayForm extends Form implements LoggerAwareInterface {
 		return $fields;
 	}
 
-	public function createActions() {
+	public function createActions()
+	{
 		$actions = FieldList::create(
-			new FormAction('process', _t('CheckoutPage.PROCEED_TO_PAY',"Proceed to pay"))
+			new FormAction('process', _t('CheckoutPage.PROCEED_TO_PAY', "Proceed to pay"))
 		);
 
 		$this->extend('updateActions', $actions);
@@ -121,7 +130,8 @@ class RepayForm extends Form implements LoggerAwareInterface {
 		return $actions;
 	}
 
-	public function createValidator() {
+	public function createValidator()
+	{
 
 		$validator = RequiredFields::create(
 			'PaymentMethod'
@@ -132,16 +142,18 @@ class RepayForm extends Form implements LoggerAwareInterface {
 		return $validator;
 	}
 
-	public function getPaymentFields() {
+	public function getPaymentFields()
+	{
 		return $this->Fields()->fieldByName('PaymentFields');
 	}
-	
+
 	/**
 	 * Helper function to return the current {@link Order}, used in the template for this form
 	 * 
 	 * @return Order
 	 */
-	function Cart() {
+	function Cart()
+	{
 		return $this->order;
 	}
 
@@ -151,15 +163,16 @@ class RepayForm extends Form implements LoggerAwareInterface {
 	 * @see OrderFormValidator::php()
 	 * @see Form::validate()
 	 */
-	function validate(){
+	function validate()
+	{
 		$valid = true;
-		if($this->validator){
+		if ($this->validator) {
 			$errors = $this->validator->validate();
 
-			if($errors){
+			if ($errors) {
 				// Load errors into session and post back
 				$data = $this->getData();
-				Session::set("FormInfo.{$this->FormName()}.errors", $errors); 
+				Session::set("FormInfo.{$this->FormName()}.errors", $errors);
 				Session::set("FormInfo.{$this->FormName()}.data", $data);
 				$valid = false;
 			}
@@ -167,18 +180,18 @@ class RepayForm extends Form implements LoggerAwareInterface {
 		return $valid;
 	}
 
-	public function process($data, $form) {
+	public function process($data, $form)
+	{
 
 		//Check payment type
 		try {
 			$paymentMethod = $data['PaymentMethod'];
 			$paymentProcessor = PaymentFactory::factory($paymentMethod);
-		}
-		catch (Exception $e) {
+		} catch (Exception $e) {
 			Debug::friendlyError(
 				403,
-				_t('CheckoutPage.NOT_VALID_METHOD',"Sorry, that is not a valid payment method."),
-				_t('CheckoutPage.TRY_AGAIN',"Please go back and try again.")
+				_t('CheckoutPage.NOT_VALID_METHOD', "Sorry, that is not a valid payment method."),
+				_t('CheckoutPage.TRY_AGAIN', "Please go back and try again.")
 			);
 			return;
 		}
@@ -205,8 +218,7 @@ class RepayForm extends Form implements LoggerAwareInterface {
 
 			$paymentProcessor->setRedirectURL($order->Link());
 			$paymentProcessor->capture($paymentData);
-		}
-		catch (\Exception $e) {
+		} catch (\Exception $e) {
 
 			//This is where we catch gateway validation or gateway unreachable errors
 			$result = $paymentProcessor->gateway->getValidationResult();
@@ -220,7 +232,8 @@ class RepayForm extends Form implements LoggerAwareInterface {
 		}
 	}
 
-	function populateFields() {
+	function populateFields()
+	{
 
 		//Populate values in the form the first time
 		if (!Session::get("FormInfo.{$this->FormName()}.errors")) {

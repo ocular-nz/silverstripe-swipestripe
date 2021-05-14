@@ -4,7 +4,7 @@ namespace SwipeStripe\Order;
 
 use DateInterval;
 use DateTime;
-use Payment;
+use Payment\Payment;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use SilverStripe\Control\Controller;
@@ -44,7 +44,8 @@ use SwipeStripe\Product\Variation;
  * actually an Order with status of 'Cart'. Has many {@link Item}s and can have {@link Modification}s
  * which might represent a {@link Modifier} like shipping, tax, coupon codes.
  */
-class Order extends DataObject implements PermissionProvider, LoggerAwareInterface {
+class Order extends DataObject implements PermissionProvider, LoggerAwareInterface
+{
 
 	use LoggerAwareTrait;
 
@@ -95,12 +96,14 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 * Provides all Member properties, for use in summary_fields etc
 	 *
 	 * @param SQLQuery $query
-	*/
-	public function augmentSQL(SQLQuery &$query) {
+	 */
+	public function augmentSQL(SQLQuery &$query)
+	{
 		$query->addLeftJoin("Member", "\"Member\".\"ID\" = \"Order\".\"MemberID\"", "Member");
 	}
 
-	public function Total() {
+	public function Total()
+	{
 
 		// TODO: Multi currency
 
@@ -116,14 +119,16 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 *
 	 * @return Price
 	 */
-	public function TotalPrice() {
+	public function TotalPrice()
+	{
 
 		$amount = $this->Total();
 		$this->extend('updatePrice', $amount);
 		return $amount;
 	}
 
-	public function SubTotal() {
+	public function SubTotal()
+	{
 
 		// TODO: Multi currency
 
@@ -139,14 +144,16 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 *
 	 * @return Price
 	 */
-	public function SubTotalPrice() {
+	public function SubTotalPrice()
+	{
 
 		$amount = $this->SubTotal();
 		$this->extend('updatePrice', $amount);
 		return $amount;
 	}
 
-	public function CartTotalPrice() {
+	public function CartTotalPrice()
+	{
 
 		$total = $this->SubTotal();
 		$amount = $total->getAmount();
@@ -239,16 +246,18 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 */
 	public static $first_id = null;
 
-	public function providePermissions() {
+	public function providePermissions()
+	{
 		return array(
 			'VIEW_ORDER' => 'View orders',
 			'EDIT_ORDER' => 'Edit orders'
 		);
 	}
 
-	public function canView($member = null) {
+	public function canView($member = null)
+	{
 		$extended = $this->extendedCan(__FUNCTION__, $member);
-		if($extended !== null) {
+		if ($extended !== null) {
 			return $extended;
 		}
 
@@ -266,9 +275,10 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 * @see DataObject::canEdit()
 	 * @return Boolean False always
 	 */
-	public function canEdit($member = null) {
+	public function canEdit($member = null)
+	{
 		$extended = $this->extendedCan(__FUNCTION__, $member);
-		if($extended !== null) {
+		if ($extended !== null) {
 			return $extended;
 		}
 
@@ -283,9 +293,10 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 * @see DataObject::canCreate()
 	 * @return Boolean False always
 	 */
-	public function canCreate($member = null, $context = []) {
+	public function canCreate($member = null, $context = [])
+	{
 		$extended = $this->extendedCan(__FUNCTION__, $member);
-		if($extended !== null) {
+		if ($extended !== null) {
 			return $extended;
 		}
 
@@ -298,9 +309,10 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 * @see DataObject::canDelete()
 	 * @return Boolean False always
 	 */
-	public function canDelete($member = null) {
+	public function canDelete($member = null)
+	{
 		$extended = $this->extendedCan(__FUNCTION__, $member);
-		if($extended !== null) {
+		if ($extended !== null) {
 			return $extended;
 		}
 
@@ -311,7 +323,8 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 * Clean up Order Items (ItemOptions by extension) and Modifications.
 	 * All wrapped in a transaction.
 	 */
-	public function delete() {
+	public function delete()
+	{
 
 		if ($this->canDelete(Security::getCurrentUser())) {
 			try {
@@ -344,9 +357,7 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 
 				parent::delete();
 				DB::get_conn()->transactionEnd();
-
-			}
-			catch (\Exception $e) {
+			} catch (\Exception $e) {
 				DB::get_conn()->transactionRollback();
 
 				$this->logger->notice($e, []);
@@ -361,7 +372,8 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 * @see DataObject::scaffoldSearchFields()
 	 * @return FieldSet
 	 */
-	public function scaffoldSearchFields($params = array()){
+	public function scaffoldSearchFields($params = array())
+	{
 
 		$fields = parent::scaffoldSearchFields();
 
@@ -385,7 +397,8 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 * @see DataObject::getDefaultSearchContext()
 	 * @return ShopSearchContext
 	 */
-	public function getDefaultSearchContext() {
+	public function getDefaultSearchContext()
+	{
 		return new ShopSearchContext_Order(
 			$this->class,
 			$this->scaffoldSearchFields(),
@@ -399,7 +412,8 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 * (non-PHPdoc)
 	 * @see DataObject::onBeforeWrite()
 	 */
-	public function onBeforeWrite() {
+	public function onBeforeWrite()
+	{
 		parent::onBeforeWrite();
 		if (!$this->ID) $this->LastActive = DBDatetime::now()->getValue();
 
@@ -422,11 +436,13 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 		$this->PaymentStatus = ($this->getPaid()) ? 'Paid' : 'Unpaid';
 	}
 
-	public function onAfterWrite() {
+	public function onAfterWrite()
+	{
 		parent::onAfterWrite();
 	}
 
-	public function onBeforePayment() {
+	public function onBeforePayment()
+	{
 		$this->extend('onBeforePayment');
 	}
 
@@ -436,7 +452,8 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 *
 	 * @see Payment_Extension::onAfterWrite()
 	 */
-	public function onAfterPayment() {
+	public function onAfterPayment()
+	{
 
 		$this->Status = ($this->getPaid()) ? self::STATUS_PROCESSING :  self::STATUS_PENDING;
 		$this->PaymentStatus = ($this->getPaid()) ? 'Paid' : 'Unpaid';
@@ -456,11 +473,13 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 *
 	 * @see DataObject::getCMSFields()
 	 */
-	public function getCMSFields() {
+	public function getCMSFields()
+	{
 
 		$fields = new FieldList();
 
-		$fields->push(new TabSet('Root',
+		$fields->push(new TabSet(
+			'Root',
 			Tab::create('Order')
 		));
 
@@ -492,7 +511,8 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 * @see DataObject::getCMSActions()
 	 * @return FieldList
 	 */
-	public function getCMSActions() {
+	public function getCMSActions()
+	{
 		$actions = parent::getCMSActions();
 		return $actions;
 	}
@@ -502,7 +522,8 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 *
 	 * @return String Order total formatted with Nice()
 	 */
-	public function SummaryOfTotal() {
+	public function SummaryOfTotal()
+	{
 		return $this->Total()->Nice();
 	}
 
@@ -512,10 +533,11 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 * @see PaypalExpressCheckoutaPayment_Handler::doRedirect()
 	 * @return String URL for viewing this order
 	 */
-	public function Link() {
+	public function Link()
+	{
 		//get the account page and go to it
 		$account = DataObject::get_one(AccountPage::class);
-		$link = $account->Link()."order/$this->ID";
+		$link = $account->Link() . "order/$this->ID";
 		$this->extend('updateLink', $link);
 		return $link;
 	}
@@ -525,7 +547,8 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 *
 	 * @return ArrayList Set of Payment objects
 	 */
-	public function Payments() {
+	public function Payments()
+	{
 		return Payment::get()
 			->where("\"OrderID\" = {$this->ID}");
 	}
@@ -536,7 +559,8 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 *
 	 * @return Money With value and currency of total outstanding
 	 */
-	public function TotalOutstanding() {
+	public function TotalOutstanding()
+	{
 		$total = $this->Total()->getAmount();
 
 		foreach ($this->Payments() as $payment) {
@@ -564,8 +588,9 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 *
 	 * @return Price With value and currency of total paid
 	 */
-	public function TotalPaid() {
-		 $paid = 0;
+	public function TotalPaid()
+	{
+		$paid = 0;
 
 		if ($this->Payments()) foreach ($this->Payments() as $payment) {
 			if ($payment->Status == 'Success') {
@@ -586,7 +611,8 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 *
 	 * @return Boolean
 	 */
-	public function getPaid() {
+	public function getPaid()
+	{
 		return ($this->Total()->getAmount() - $this->TotalPaid()->getAmount()) <= 0;
 	}
 
@@ -597,7 +623,8 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 * @param DataObject $product The product to be represented by this order item
 	 * @param ArrayList $productOptions The product variations to be added, usually just one
 	 */
-	public function addItem(Product $product, Variation $variation, $quantity = 1, ArrayList $options = null) {
+	public function addItem(Product $product, Variation $variation, $quantity = 1, ArrayList $options = null)
+	{
 
 		//Increment the quantity if this item exists already
 		$item = $this->findIdenticalItem($product, $variation, $options);
@@ -605,8 +632,7 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 		if ($item && $item->exists()) {
 			$item->Quantity = $item->Quantity + $quantity;
 			$item->write();
-		}
-		else {
+		} else {
 
 			DB::get_conn()->transactionStart();
 			try {
@@ -636,15 +662,13 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 					$option->ItemID = $item->ID;
 					$option->write();
 				}
-			}
-			catch (\Exception $e) {
+			} catch (\Exception $e) {
 
 				DB::get_conn()->transactionRollback();
 				$this->logger->notice($e, []);
 				throw $e;
 			}
 			DB::get_conn()->transactionEnd();
-
 		}
 
 		$this->updateTotal();
@@ -662,7 +686,8 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 * @param ArrayList $options
 	 * @return DataObject
 	 */
-	public function findIdenticalItem($product, $variation, ArrayList $options) {
+	public function findIdenticalItem($product, $variation, ArrayList $options)
+	{
 
 		$items = $this->Items();
 
@@ -699,7 +724,8 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 * $this->Items() was not returning any items after first call
 	 * to $this->addItem().
 	 */
-	public function updateTotal() {
+	public function updateTotal()
+	{
 
 		$total = 0;
 		$subTotal = 0;
@@ -717,8 +743,7 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 			if ($modification->SubTotalModifier) {
 				$total += $modification->Amount()->getAmount();
 				$subTotal += $modification->Amount()->getAmount();
-			}
-			else {
+			} else {
 				$total += $modification->Amount()->getAmount();
 			}
 		}
@@ -735,7 +760,8 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 *
 	 * @return ArrayList Set of {@link Product}s
 	 */
-	public function Products() {
+	public function Products()
+	{
 		$items = $this->Items();
 		$products = new ArrayList();
 		foreach ($items as $item) {
@@ -749,15 +775,15 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 *
 	 * @return String List of payments and their status
 	 */
-	public function SummaryOfPaymentStatus() {
+	public function SummaryOfPaymentStatus()
+	{
 		$payments = $this->Payments();
 		$status = null;
 
 		if ($payments instanceof DataList) {
 			if ($payments->Count() == 1) {
 				$status = 'Payment ' . $payments->First()->Status;
-			}
-			else {
+			} else {
 				$statii = array();
 				foreach ($payments as $payment) {
 					$statii[] = "Payment #$payment->ID $payment->Status";
@@ -773,7 +799,8 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 *
 	 * @param Array $data
 	 */
-	public function updateModifications(Array $data) {
+	public function updateModifications(array $data)
+	{
 
 		//Remove existing Modifications
 		$existingModifications = $this->Modifications();
@@ -802,7 +829,8 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 *
 	 * @return ValidationResult
 	 */
-	public function validateForCart() {
+	public function validateForCart()
+	{
 
 		$result = new ValidationResult();
 		$items = $this->Items();
@@ -841,7 +869,8 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 *
 	 * @see DataObject::validate()
 	 */
-	public function validate() {
+	public function validate()
+	{
 		$result = parent::validate();
 		return $result;
 	}
@@ -853,7 +882,8 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 *
 	 * @return Void
 	 */
-	public static function delete_abandoned() {
+	public static function delete_abandoned()
+	{
 
 		$shopConfig = ShopConfig::current_shop_config();
 
@@ -877,7 +907,8 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 *
 	 * @return DataList Set of Modification DataObjects
 	 */
-	public function SubTotalModifications() {
+	public function SubTotalModifications()
+	{
 		$mods = $this->Modifications();
 		if ($mods && $mods->exists()) {
 			return $mods->where("\"SubTotalModifier\" = 1");
@@ -890,7 +921,8 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 *
 	 * @return DataList Set of Modification DataObjects
 	 */
-	public function TotalModifications() {
+	public function TotalModifications()
+	{
 		$mods = $this->Modifications();
 		if ($mods && $mods->exists()) {
 			return $mods->where("\"SubTotalModifier\" = 0");
@@ -898,13 +930,14 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 		return null;
 	}
 
-	public function CustomerUpdates() {
+	public function CustomerUpdates()
+	{
 		return $this->Updates()->where("\"Visible\" = 1");
 	}
-
 }
 
-class Order_Update extends DataObject {
+class Order_Update extends DataObject
+{
 
 	private static $table_name = 'Order_Update';
 
@@ -935,11 +968,13 @@ class Order_Update extends DataObject {
 		'VisibleSummary' => 'Visible'
 	);
 
-	public function canDelete($member = null) {
+	public function canDelete($member = null)
+	{
 		return false;
 	}
 
-	public function delete() {
+	public function delete()
+	{
 		if ($this->canDelete(Security::getCurrentUser())) {
 			parent::delete();
 		}
@@ -950,7 +985,8 @@ class Order_Update extends DataObject {
 	 *
 	 * @see DataObject::onAfterWrite()
 	 */
-	public function onAfterWrite() {
+	public function onAfterWrite()
+	{
 
 		parent::onAfterWrite();
 
@@ -964,7 +1000,8 @@ class Order_Update extends DataObject {
 		}
 	}
 
-	public function getCMSFields() {
+	public function getCMSFields()
+	{
 
 		$fields = parent::getCMSFields();
 
@@ -981,11 +1018,13 @@ class Order_Update extends DataObject {
 		return $fields;
 	}
 
-	public function Created() {
+	public function Created()
+	{
 		return $this->dbObject('Created');
 	}
 
-	public function VisibleSummary() {
+	public function VisibleSummary()
+	{
 		return ($this->Visible) ? 'True' : '';
 	}
 }

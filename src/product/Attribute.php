@@ -29,7 +29,8 @@ use SwipeStripe\Admin\ShopConfig;
  * @package swipestripe
  * @subpackage product
  */
-class Attribute extends DataObject implements PermissionProvider {
+class Attribute extends DataObject implements PermissionProvider
+{
 
 	private static $singular_name = 'Attribute';
 	private static $plural_name = 'Attributes';
@@ -49,7 +50,7 @@ class Attribute extends DataObject implements PermissionProvider {
 		'Description' => 'Text',
 		'SortOrder' => 'Int'
 	);
-	
+
 	/**
 	 * Has many relations for the Attribute
 	 * 
@@ -63,7 +64,7 @@ class Attribute extends DataObject implements PermissionProvider {
 		'Product' => Product::class,
 		'DefaultAttribute' => Attribute_Default::class
 	);
-	
+
 	/**
 	 * Searchable fields for Attributes
 	 * 
@@ -72,7 +73,7 @@ class Attribute extends DataObject implements PermissionProvider {
 	private static $searchable_fields = array(
 		'Title'
 	);
-	
+
 	/**
 	 * Summary fields for Attributes
 	 * 
@@ -86,39 +87,44 @@ class Attribute extends DataObject implements PermissionProvider {
 
 	private static $default_sort = 'SortOrder';
 
-	public function providePermissions() {
+	public function providePermissions()
+	{
 		return array(
 			'EDIT_ATTRIBUTES' => 'Edit Attributes',
 		);
 	}
 
-	public function canEdit($member = null) {
+	public function canEdit($member = null)
+	{
 		$extended = $this->extendedCan(__FUNCTION__, $member);
-		if($extended !== null) {
+		if ($extended !== null) {
 			return $extended;
 		}
 		return Permission::check('EDIT_ATTRIBUTES');
 	}
 
-	public function canView($member = null) {
+	public function canView($member = null)
+	{
 		$extended = $this->extendedCan(__FUNCTION__, $member);
-		if($extended !== null) {
+		if ($extended !== null) {
 			return $extended;
 		}
 		return true;
 	}
 
-	public function canDelete($member = null) {
+	public function canDelete($member = null)
+	{
 		$extended = $this->extendedCan(__FUNCTION__, $member);
-		if($extended !== null) {
+		if ($extended !== null) {
 			return $extended;
 		}
 		return Permission::check('EDIT_ATTRIBUTES');
 	}
 
-	public function canCreate($member = null, $context = []) {
+	public function canCreate($member = null, $context = [])
+	{
 		$extended = $this->extendedCan(__FUNCTION__, $member);
-		if($extended !== null) {
+		if ($extended !== null) {
 			return $extended;
 		}
 		return Permission::check('EDIT_ATTRIBUTES');
@@ -130,11 +136,14 @@ class Attribute extends DataObject implements PermissionProvider {
 	 * @see DataObject::getCMSFields()
 	 * @return FieldList
 	 */
-	function getCMSFields() {
+	function getCMSFields()
+	{
 
 		$fields = new FieldList(
-			$rootTab = new TabSet('Root',
-				$tabMain = new Tab('Attribute',
+			$rootTab = new TabSet(
+				'Root',
+				$tabMain = new Tab(
+					'Attribute',
 					TextField::create('Title')
 						->setRightTitle('For displaying on the product page'),
 					TextField::create('Description')
@@ -149,9 +158,9 @@ class Attribute extends DataObject implements PermissionProvider {
 			if ($defaultAttributes && $defaultAttributes->exists()) {
 
 				$fields->addFieldToTab(
-					'Root.Attribute', 
+					'Root.Attribute',
 					DropdownField::create(
-						'DefaultAttributeID', 
+						'DefaultAttributeID',
 						'Use existing attribute',
 						$defaultAttributes->map('ID', 'TitleOptionSummary')->toArray()
 					)->setHasEmptyDefault(true),
@@ -174,7 +183,8 @@ class Attribute extends DataObject implements PermissionProvider {
 		return $fields;
 	}
 
-	public function OptionSummary() {
+	public function OptionSummary()
+	{
 		$summary = '';
 		$options = $this->Options();
 		if ($options && $options->exists()) {
@@ -183,7 +193,8 @@ class Attribute extends DataObject implements PermissionProvider {
 		return $summary;
 	}
 
-	public function TitleOptionSummary() {
+	public function TitleOptionSummary()
+	{
 
 		$optionString = '';
 		$options  = $this->Options();
@@ -193,7 +204,8 @@ class Attribute extends DataObject implements PermissionProvider {
 		return $this->Title . " - $optionString";
 	}
 
-	public function onBeforeWrite() {
+	public function onBeforeWrite()
+	{
 		parent::onBeforeWrite();
 		$this->firstWrite = !$this->isInDB();
 
@@ -208,7 +220,8 @@ class Attribute extends DataObject implements PermissionProvider {
 		}
 	}
 
-	public function onAfterWrite() {
+	public function onAfterWrite()
+	{
 		parent::onAfterWrite();
 
 		//Check if first write
@@ -240,15 +253,17 @@ class Attribute extends DataObject implements PermissionProvider {
 		}
 	}
 
-	public function getOptionField($prev = null) {
+	public function getOptionField($prev = null)
+	{
 		return Attribute_OptionField::create($this, $prev);
 	}
-
 }
 
-class Attribute_OptionField extends DropdownField {
+class Attribute_OptionField extends DropdownField
+{
 
-	public function __construct($attr, $prev = null) {
+	public function __construct($attr, $prev = null)
+	{
 
 		Requirements::javascript(THIRDPARTY_DIR . '/jquery/jquery.js');
 		Requirements::javascript(THIRDPARTY_DIR . '/jquery-entwine/dist/jquery.entwine-dist.js');
@@ -261,7 +276,7 @@ class Attribute_OptionField extends DropdownField {
 		$title = $attr->Title;
 		$source = $product->getOptionsForAttribute($attr->ID)->map();
 		$value = null;
-		
+
 		$this->addExtraClass('dropdown');
 
 		//If previous attribute field exists, listen to it and react with new options
@@ -295,12 +310,13 @@ class Attribute_OptionField extends DropdownField {
 
 			$this->setAttribute('data-map', json_encode($options));
 		}
-		
+
 		parent::__construct($name, $title, $source, $value);
 	}
 }
 
-class Attribute_Default extends Attribute {
+class Attribute_Default extends Attribute
+{
 
 	private static $singular_name = 'Attribute';
 	private static $plural_name = 'Attributes';
@@ -309,16 +325,20 @@ class Attribute_Default extends Attribute {
 		'ShopConfig' => ShopConfig::class
 	);
 
-	public function onBeforeWrite() {
+	public function onBeforeWrite()
+	{
 		parent::onBeforeWrite();
 		$this->ProductID = 0;
 	}
 
-	function getCMSFields() {
+	function getCMSFields()
+	{
 
 		$fields = new FieldList(
-			$rootTab = new TabSet('Root',
-				$tabMain = new Tab('Attribute',
+			$rootTab = new TabSet(
+				'Root',
+				$tabMain = new Tab(
+					'Attribute',
 					TextField::create('Title')
 						->setRightTitle('For displaying on the product page'),
 					TextField::create('Description')
@@ -336,11 +356,9 @@ class Attribute_Default extends Attribute {
 				GridFieldConfig_Basic::create()
 			));
 		}
-		
+
 		$this->extend('updateCMSFields', $fields);
 
 		return $fields;
 	}
 }
-
-

@@ -2,6 +2,12 @@
 
 namespace SwipeStripe\Emails;
 
+use SilverStripe\Control\Director;
+use SilverStripe\Control\Email\Email;
+use SilverStripe\Security\Member;
+use SwipeStripe\Admin\ShopConfig;
+use SwipeStripe\Order\Order;
+
 /**
  * A notification email that is sent to an email address specified in {@link ShopConfig}, usually
  * a site administrator or owner. 

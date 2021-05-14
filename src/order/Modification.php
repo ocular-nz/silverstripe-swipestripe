@@ -3,8 +3,10 @@
 namespace SwipeStripe\Order;
 
 use SilverStripe\Core\ClassInfo;
+use SilverStripe\Forms\FieldList;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DataObject;
+use SwipeStripe\Product\Price;
 
 /**
  * Modification for the {@link Order}, saves data that is set by {@link Modifier}s 
@@ -18,7 +20,8 @@ use SilverStripe\ORM\DataObject;
  * @package swipestripe
  * @subpackage order
  */
-class Modification extends DataObject {
+class Modification extends DataObject
+{
 
 	private static $table_name = 'Modification';
 
@@ -48,7 +51,8 @@ class Modification extends DataObject {
 
 	private static $default_sort = 'SortOrder ASC';
 
-	public static function get_all() {
+	public static function get_all()
+	{
 		$mods = new ArrayList();
 		$temp = array();
 
@@ -60,9 +64,9 @@ class Modification extends DataObject {
 				$temp[$mod->SortOrder] = $mod;
 			}
 		}
-		
+
 		//Sorting the modifications so they are applied in correct order
-		ksort($temp);	
+		ksort($temp);
 
 		foreach ($temp as $mod) {
 			$mods->push($mod);
@@ -70,7 +74,8 @@ class Modification extends DataObject {
 		return $mods;
 	}
 
-	public function Amount() {
+	public function Amount()
+	{
 
 		// TODO: Multi currency
 		$order = $this->Order();
@@ -87,19 +92,21 @@ class Modification extends DataObject {
 	 * 
 	 * @return Price
 	 */
-	public function Price() {
-		
+	public function Price()
+	{
+
 		$amount = $this->Amount();
 		$this->extend('updatePrice', $amount);
 		return $amount;
 	}
 
-	public function add($order, $value = null) {
+	public function add($order, $value = null)
+	{
 		return;
 	}
 
-	public function getFormFields() {
+	public function getFormFields()
+	{
 		return new FieldList();
 	}
-	
 }

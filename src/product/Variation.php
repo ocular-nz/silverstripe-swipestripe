@@ -2,6 +2,7 @@
 
 namespace SwipeStripe\Product;
 
+use SilverStripe\Control\Controller;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\Tab;
@@ -26,7 +27,8 @@ use SwipeStripe\Admin\ShopConfig;
  * @package swipestripe
  * @subpackage product
  */
-class Variation extends DataObject implements PermissionProvider {
+class Variation extends DataObject implements PermissionProvider
+{
 
 	private static $table_name = 'Variation';
 
@@ -42,7 +44,8 @@ class Variation extends DataObject implements PermissionProvider {
 		'SortOrder' => 'Int'
 	);
 
-	public function Amount() {
+	public function Amount()
+	{
 
 		$amount = Price::create();
 		$amount->setCurrency($this->Currency);
@@ -55,8 +58,9 @@ class Variation extends DataObject implements PermissionProvider {
 		return $amount;
 	}
 
-	public function Price() {
-		
+	public function Price()
+	{
+
 		$amount = $this->Amount();
 
 		//Transform price here for display in different currencies etc.
@@ -73,7 +77,7 @@ class Variation extends DataObject implements PermissionProvider {
 	private static $has_one = array(
 		'Product' => Product::class
 	);
-	
+
 	/**
 	 * Many many relation for a Variation
 	 * 
@@ -82,7 +86,7 @@ class Variation extends DataObject implements PermissionProvider {
 	private static $many_many = array(
 		'Options' => Option::class
 	);
-	
+
 	/**
 	 * Summary fields for displaying Variations in the CMS
 	 * 
@@ -93,7 +97,7 @@ class Variation extends DataObject implements PermissionProvider {
 		'SummaryOfPrice' => 'Added Price',
 		'Status' => 'Status',
 	);
-	
+
 	/**
 	 * Versioning for a Variation, so that Orders can access the version 
 	 * that was purchased and correct information can be retrieved.
@@ -110,44 +114,49 @@ class Variation extends DataObject implements PermissionProvider {
 
 	private static $default_sort = 'SortOrder';
 
-	public function providePermissions() {
+	public function providePermissions()
+	{
 		return array(
 			'EDIT_VARIATIONS' => 'Edit Variations',
 		);
 	}
 
-	public function canEdit($member = null) {
+	public function canEdit($member = null)
+	{
 		$extended = $this->extendedCan(__FUNCTION__, $member);
-		if($extended !== null) {
+		if ($extended !== null) {
 			return $extended;
 		}
 		return Permission::check('EDIT_VARIATIONS');
 	}
 
-	public function canView($member = null) {
+	public function canView($member = null)
+	{
 		$extended = $this->extendedCan(__FUNCTION__, $member);
-		if($extended !== null) {
+		if ($extended !== null) {
 			return $extended;
 		}
 		return true;
 	}
 
-	public function canDelete($member = null) {
+	public function canDelete($member = null)
+	{
 		$extended = $this->extendedCan(__FUNCTION__, $member);
-		if($extended !== null) {
+		if ($extended !== null) {
 			return $extended;
 		}
 		return Permission::check('EDIT_VARIATIONS');
 	}
 
-	public function canCreate($member = null, $context = []) {
+	public function canCreate($member = null, $context = [])
+	{
 		$extended = $this->extendedCan(__FUNCTION__, $member);
-		if($extended !== null) {
+		if ($extended !== null) {
 			return $extended;
 		}
 		return Permission::check('EDIT_VARIATIONS');
 	}
-	
+
 	/**
 	 * Overloaded magic method so that attribute values can be retrieved for display 
 	 * in CTFs etc.
@@ -155,42 +164,45 @@ class Variation extends DataObject implements PermissionProvider {
 	 * @see ViewableData::__get()
 	 * @see Product::getCMSFields()
 	 */
-	public function __get($property) {
+	public function __get($property)
+	{
 
 		if (strpos($property, 'AttributeValue_') === 0) {
 			return $this->SummaryOfOptionValueForAttribute(str_replace('AttributeValue_', '', $property));
-		}
-		else {
+		} else {
 			return parent::__get($property);
 		}
 	}
-	
+
 	/**
 	 * Get a Variation option for an attribute
 	 * 
 	 * @param Int $attributeID
 	 * @return Option
 	 */
-	public function getOptionForAttribute($attributeID) {
+	public function getOptionForAttribute($attributeID)
+	{
 		$options = $this->Options();
 		if ($options && $options->exists()) foreach ($options as $option) {
-			
+
 			if ($option->AttributeID == $attributeID) {
 				return $option;
 			}
-		} 
+		}
 		return null;
 	}
-	
+
 	/**
 	 * Add fields for editing a Variation in the CMS popup.
 	 * 
 	 * @return FieldList
 	 */
-	public function getCMSFields() {
+	public function getCMSFields()
+	{
 
 		$fields = new FieldList(
-			$rootTab = new TabSet('Root',
+			$rootTab = new TabSet(
+				'Root',
 				$tabMain = new Tab('Variation')
 			)
 		);
@@ -207,13 +219,15 @@ class Variation extends DataObject implements PermissionProvider {
 			$fields->addFieldToTab('Root.Variation', $optionField);
 		}
 
-		$fields->addFieldToTab('Root.Variation', PriceField::create('Price', 'Price')
-			->setRightTitle('Amount that this variation will increase the base product price by')
+		$fields->addFieldToTab(
+			'Root.Variation',
+			PriceField::create('Price', 'Price')
+				->setRightTitle('Amount that this variation will increase the base product price by')
 		);
 
 		$fields->addFieldToTab('Root.Variation', DropdownField::create(
-			'Status', 
-			'Status', 
+			'Status',
+			'Status',
 			$this->dbObject('Status')->enumValues()
 		)->setRightTitle('You can disable a variation to prevent it being sold'));
 
@@ -221,7 +235,7 @@ class Variation extends DataObject implements PermissionProvider {
 
 		return $fields;
 	}
-	
+
 	/**
 	 * Get a summary of the Options, helper method for displaying Options nicely
 	 * 
@@ -229,19 +243,20 @@ class Variation extends DataObject implements PermissionProvider {
 	 * 
 	 * @return String
 	 */
-	public function SummaryOfOptions() {
+	public function SummaryOfOptions()
+	{
 		$options = $this->Options();
 		$options->sort('AttributeID');
-		
+
 		$temp = array();
 		$summary = '';
 		if ($options && $options->exists()) foreach ($options as $option) {
 			$temp[] = '<strong>' . $option->Attribute()->Title . ':</strong> ' . $option->Title;
-		} 
+		}
 		$summary = implode('<br /> ', $temp);
 		return $summary;
 	}
-	
+
 	/**
 	 * Get attribute option value, helper method
 	 * 
@@ -249,65 +264,69 @@ class Variation extends DataObject implements PermissionProvider {
 	 * @param Int $attributeID
 	 * @return String
 	 */
-	public function SummaryOfOptionValueForAttribute($attributeID) {
+	public function SummaryOfOptionValueForAttribute($attributeID)
+	{
 
 		$options = $this->Options();
 		if ($options && $options->exists()) foreach ($options as $option) {
 			if ($option->AttributeID == $attributeID) {
 				return $option->Title;
 			}
-		} 
+		}
 		return null;
 	}
-	
+
 	/**
 	 * Summarize the Product price, returns Amount formatted with Nice()
 	 * 
 	 * @return String
 	 */
-	public function SummaryOfPrice() {
+	public function SummaryOfPrice()
+	{
 		return $this->Amount()->Nice();
 	}
-	
+
 	/**
 	 * Validate that this variation is suitable for adding to the cart.
 	 * 
 	 * @return ValidationResult
 	 */
-	public function validateForCart() {
-		
-		$result = new ValidationResult(); 
-		
+	public function validateForCart()
+	{
+
+		$result = new ValidationResult();
+
 		// if (!$this->hasValidOptions()) {
 		//   $result->error(
 		//     'This product does not have valid options set',
 		//     'VariationValidOptionsError'
 		//   );
 		// }
-		
+
 		if (!$this->isEnabled()) {
 			$result->error(
 				'These product options are not available sorry, please choose again',
 				'VariationValidOptionsError'
 			);
 		}
-		
+
 		if ($this->isDeleted()) {
 			$result->error(
 				'These product options have been deleted sorry, please choose again',
 				'VariationDeltedError'
 			);
 		}
-		
+
 		return $result;
 	}
-	
+
 	/**
 	 * Convenience method to check that this Variation has valid options.
 	 * 
 	 * @return Boolean
 	 */
-	public function hasValidOptions() {
+	public function hasValidOptions()
+	{
 
 		//Get the options for the product
 		//Get the attributes for the product
@@ -324,18 +343,20 @@ class Variation extends DataObject implements PermissionProvider {
 
 		$variationAttributeOptions = array();
 		$variationOptions = $this->Options();
-		
+
 		if (!$variationOptions || !$variationOptions->exists()) return false;
 		foreach ($variationOptions as $option) {
 			$variationAttributeOptions[$option->AttributeID] = $option->ID;
 		}
 
 		//If attributes are not equal between product and variation, variation is invalid
-		if (array_diff_key($productAttributeOptions, $variationAttributeOptions)
-		 || array_diff_key($variationAttributeOptions, $productAttributeOptions)) {
+		if (
+			array_diff_key($productAttributeOptions, $variationAttributeOptions)
+			|| array_diff_key($variationAttributeOptions, $productAttributeOptions)
+		) {
 			return false;
 		}
-		
+
 		foreach ($productAttributeOptions as $attributeID => $validOptionIDs) {
 			if (!array_key_exists($variationAttributeOptions[$attributeID], $validOptionIDs)) {
 				return false;
@@ -344,22 +365,23 @@ class Variation extends DataObject implements PermissionProvider {
 
 		return true;
 	}
-	
+
 	/**
 	 * Convenience method to check that this Variation is not a duplicate.
 	 * 
 	 * @see Varaition::validate()
 	 * @return Boolean
 	 */
-	public function isDuplicate() {
+	public function isDuplicate()
+	{
 
 		//Hacky way to get new option IDs from $this->record because $this->Options() returns existing options
 		//not the new ones passed in POST data    
 		$attributeIDs = $this->Product()->Attributes()->getIDList();
 		$variationAttributeOptions = array();
 		if ($attributeIDs) foreach ($attributeIDs as $attributeID) {
-			
-			$attributeOptionID = (isset($this->record['Options[' . $attributeID .']'])) ? $this->record['Options[' . $attributeID .']'] : null;
+
+			$attributeOptionID = (isset($this->record['Options[' . $attributeID . ']'])) ? $this->record['Options[' . $attributeID . ']'] : null;
 			if ($attributeOptionID) {
 				$variationAttributeOptions[$attributeID] = $attributeOptionID;
 			}
@@ -369,13 +391,13 @@ class Variation extends DataObject implements PermissionProvider {
 
 			$product = $this->Product();
 			$variations = DataObject::get('Variation', "\"Variation\".\"ProductID\" = " . $product->ID . " AND \"Variation\".\"ID\" != " . $this->ID);
-			
+
 			if ($variations) foreach ($variations as $variation) {
-	
+
 				$tempAttrOptions = array();
 				if ($variation->Options()) foreach ($variation->Options() as $option) {
 					$tempAttrOptions[$option->AttributeID] = $option->ID;
-				} 
+				}
 
 				if ($tempAttrOptions == $variationAttributeOptions) {
 					return true;
@@ -384,7 +406,7 @@ class Variation extends DataObject implements PermissionProvider {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * If current variation is enabled, checks lastest version of variation because status is saved
 	 * in versions. So a variation can be saved as enabled, the version can be added to cart, then
@@ -392,31 +414,34 @@ class Variation extends DataObject implements PermissionProvider {
 	 * 
 	 * @return Boolean
 	 */
-	public function isEnabled() {
+	public function isEnabled()
+	{
 
 		$latestVersion = Versioned::get_latest_version('Variation', $this->ID);
 		$enabled = $latestVersion->Status == 'Enabled';
 		$this->extend('isEnabled', $enabled);
 		return $enabled;
 	}
-	
+
 	/**
 	 * Check if the variation has been deleted, need to check the actual variation and not just this version.
 	 * 
 	 * @return Boolean
 	 */
-	public function isDeleted() {
-		
+	public function isDeleted()
+	{
+
 		$latest = DataObject::get_by_id('Variation', $this->ID);
 		return (!$latest || !$latest->exists());
 	}
-	
+
 	/**
 	 * Check if {@link Variation} amount is a negative value
 	 * 
 	 * @return Boolean
 	 */
-	public function isNegativeAmount() {
+	public function isNegativeAmount()
+	{
 		return $this->Amount()->getAmount() < 0;
 	}
 
@@ -426,9 +451,10 @@ class Variation extends DataObject implements PermissionProvider {
 	 * @see DataObject::validate()
 	 * @return ValidationResult
 	 */
-	public function validate() {
-		
-		$result = new ValidationResult(); 
+	public function validate()
+	{
+
+		$result = new ValidationResult();
 
 		if ($this->isDuplicate()) {
 			$result->error(
@@ -445,7 +471,7 @@ class Variation extends DataObject implements PermissionProvider {
 		}
 		return $result;
 	}
-	
+
 	/**
 	 * Unpublish {@link Product}s if after the Variations have been saved there are no enabled Variations.
 	 * 
@@ -453,7 +479,8 @@ class Variation extends DataObject implements PermissionProvider {
 	 * 
 	 * @see DataObject::onAfterWrite()
 	 */
-	protected function onAfterWrite() {
+	protected function onAfterWrite()
+	{
 		parent::onAfterWrite();
 
 		//Save the variation options (pretty hacky TODO this with HasManyList)
@@ -485,14 +512,15 @@ class Variation extends DataObject implements PermissionProvider {
 		//   $product->doUnpublish(); 
 		// }
 	}
-	
+
 	/**
 	 * Update stock level associated with this Variation.
 	 * 
 	 * (non-PHPdoc)
 	 * @see DataObject::onBeforeWrite()
 	 */
-	public function onBeforeWrite() {
+	public function onBeforeWrite()
+	{
 		parent::onBeforeWrite();
 
 		//Save in base currency
@@ -501,7 +529,8 @@ class Variation extends DataObject implements PermissionProvider {
 	}
 }
 
-class Variation_Options extends DataObject {
+class Variation_Options extends DataObject
+{
 
 	private static $has_one = array(
 		'Variation' => Variation::class,

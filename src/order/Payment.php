@@ -16,7 +16,8 @@ use SilverStripe\ORM\DataExtension;
  * @package swipestripe
  * @subpackage order
  */
-class Payment_Extension extends DataExtension {
+class Payment_Extension extends DataExtension
+{
 
 	private static $has_one = array(
 		'Order' => Order::class //Need to add Order here for ModelAdmin
@@ -35,7 +36,8 @@ class Payment_Extension extends DataExtension {
 	 * @see DataObjectDecorator::canCreate()
 	 * @return Boolean False always
 	 */
-	function canCreate($member = null) {
+	function canCreate($member = null)
+	{
 		return false;
 	}
 
@@ -45,19 +47,21 @@ class Payment_Extension extends DataExtension {
 	 * @see DataObjectDecorator::canDelete()
 	 * @return Boolean False always
 	 */
-	function canDelete($member = null) {
+	function canDelete($member = null)
+	{
 		return false;
 	}
-	
+
 	/**
 	 * Helper to get a nicely formatted amount for this {@link Payment}
 	 * 
 	 * @return String Payment amount formatted with Nice()
 	 */
-	function SummaryOfAmount() {
+	function SummaryOfAmount()
+	{
 		return $this->owner->dbObject('Amount')->Nice();
 	}
-	
+
 	/**
 	 * Fields to display this {@link Payment} in the CMS, removed some of the 
 	 * unnecessary fields.
@@ -65,7 +69,8 @@ class Payment_Extension extends DataExtension {
 	 * @see DataObjectDecorator::updateCMSFields()
 	 * @return FieldList
 	 */
-	function updateCMSFields(FieldList $fields) {
+	function updateCMSFields(FieldList $fields)
+	{
 
 		$fields->removeByName('OrderID');
 		$fields->removeByName('HTTPStatus');
@@ -83,7 +88,8 @@ class Payment_Extension extends DataExtension {
 	 * @see Order::onAfterPayment()
 	 * @see DataObjectDecorator::onAfterWrite()
 	 */
-	function onAfterWrite() {
+	function onAfterWrite()
+	{
 
 		$order = $this->owner->Order();
 
@@ -94,9 +100,11 @@ class Payment_Extension extends DataExtension {
 	}
 }
 
-class Payment_ProcessorExtension extends Extension {
+class Payment_ProcessorExtension extends Extension
+{
 
-	public function onBeforeRedirect() {
+	public function onBeforeRedirect()
+	{
 
 		$order = $this->owner->payment->Order();
 		if ($order && $order->exists()) {

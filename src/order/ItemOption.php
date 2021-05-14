@@ -13,7 +13,8 @@ use SwipeStripe\Product\Price;
  * @package swipestripe
  * @subpackage order
  */
-class ItemOption extends DataObject {
+class ItemOption extends DataObject
+{
 
 	private static $table_name = 'ItemOption';
 
@@ -36,7 +37,8 @@ class ItemOption extends DataObject {
 		'Price' => 'Decimal(19,8)'
 	);
 
-	public function Amount() {
+	public function Amount()
+	{
 
 		// TODO: Multi currency
 
@@ -54,8 +56,9 @@ class ItemOption extends DataObject {
 	 * 
 	 * @return Price
 	 */
-	public function Price() {
-		
+	public function Price()
+	{
+
 		$amount = $this->Amount();
 
 		//Transform price here for display in different currencies etc.
@@ -64,8 +67,8 @@ class ItemOption extends DataObject {
 		return $amount;
 	}
 
-	public function Order() {
+	public function Order()
+	{
 		return $this->Item()->Order();
 	}
-
 }

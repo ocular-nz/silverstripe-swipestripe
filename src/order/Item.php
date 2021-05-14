@@ -12,7 +12,8 @@ use SwipeStripe\Product\Variation;
 /**
  * An Item for an {@link Order}.
  */
-class Item extends DataObject {
+class Item extends DataObject
+{
 
 	private static $table_name = 'Item';
 
@@ -30,7 +31,8 @@ class Item extends DataObject {
 		'VariationVersion' => 'Int'
 	);
 
-	public function Amount() {
+	public function Amount()
+	{
 
 		// TODO: Multi currency
 
@@ -40,9 +42,9 @@ class Item extends DataObject {
 		$amount->setAmount($this->Price);
 		$amount->setCurrency($order->BaseCurrency);
 		$amount->setSymbol($order->BaseCurrencySymbol);
-		
+
 		$this->extend('updateAmount', $amount);
-		
+
 		return $amount;
 	}
 
@@ -51,8 +53,9 @@ class Item extends DataObject {
 	 * 
 	 * @return Price
 	 */
-	public function Price() {
-		
+	public function Price()
+	{
+
 		$amount = $this->Amount();
 
 		//Transform price here for display in different currencies etc.
@@ -71,7 +74,7 @@ class Item extends DataObject {
 		'Product' => Product::class,
 		'Variation' => Variation::class
 	);
-	
+
 	/**
 	 * Relations for this class
 	 * 
@@ -80,7 +83,7 @@ class Item extends DataObject {
 	private static $has_many = array(
 		'ItemOptions' => ItemOption::class
 	);
-	
+
 	/**
 	 * Default values for this class
 	 * 
@@ -89,23 +92,25 @@ class Item extends DataObject {
 	private static $defaults = array(
 		'Quantity' => 1
 	);
-	
+
 	/**
 	 * Find item options and delete them to clean up DB.
 	 * 
 	 * @see DataObject::onBeforeDelete()
 	 */
-	public function onBeforeDelete() {
+	public function onBeforeDelete()
+	{
 		parent::onBeforeDelete();
-		
-		$itemOptions = DataObject::get(ItemOption::class, 'ItemID = '.$this->ID);
+
+		$itemOptions = DataObject::get(ItemOption::class, 'ItemID = ' . $this->ID);
 		if ($itemOptions && $itemOptions->exists()) foreach ($itemOptions as $itemOption) {
 			$itemOption->delete();
 			$itemOption->destroy();
 		}
 	}
 
-	public function UnitAmount() {
+	public function UnitAmount()
+	{
 
 		$itemAmount = $this->Amount();
 
@@ -113,26 +118,27 @@ class Item extends DataObject {
 
 		foreach ($this->ItemOptions() as $itemOption) {
 			$amount += $itemOption->Amount()->getAmount();
-		} 
+		}
 
 		$unitAmount = clone $itemAmount;
 		$unitAmount->setAmount($amount);
 		return $unitAmount;
 	}
-	
+
 	/**
 	 * Get unit price for this Item including price of any {@link ItemOption}s.
 	 * 
 	 * @return Money Item price inclusive of item options prices
 	 */
-	public function UnitPrice() {
+	public function UnitPrice()
+	{
 
 		$itemPrice = $this->Price();
 		$amount = $itemPrice->getAmount();
 
 		foreach ($this->ItemOptions() as $itemOption) {
 			$amount += $itemOption->Price()->getAmount();
-		} 
+		}
 
 		// TODO: Multi currency
 
@@ -140,20 +146,22 @@ class Item extends DataObject {
 		$unitPrice->setAmount($amount);
 		return $unitPrice;
 	}
-	
+
 	/**
 	 * Get unit price for this item including item options price and quantity.
 	 * 
 	 * @return Price Item total inclusive of item options prices and quantity
 	 */
-	public function Total() {
+	public function Total()
+	{
 
 		$unitAmount = $this->UnitAmount();
 		$unitAmount->setAmount($unitAmount->getAmount() * $this->Quantity);
 		return $unitAmount;
 	}
 
-	public function TotalPrice() {
+	public function TotalPrice()
+	{
 
 		$unitPrice = $this->UnitPrice();
 		$unitPrice->setAmount($unitPrice->getAmount() * $this->Quantity);
@@ -166,28 +174,31 @@ class Item extends DataObject {
 	 * 
 	 * @return Mixed Variation if it exists, otherwise null
 	 */
-	function Variation() {
+	function Variation()
+	{
 		return ($this->VariationID) ? Versioned::get_version(Variation::class, $this->VariationID, $this->VariationVersion) : null;
 	}
-	
+
 	/**
 	 * Get the product for the item
 	 * 
 	 * @return Mixed Product if it exists, otherwise null
 	 */
-	function Product() {
+	function Product()
+	{
 		return Versioned::get_version(Product::class, $this->ProductID, $this->ProductVersion);
 	}
-	
+
 	/**
 	 * Validate this Item to make sure it can be added to a cart.
 	 * 
 	 * @return ValidationResult
 	 */
-	function validateForCart() {
+	function validateForCart()
+	{
 		return $this->validate();
 	}
-	
+
 	/**
 	 * Validate that product exists and is published, variation exists for product if necessary
 	 * and quantity is greater than 0
@@ -195,10 +206,11 @@ class Item extends DataObject {
 	 * @see DataObject::validate()
 	 * @return ValidationResult
 	 */
-	function validate() {
+	function validate()
+	{
 
-		$result = new ValidationResult(); 
-		
+		$result = new ValidationResult();
+
 		$product = $this->Product();
 		$variation = $this->Variation();
 		$quantity = $this->Quantity;
@@ -225,7 +237,7 @@ class Item extends DataObject {
 				'VariationIncorrectError'
 			);
 		}
-		
+
 		//Check that quantity is correct
 		if (!$quantity || !is_numeric($quantity) || $quantity <= 0 || $quantity > 2147483647) {
 			$result->error(
@@ -236,7 +248,8 @@ class Item extends DataObject {
 		return $result;
 	}
 
-	public function SummaryOfOptions() {
+	public function SummaryOfOptions()
+	{
 
 		//TODO: Make this more flexible for formatting
 

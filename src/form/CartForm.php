@@ -14,6 +14,7 @@ use SilverStripe\View\Requirements;
 use SwipeStripe\Customer\Cart;
 use SwipeStripe\Order\Item;
 use SilverStripe\Control\RequestHandler;
+use SilverStripe\Dev\Debug;
 use SwipeStripe\Customer\CheckoutPage;
 
 /**
@@ -24,17 +25,18 @@ use SwipeStripe\Customer\CheckoutPage;
  * @package swipestripe
  * @subpackage form
  */
-class CartForm extends Form implements LoggerAwareInterface {
+class CartForm extends Form implements LoggerAwareInterface
+{
 
 	use LoggerAwareTrait;
-	
+
 	/**
 	 * The current {@link Order} (cart).
 	 * 
 	 * @var Order
 	 */
 	public $order;
-	
+
 	/**
 	 * Construct the form, set the current order and the template to be used for rendering.
 	 * 
@@ -45,7 +47,8 @@ class CartForm extends Form implements LoggerAwareInterface {
 	 * @param Validator $validator
 	 * @param Order $currentOrder
 	 */
-	function __construct($controller = null, $name = SELF::DEFAULT_NAME) {
+	function __construct($controller = null, $name = SELF::DEFAULT_NAME)
+	{
 
 		parent::__construct($controller, $name, FieldList::create(), FieldList::create(), null);
 
@@ -69,7 +72,8 @@ class CartForm extends Form implements LoggerAwareInterface {
 	 * Set up current form errors in session to
 	 * the current form if appropriate.
 	 */
-	public function setupFormErrors() {
+	public function setupFormErrors()
+	{
 
 		//Only run when fields exist
 		if ($this->fields->exists()) {
@@ -77,7 +81,8 @@ class CartForm extends Form implements LoggerAwareInterface {
 		}
 	}
 
-	public function createFields() {
+	public function createFields()
+	{
 
 		$fields = FieldList::create();
 		$items = $this->order->Items();
@@ -85,10 +90,10 @@ class CartForm extends Form implements LoggerAwareInterface {
 		if ($items) foreach ($items as $item) {
 
 			$fields->push(CartForm_QuantityField::create(
-				'Quantity['.$item->ID.']', 
-				$item->Quantity, 
+				'Quantity[' . $item->ID . ']',
+				$item->Quantity,
 				$item
-			)); 
+			));
 		}
 
 		$this->extend('updateFields', $fields);
@@ -96,7 +101,8 @@ class CartForm extends Form implements LoggerAwareInterface {
 		return $fields;
 	}
 
-	public function createActions() {
+	public function createActions()
+	{
 
 		$actions = FieldList::create(
 			FormAction::create('updateCart', _t('CartForm.UPDATE_CART', 'Update Cart')),
@@ -107,13 +113,14 @@ class CartForm extends Form implements LoggerAwareInterface {
 		return $actions;
 	}
 
-	public function createValidator() {
+	public function createValidator()
+	{
 
 		$validator = RequiredFields::create();
 
 		$items = $this->order->Items();
 		if ($items) foreach ($items as $item) {
-			$validator->addRequiredField('Quantity['.$item->ID.']');
+			$validator->addRequiredField('Quantity[' . $item->ID . ']');
 		}
 
 		$this->extend('updateValidator', $validator);
@@ -127,7 +134,8 @@ class CartForm extends Form implements LoggerAwareInterface {
 	 * @param Array $data Data submitted from the form via POST
 	 * @param Form $form Form that data was submitted from
 	 */
-	public function updateCart(Array $data, Form $form) {
+	public function updateCart(array $data, Form $form)
+	{
 
 		$this->saveCart($data, $form);
 		$this->controller->redirectBack();
@@ -139,14 +147,14 @@ class CartForm extends Form implements LoggerAwareInterface {
 	 * @param Array $data Data submitted from the form via POST
 	 * @param Form $form Form that data was submitted from
 	 */
-	public function goToCheckout(Array $data, Form $form) {
+	public function goToCheckout(array $data, Form $form)
+	{
 
 		$this->saveCart($data, $form);
-		
+
 		if ($checkoutPage = DataObject::get_one(CheckoutPage::class)) {
 			$this->controller->redirect($checkoutPage->AbsoluteLink());
-		}
-		else Debug::friendlyError(500);
+		} else Debug::friendlyError(500);
 	}
 
 
@@ -156,9 +164,10 @@ class CartForm extends Form implements LoggerAwareInterface {
 	 * @param array $data Data submitted from the form via POST
 	 * @param Form $form Form that data was submitted from
 	 */
-	private function saveCart(array $data, Form $form) {
+	private function saveCart(array $data, Form $form)
+	{
 		$currentOrder = Cart::get_current_order();
-		$quantities = (isset($data['Quantity'])) ?$data['Quantity'] :null;
+		$quantities = (isset($data['Quantity'])) ? $data['Quantity'] : null;
 
 		if ($quantities) foreach ($quantities as $itemID => $quantity) {
 
@@ -168,8 +177,7 @@ class CartForm extends Form implements LoggerAwareInterface {
 					$this->logger->notice(new \Exception(print_r($item->toMap(), true)), []);
 
 					$item->delete();
-				}
-				else {
+				} else {
 					$item->Quantity = $quantity;
 					$item->write();
 				}
@@ -183,16 +191,17 @@ class CartForm extends Form implements LoggerAwareInterface {
 	 * 
 	 * @return Order The current order (cart)
 	 */
-	public function Cart() {
+	public function Cart()
+	{
 		return $this->order;
 	}
-	
 }
 
 /**
  * Quantity field for displaying each {@link Item} in an {@link Order} on the {@link CartPage}.
  */
-class CartForm_QuantityField extends TextField {
+class CartForm_QuantityField extends TextField
+{
 
 	/**
 	 * Template for rendering the field
@@ -200,14 +209,14 @@ class CartForm_QuantityField extends TextField {
 	 * @var String
 	 */
 	protected $template = "CartForm_QuantityField";
-	
+
 	/**
 	 * Current {@link Item} represented by this field.
 	 * 
 	 *  @var Item
 	 */
 	protected $item;
-	
+
 	/**
 	 * Construct the field and set the current {@link Item} that this field represents.
 	 * 
@@ -218,40 +227,44 @@ class CartForm_QuantityField extends TextField {
 	 * @param Form $form
 	 * @param Item $item
 	 */
-	function __construct($name, $value = "", $item = null){
+	function __construct($name, $value = "", $item = null)
+	{
 
 		$this->item = $item;
 		parent::__construct($name, '', $value, null, null);
 	}
-	
+
 	/**
 	 * Render the field with the appropriate template.
 	 * 
 	 * @see FormField::FieldHolder()
 	 */
-	function FieldHolder($properties = array()) {
+	function FieldHolder($properties = array())
+	{
 		$obj = ($properties) ? $this->customise($properties) : $this;
 		return $this->renderWith($this->template);
 	}
-	
+
 	/**
 	 * Retrieve the current {@link Item} this field represents. Used in the template.
 	 * 
 	 * @return Item
 	 */
-	function Item() {
+	function Item()
+	{
 		return $this->item;
 	}
-	
+
 	/**
 	 * Set the current {@link Item} this field represents
 	 * 
 	 * @param Item $item
 	 */
-	function setItem(Item $item) {
+	function setItem(Item $item)
+	{
 		$this->item = $item;
 	}
-	
+
 	/**
 	 * Validate this field, check that the current {@link Item} is in the current 
 	 * {@Link Order} and is valid for adding to the cart.
@@ -259,7 +272,8 @@ class CartForm_QuantityField extends TextField {
 	 * @see FormField::validate()
 	 * @return Boolean
 	 */
-	function validate($validator) {
+	function validate($validator)
+	{
 
 		$valid = true;
 		$item = $this->Item();
@@ -274,20 +288,19 @@ class CartForm_QuantityField extends TextField {
 
 		//Check that item exists and is in the current order
 		if (!$item || !$item->exists() || !$items->find('ID', $item->ID)) {
-			
+
 			$errorMessage = _t('Form.ITEM_IS_NOT_IN_ORDER', 'This product is not in the Cart.');
 			if ($msg = $this->getCustomValidationMessage()) {
 				$errorMessage = $msg;
 			}
-			
+
 			$validator->validationError(
 				$this->getName(),
 				$errorMessage,
 				"error"
 			);
 			$valid = false;
-		}
-		else if ($item) {
+		} else if ($item) {
 
 			//If removing item, cannot subtract past 0
 			if ($removingItem) {
@@ -296,7 +309,7 @@ class CartForm_QuantityField extends TextField {
 					if ($msg = $this->getCustomValidationMessage()) {
 						$errorMessage = $msg;
 					}
-					
+
 					$validator->validationError(
 						$this->getName(),
 						$errorMessage,
@@ -304,28 +317,26 @@ class CartForm_QuantityField extends TextField {
 					);
 					$valid = false;
 				}
-			}
-			else {
+			} else {
 				//If quantity is invalid
 				if ($quantity == null || !is_numeric($quantity)) {
 					$errorMessage = _t('Form.ITEM_QUANTITY_INCORRECT', 'The quantity must be a number');
 					if ($msg = $this->getCustomValidationMessage()) {
 						$errorMessage = $msg;
 					}
-					
+
 					$validator->validationError(
 						$this->getName(),
 						$errorMessage,
 						"error"
 					);
 					$valid = false;
-				}
-				else if ($quantity > 2147483647) {
+				} else if ($quantity > 2147483647) {
 					$errorMessage = _t('Form.ITEM_QUANTITY_INCORRECT', 'The quantity must be less than 2,147,483,647');
 					if ($msg = $this->getCustomValidationMessage()) {
 						$errorMessage = $msg;
 					}
-					
+
 					$validator->validationError(
 						$this->getName(),
 						$errorMessage,
@@ -336,12 +347,12 @@ class CartForm_QuantityField extends TextField {
 
 				$validation = $item->validateForCart();
 				if (!$validation->valid()) {
-					
+
 					$errorMessage = $validation->message();
 					if ($msg = $this->getCustomValidationMessage()) {
 						$errorMessage = $msg;
 					}
-					
+
 					$validator->validationError(
 						$this->getName(),
 						$errorMessage,
@@ -351,12 +362,12 @@ class CartForm_QuantityField extends TextField {
 				}
 			}
 		}
-		
+
 		return $valid;
 	}
 
-	public function Type() {
-		return 'cartquantity';	
+	public function Type()
+	{
+		return 'cartquantity';
 	}
-	
 }

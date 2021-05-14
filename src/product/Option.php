@@ -17,7 +17,8 @@ use SilverStripe\Security\PermissionProvider;
  * @package swipestripe
  * @subpackage product
  */
-class Option extends DataObject implements PermissionProvider {
+class Option extends DataObject implements PermissionProvider
+{
 
 	private static $singular_name = 'Option';
 	private static $plural_name = 'Options';
@@ -44,7 +45,7 @@ class Option extends DataObject implements PermissionProvider {
 		'Attribute' => Attribute::class,
 		'Product' => Product::class
 	);
-	
+
 	/**
 	 * Belongs many many relations for an Option
 	 * 
@@ -56,45 +57,51 @@ class Option extends DataObject implements PermissionProvider {
 
 	private static $default_sort = 'SortOrder';
 
-	public function providePermissions() {
+	public function providePermissions()
+	{
 		return array(
 			'EDIT_OPTIONS' => 'Edit Options',
 		);
 	}
 
-	public function canEdit($member = null) {
+	public function canEdit($member = null)
+	{
 		$extended = $this->extendedCan(__FUNCTION__, $member);
-		if($extended !== null) {
+		if ($extended !== null) {
 			return $extended;
 		}
 		return Permission::check('EDIT_OPTIONS');
 	}
 
-	public function canView($member = null) {
+	public function canView($member = null)
+	{
 		$extended = $this->extendedCan(__FUNCTION__, $member);
-		if($extended !== null) {
+		if ($extended !== null) {
 			return $extended;
 		}
 		return true;
 	}
 
-	public function canDelete($member = null) {
+	public function canDelete($member = null)
+	{
 		$extended = $this->extendedCan(__FUNCTION__, $member);
-		if($extended !== null) {
+		if ($extended !== null) {
 			return $extended;
 		}
 		return Permission::check('EDIT_OPTIONS');
 	}
 
-	public function canCreate($member = null, $context = []) {
+	public function canCreate($member = null, $context = [])
+	{
 		$extended = $this->extendedCan(__FUNCTION__, $member);
-		if($extended !== null) {
+		if ($extended !== null) {
 			return $extended;
 		}
 		return Permission::check('EDIT_OPTIONS');
 	}
 
-	public function getCMSFields() {
+	public function getCMSFields()
+	{
 		$fields = parent::getCMSFields();
 		$fields->removeByName('Variations');
 		$fields->removeByName('ProductID');
@@ -102,15 +109,16 @@ class Option extends DataObject implements PermissionProvider {
 		$fields->removeByName('SortOrder');
 		return $fields;
 	}
-
 }
 
-class Option_Default extends Option {
+class Option_Default extends Option
+{
 
 	private static $singular_name = 'Option';
 	private static $plural_name = 'Options';
 
-	public function onBeforeWrite() {
+	public function onBeforeWrite()
+	{
 		parent::onBeforeWrite();
 		$this->ProductID = 0;
 	}
