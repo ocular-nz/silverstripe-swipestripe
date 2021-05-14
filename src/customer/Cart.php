@@ -6,6 +6,7 @@ use SilverStripe\Control\Director;
 use SilverStripe\Control\Session;
 use SilverStripe\Core\Extension;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\FieldType\DBDatetime;
 
 /**
  * Extends {@link Page_Controller} adding some functions to retrieve the current cart, 
@@ -94,7 +95,7 @@ class Cart extends Extension {
 
 		$orderID = Session::get('Cart.OrderID');
 		if ($orderID && $order = DataObject::get_by_id('Order', $orderID)) {
-			$order->LastActive = SS_Datetime::now()->getValue();
+			$order->LastActive = DBDatetime::now()->getValue();
 			$order->write();
 		}
 	}

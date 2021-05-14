@@ -7,6 +7,8 @@ use Page_Controller;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use SilverStripe\Security\Security;
+use SilverStripe\View\Requirements;
+use SwipeStripe\Form\CartForm;
 
 /**
  * A cart page for the frontend to display contents of a cart to a visitor.

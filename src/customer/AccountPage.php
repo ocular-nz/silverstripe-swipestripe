@@ -11,6 +11,7 @@ use SilverStripe\ORM\DB;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\Security;
 use SilverStripe\View\Requirements;
+use SwipeStripe\Form\RepayForm;
 use SwipeStripe\Order\Order;
 
 /**

@@ -1,4 +1,9 @@
-<?php\nnamespace SwipeStripe;
+<?php
+
+namespace SwipeStripe\Tests;
+
+use SwipeStripe\Customer\Cart;
+
 /**
  * Testing {@link Product}s added and removed from {@link Order}s.
  * 

@@ -9,6 +9,7 @@ use SilverStripe\ORM\DB;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
 use SilverStripe\View\Requirements;
+use SwipeStripe\Form\OrderForm;
 
 /**
  * A checkout page for displaying the checkout form to a visitor.
