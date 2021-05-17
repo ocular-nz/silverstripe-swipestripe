@@ -92,9 +92,9 @@ class Product extends Page
 	 * @var Array
 	 */
 	private static $has_many = array(
-		'Attributes' => 'Attribute',
-		'Options' => 'Option',
-		'Variations' => 'Variation'
+		'Attributes' => Attribute::class,
+		'Options' => Option::class,
+		'Variations' => Variation::class
 	);
 
 	/**

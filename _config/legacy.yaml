@@ -1,0 +1,20 @@
+---
+Name: swipestripe-legacy
+---
+SilverStripe\ORM\DatabaseAdmin:
+  classname_value_remapping:
+    AccountPage: SwipeStripe\Customer\AccountPage
+    CartPage: SwipeStripe\Customer\CartPage
+    CheckoutPage: SwipeStripe\Customer\CheckoutPage
+    Product: SwipeStripe\Product\Product
+    Attribute: SwipeStripe\Product\Attribute
+    Item: SwipeStripe\Order\Item
+    ItemOption: SwipeStripe\Order\ItemOption
+    Modification: SwipeStripe\Order\Modification
+    Attribute_Default: SwipeStripe\Product\Attribute_Default
+    ShopConfig: SwipeStripe\Admin\ShopConfig
+    Customer: SwipeStripe\Customer\Customer
+    Option: SwipeStripe\Product\Option
+    Order: SwipeStripe\Order\Order
+    Order_Update: SwipeStripe\Order\Order_Update
+    Variation: SwipeStripe\Product\Variation

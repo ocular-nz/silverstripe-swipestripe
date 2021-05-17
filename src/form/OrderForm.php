@@ -67,8 +67,7 @@ class OrderForm extends Form implements LoggerAwareInterface
 
 		parent::__construct($controller, $name, FieldList::create(), FieldList::create(), null);
 
-		Requirements::javascript(THIRDPARTY_DIR . '/jquery/jquery.js');
-		Requirements::javascript(THIRDPARTY_DIR . '/jquery-entwine/dist/jquery.entwine-dist.js');
+		
 		Requirements::javascript('swipestripe/javascript/OrderForm.js');
 
 		$this->order = Cart::get_current_order();

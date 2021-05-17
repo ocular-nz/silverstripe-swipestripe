@@ -170,7 +170,7 @@ class CheckoutPage_Controller extends Page_Controller
 	{
 
 		$order = Cart::get_current_order();
-		$member = Customer::currentUser() ? Customer::currentUser() : singleton('Customer');
+		$member = Customer::currentUser() ? Customer::currentUser() : singleton(Customer::class);
 
 		$form = OrderForm::create(
 			$this,

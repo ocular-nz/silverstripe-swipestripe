@@ -7,7 +7,9 @@ use Payment\PaymentFactory;
 use Payment\PaymentProcessor;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
+use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\Session;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\Debug;
 use SilverStripe\Forms\CompositeField;
 use SilverStripe\Forms\DropdownField;
@@ -38,7 +40,7 @@ class RepayForm extends Form implements LoggerAwareInterface
 	 * the fields are passed in an associative array so that the fields can be grouped into sets 
 	 * making it easier for the template to grab certain fields for different parts of the form.
 	 * 
-	 * @param Controller $controller
+	 * @param RequestHandler|null $controller
 	 * @param String $name
 	 * @param Array $groupedFields Associative array of fields grouped into sets
 	 * @param FieldList $actions
@@ -50,14 +52,13 @@ class RepayForm extends Form implements LoggerAwareInterface
 
 		parent::__construct($controller, $name, FieldList::create(), FieldList::create(), null);
 
-		Requirements::javascript(THIRDPARTY_DIR . '/jquery/jquery.js');
 		Requirements::javascript(THIRDPARTY_DIR . '/jquery-entwine/dist/jquery.entwine-dist.js');
 
-		$orderID = Session::get('Repay.OrderID');
+		$orderID = Injector::inst()->get(HTTPRequest::class)->getSession()->get('Repay.OrderID');
 		if ($orderID) {
 			$this->order = DataObject::get_by_id('Order', $orderID);
 		}
-		$this->customer = Customer::currentUser() ? Customer::currentUser() : singleton('Customer');
+		$this->customer = Customer::currentUser() ? Customer::currentUser() : singleton(Customer::class);
 
 		$this->fields = $this->createFields();
 		$this->actions = $this->createActions();

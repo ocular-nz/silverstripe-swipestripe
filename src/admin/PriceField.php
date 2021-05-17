@@ -27,7 +27,7 @@ class PriceField extends CurrencyField {
 		));
 
 		$obj = ($properties) ? $this->customise($properties) : $this;
-		return $obj->renderWith('PriceField_holder');
+		return $obj->renderWith('Includes/PriceField_holder');
 	}
 
 	/**

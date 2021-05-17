@@ -3,10 +3,13 @@
 namespace SwipeStripe\Customer;
 
 use SilverStripe\Control\Director;
+use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\Session;
 use SilverStripe\Core\Extension;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBDatetime;
+use SwipeStripe\Order\Order;
 
 /**
  * Extends {@link Page_Controller} adding some functions to retrieve the current cart, 
@@ -17,14 +20,16 @@ use SilverStripe\ORM\FieldType\DBDatetime;
  * @package swipestripe
  * @subpackage customer
  */
-class Cart extends Extension {
+class Cart extends Extension
+{
 
 	/**
 	 * Retrieve the current cart for display in the template.
 	 * 
 	 * @return Order The current order (cart)
 	 */
-	public function __construct() {
+	public function __construct()
+	{
 		$order = self::get_current_order();
 		$order->Items();
 		$order->Total;
@@ -32,14 +37,15 @@ class Cart extends Extension {
 		//HTTP::set_cache_age(0);
 		return $order;
 	}
-	
+
 	/**
 	 * Convenience method to return links to cart related page.
 	 * 
 	 * @param String $type The type of cart page a link is needed for
 	 * @return String The URL to the particular page
 	 */
-	function CartLink($type = 'Cart') {
+	function CartLink($type = 'Cart')
+	{
 		switch ($type) {
 			case 'Account':
 				if ($page = DataObject::get_one(AccountPage::class)) return $page->Link();
@@ -59,30 +65,34 @@ class Cart extends Extension {
 				else break;
 		}
 	}
-	
+
 	/**
 	 * Get the current order from the session, if order does not exist create a new one.
 	 * 
 	 * @return Order The current order (cart)
 	 */
-	public static function get_current_order($persist = false) {
+	public static function get_current_order($persist = false)
+	{
+		/** @var HTTPRequest $request */
+		$request = Injector::inst()->get(HTTPRequest::class);
+		$session = $request->getSession();
 
-		$orderID = Session::get('Cart.OrderID');
+		$orderID = $session->get('Cart.OrderID');
 		$order = null;
-		
+
 		if ($orderID) {
 			$order = DataObject::get_by_id('Order', $orderID);
 		}
-		
+
 		if (!$orderID || !$order || !$order->exists()) {
 			$order = Order::create();
 
 			if ($persist) {
 				$order->write();
-				Session::set('Cart', array(
+				$session->set('Cart', array(
 					'OrderID' => $order->ID
 				));
-				Session::save();
+				$session->save($request);
 			}
 		}
 		return $order;
@@ -91,9 +101,10 @@ class Cart extends Extension {
 	/**
 	 * Updates timestamp LastActive on the order, called on every page request. 
 	 */
-	function onBeforeInit() {
-
-		$orderID = Session::get('Cart.OrderID');
+	function onBeforeInit()
+	{
+		$request = Injector::inst()->get(HTTPRequest::class);
+		$orderID = $request->getSession()->get('Cart.OrderID');
 		if ($orderID && $order = DataObject::get_by_id('Order', $orderID)) {
 			$order->LastActive = DBDatetime::now()->getValue();
 			$order->write();

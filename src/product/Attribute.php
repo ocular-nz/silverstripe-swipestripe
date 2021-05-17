@@ -264,9 +264,6 @@ class Attribute_OptionField extends DropdownField
 
 	public function __construct($attr, $prev = null)
 	{
-
-		Requirements::javascript(THIRDPARTY_DIR . '/jquery/jquery.js');
-		Requirements::javascript(THIRDPARTY_DIR . '/jquery-entwine/dist/jquery.entwine-dist.js');
 		Requirements::javascript('swipestripe/javascript/Attribute_OptionField.js');
 
 		$product = $attr->Product();

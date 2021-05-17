@@ -4,7 +4,7 @@ name: SwipeStripe
 
 Director:
   rules:
-    'product//$ID!/$Action': 'Product_Controller'
+    'product//$ID!/$Action': 'SwipeStripe\Product\Product_Controller'
 
 Modifier:
   Enabled:
@@ -21,10 +21,10 @@ Payment:
     - 'SwipeStripe\Order\Payment_Extension'
 PaymentProcessor:
   extensions: 
-    - 'Payment_ProcessorExtension'
+    - 'SwipeStripe\Order\Payment_ProcessorExtension'
 LeftAndMain:
   extensions: 
-    - 'ShopAdmin_LeftAndMainExtension'
+    - 'SwipeStripe\Admin\ShopAdmin_LeftAndMainExtension'
 Page_Controller:
   extensions: 
-    - 'Cart'
+    - 'SwipeStripe\Customer\Cart'
