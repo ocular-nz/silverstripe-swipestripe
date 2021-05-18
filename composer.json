@@ -26,6 +26,11 @@
 	{
 		"silverstripe/sqlite3": "*"
 	},
+	"extra": {
+		"expose": [
+            "css"
+        ]
+	},
 	"suggest": {
 		"frankmullenger/payment-cheque": "Simple payment method for testing"
 	},

@@ -16,13 +16,13 @@ ShopAdmin:
 Security:
   default_login_dest: 'account'
 
-Payment:
+Payment\Payment:
   extensions: 
     - 'SwipeStripe\Order\Payment_Extension'
-PaymentProcessor:
+Payment\PaymentProcessor:
   extensions: 
     - 'SwipeStripe\Order\Payment_ProcessorExtension'
-LeftAndMain:
+SilverStripe\Admin\LeftAndMain:
   extensions: 
     - 'SwipeStripe\Admin\ShopAdmin_LeftAndMainExtension'
 Page_Controller:

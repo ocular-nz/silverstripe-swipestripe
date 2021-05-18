@@ -5,6 +5,7 @@ namespace SwipeStripe\Form;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\Session;
 use SilverStripe\Core\Convert;
+use SilverStripe\Dev\Debug;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\Form;
 use SilverStripe\Forms\FormAction;
@@ -14,10 +15,14 @@ use SilverStripe\Forms\RequiredFields;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBField;
+use SilverStripe\ORM\FieldType\DBHTMLText;
+use SilverStripe\ORM\ValidationResult;
 use SilverStripe\View\Requirements;
 use SwipeStripe\Admin\ShopConfig;
+use SwipeStripe\Customer\Cart;
 use SwipeStripe\Customer\CartPage;
 use SwipeStripe\Product\Price;
+use SwipeStripe\Product\Variation;
 
 /**
  * Form for adding items to the cart from a {@link Product} page.
@@ -38,7 +43,6 @@ class ProductForm extends Form
 
 		parent::__construct($controller, $name, FieldList::create(), FieldList::create(), null);
 
-		Requirements::javascript(THIRDPARTY_DIR . '/jquery-entwine/dist/jquery.entwine-dist.js');
 		Requirements::javascript('swipestripe/javascript/ProductForm.js');
 
 		$this->product = $controller->data();
@@ -49,7 +53,7 @@ class ProductForm extends Form
 		$this->actions = $this->createActions();
 		$this->validator = $this->createValidator();
 
-		$this->setupFormErrors();
+		$this->restoreFormState();
 
 		$this->addExtraClass('product-form');
 
@@ -84,12 +88,11 @@ class ProductForm extends Form
 	 * Set up current form errors in session to
 	 * the current form if appropriate.
 	 */
-	public function setupFormErrors()
+	public function restoreFormState()
 	{
-
 		//Only run when fields exist
 		if ($this->fields->exists()) {
-			parent::setupFormErrors();
+			parent::restoreFormState();
 		}
 	}
 
@@ -206,8 +209,8 @@ class ProductForm extends Form
 	public function add(array $data, Form $form)
 	{
 
-		Cart::get_current_order(true)
-			->addItem(
+		$order = Cart::get_current_order(true);
+		$order->addItem(
 				$this->getProduct(),
 				$this->getVariation(),
 				$this->getQuantity(),
@@ -229,9 +232,9 @@ class ProductForm extends Form
 				);
 			}
 			$form->sessionMessage(
-				DBField::create_field("HTMLText", $message),
-				'good',
-				false
+				DBField::create_field(DBHTMLText::class, $message),
+				ValidationResult::TYPE_GOOD,
+				ValidationResult::CAST_HTML
 			);
 		}
 		$this->goToNextPage();
@@ -329,7 +332,7 @@ class ProductForm_Validator extends RequiredFields
 
 		//Check that variation exists if necessary
 		$form = $this->form;
-		$request = $this->form->getRequest();
+		$request = $this->form->getRequestHandler()->getRequest();
 
 		//Get product variations from options sent
 		//TODO refactor this

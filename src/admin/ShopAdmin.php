@@ -24,6 +24,7 @@ use SilverStripe\Forms\TabSet;
 use SilverStripe\Forms\TextareaField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\ORM\ArrayList;
+use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
 use SilverStripe\View\ArrayData;
@@ -395,7 +396,7 @@ class ShopAdmin_EmailAdmin extends ShopAdmin {
 		$config = ShopConfig::get()->First();
 		$form->saveInto($config);
 		$config->write();
-		$form->sessionMessage('Saved Email Settings', 'good');
+		$form->sessionMessage('Saved Email Settings', ValidationResult::TYPE_GOOD);
 
 		$controller = $this;
 		$responseNegotiator = new PjaxResponseNegotiator(
@@ -572,7 +573,7 @@ class ShopAdmin_BaseCurrency extends ShopAdmin {
 		$config = ShopConfig::get()->First();
 		$form->saveInto($config);
 		$config->write();
-		$form->sessionMessage('Saved BaseCurrency Key', 'good');
+		$form->sessionMessage('Saved BaseCurrency Key', ValidationResult::TYPE_GOOD);
 
 		$controller = $this;
 		$responseNegotiator = new PjaxResponseNegotiator(
@@ -740,7 +741,7 @@ class ShopAdmin_Attribute extends ShopAdmin {
 		$config = ShopConfig::get()->First();
 		$form->saveInto($config);
 		$config->write();
-		$form->sessionMessage('Saved Attribute Settings', 'good');
+		$form->sessionMessage('Saved Attribute Settings', ValidationResult::TYPE_GOOD);
 
 		$controller = $this;
 		$responseNegotiator = new PjaxResponseNegotiator(

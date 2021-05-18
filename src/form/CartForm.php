@@ -61,7 +61,7 @@ class CartForm extends Form implements LoggerAwareInterface
 		$this->actions = $this->createActions();
 		$this->validator = $this->createValidator();
 
-		$this->setupFormErrors();
+		$this->restoreFormState();
 
 		$this->addExtraClass('cart-form');
 		$this->setTemplate('CartForm');
@@ -71,12 +71,11 @@ class CartForm extends Form implements LoggerAwareInterface
 	 * Set up current form errors in session to
 	 * the current form if appropriate.
 	 */
-	public function setupFormErrors()
+	public function restoreFormState()
 	{
-
-		//Only run when fields exist
+		// Only run when fields exist
 		if ($this->fields->exists()) {
-			parent::setupFormErrors();
+			parent::restoreFormState();
 		}
 	}
 
@@ -207,7 +206,7 @@ class CartForm_QuantityField extends TextField
 	 *
 	 * @var String
 	 */
-	protected $template = "CartForm_QuantityField";
+	protected $template = "Includes\\CartForm_QuantityField";
 
 	/**
 	 * Current {@link Item} represented by this field.

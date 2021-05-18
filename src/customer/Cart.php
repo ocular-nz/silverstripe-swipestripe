@@ -81,7 +81,7 @@ class Cart extends Extension
 		$order = null;
 
 		if ($orderID) {
-			$order = DataObject::get_by_id('Order', $orderID);
+			$order = DataObject::get_by_id(Order::class, $orderID);
 		}
 
 		if (!$orderID || !$order || !$order->exists()) {
@@ -105,7 +105,7 @@ class Cart extends Extension
 	{
 		$request = Injector::inst()->get(HTTPRequest::class);
 		$orderID = $request->getSession()->get('Cart.OrderID');
-		if ($orderID && $order = DataObject::get_by_id('Order', $orderID)) {
+		if ($orderID && $order = DataObject::get_by_id(Order::class, $orderID)) {
 			$order->LastActive = DBDatetime::now()->getValue();
 			$order->write();
 		}
