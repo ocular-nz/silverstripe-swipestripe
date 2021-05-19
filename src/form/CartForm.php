@@ -15,6 +15,7 @@ use SwipeStripe\Customer\Cart;
 use SwipeStripe\Order\Item;
 use SilverStripe\Control\RequestHandler;
 use SilverStripe\Dev\Debug;
+use SilverStripe\Forms\NumericField;
 use SwipeStripe\Customer\CheckoutPage;
 
 /**
@@ -198,15 +199,8 @@ class CartForm extends Form implements LoggerAwareInterface
 /**
  * Quantity field for displaying each {@link Item} in an {@link Order} on the {@link CartPage}.
  */
-class CartForm_QuantityField extends TextField
+class CartForm_QuantityField extends NumericField
 {
-
-	/**
-	 * Template for rendering the field
-	 *
-	 * @var String
-	 */
-	protected $template = "Includes\\CartForm_QuantityField";
 
 	/**
 	 * Current {@link Item} represented by this field.
@@ -215,32 +209,25 @@ class CartForm_QuantityField extends TextField
 	 */
 	protected $item;
 
+	/** 
+	 * @var bool
+	 */
+	protected $html5 = true;
+
 	/**
 	 * Construct the field and set the current {@link Item} that this field represents.
 	 * 
 	 * @param String $name
 	 * @param String $title
 	 * @param String $value
-	 * @param Int $maxLength
+	 * @param int $maxLength
 	 * @param Form $form
 	 * @param Item $item
 	 */
 	function __construct($name, $value = "", $item = null)
 	{
-
 		$this->item = $item;
 		parent::__construct($name, '', $value, null, null);
-	}
-
-	/**
-	 * Render the field with the appropriate template.
-	 * 
-	 * @see FormField::FieldHolder()
-	 */
-	function FieldHolder($properties = array())
-	{
-		$obj = ($properties) ? $this->customise($properties) : $this;
-		return $this->renderWith($this->template);
 	}
 
 	/**
@@ -367,5 +354,13 @@ class CartForm_QuantityField extends TextField
 	public function Type()
 	{
 		return 'cartquantity';
+	}
+
+	public function getAttributes()
+	{
+		return array_merge(
+			parent::getAttributes(),
+			['min' => 0]
+		);
 	}
 }
