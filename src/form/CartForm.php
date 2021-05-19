@@ -4,6 +4,7 @@ namespace SwipeStripe\Form;
 
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\Form;
 use SilverStripe\Forms\FormAction;
@@ -30,6 +31,10 @@ class CartForm extends Form implements LoggerAwareInterface
 {
 
 	use LoggerAwareTrait;
+
+	private static $dependencies = [
+		'Logger' => '%$' . LoggerInterface::class,
+	];
 
 	/**
 	 * The current {@link Order} (cart).
@@ -173,7 +178,7 @@ class CartForm extends Form implements LoggerAwareInterface
 			if ($item = $currentOrder->Items()->find('ID', $itemID)) {
 				if ($quantity == 0) {
 
-					$this->logger->notice(new \Exception(print_r($item->toMap(), true)), []);
+					$this->logger->notice('Item removed from cart as quantity = 0', $item->toMap());
 
 					$item->delete();
 				} else {

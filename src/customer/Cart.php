@@ -28,7 +28,7 @@ class Cart extends Extension
 	 * 
 	 * @return Order The current order (cart)
 	 */
-	public function __construct()
+	public function getCart()
 	{
 		$order = self::get_current_order();
 		$order->Items();
