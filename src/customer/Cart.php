@@ -12,7 +12,7 @@ use SilverStripe\ORM\FieldType\DBDatetime;
 use SwipeStripe\Order\Order;
 
 /**
- * Extends {@link Page_Controller} adding some functions to retrieve the current cart, 
+ * Extends {@link PageController} adding some functions to retrieve the current cart, 
  * and link to the cart.
  * 
  * @author Frank Mullenger <frankmullenger@gmail.com>

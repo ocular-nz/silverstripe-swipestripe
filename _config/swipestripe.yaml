@@ -19,12 +19,15 @@ Security:
 Payment\Payment:
   extensions: 
     - 'SwipeStripe\Order\Payment_Extension'
+
 Payment\PaymentProcessor:
   extensions: 
     - 'SwipeStripe\Order\Payment_ProcessorExtension'
+
 SilverStripe\Admin\LeftAndMain:
   extensions: 
     - 'SwipeStripe\Admin\ShopAdmin_LeftAndMainExtension'
-Page_Controller:
+
+PageController:
   extensions: 
     - 'SwipeStripe\Customer\Cart'

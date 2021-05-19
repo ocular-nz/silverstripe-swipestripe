@@ -3,7 +3,7 @@
 namespace SwipeStripe\Customer;
 
 use Page;
-use Page_Controller;
+use PageController;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Convert;
 use SilverStripe\ORM\DataObject;
@@ -137,7 +137,7 @@ class AccountPage extends Page
  * @package swipestripe
  * @subpackage customer
  */
-class AccountPage_Controller extends Page_Controller
+class AccountPageController extends PageController
 {
 
 	/**
@@ -152,7 +152,7 @@ class AccountPage_Controller extends Page_Controller
 		'RepayForm'
 	);
 
-	public function init()
+	protected function init()
 	{
 		parent::init();
 

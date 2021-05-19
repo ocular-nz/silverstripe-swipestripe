@@ -3,7 +3,7 @@
 namespace SwipeStripe\Customer;
 
 use Page;
-use Page_Controller;
+use PageController;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use SilverStripe\Security\Security;
@@ -133,7 +133,7 @@ class CartPage extends Page
  * @package swipestripe
  * @subpackage customer
  */
-class CartPage_Controller extends Page_Controller
+class CartPageController extends PageController
 {
 
 	private static $allowed_actions = array(

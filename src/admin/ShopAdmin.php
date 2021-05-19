@@ -38,7 +38,8 @@ use SilverStripe\View\Requirements;
  * @package swipestripe
  * @subpackage admin
  */
-class ShopAdmin extends ModelAdmin {
+class ShopAdmin extends ModelAdmin
+{
 
 	private static $url_segment = 'shop';
 
@@ -61,25 +62,26 @@ class ShopAdmin extends ModelAdmin {
 	);
 
 	public static $hidden_sections = array();
-	
+
 	private static $allowed_actions = array(
 		'EditForm',
 		'SettingsContent',
 		'SettingsForm'
 	);
 
-	public function init() {
+	protected function init()
+	{
 
 		// set reading lang
 		// if(Object::has_extension('SiteTree', 'Translatable') && !$this->request->isAjax()) {
 		// 	Translatable::choose_site_locale(array_keys(Translatable::get_existing_content_languages('SiteTree')));
 		// }
-		
+
 		parent::init();
 
 		Requirements::css(CMS_DIR . '/css/screen.css');
 		Requirements::css('swipestripe/css/ShopAdmin.css');
-		
+
 		Requirements::combine_files(
 			'cmsmain.js',
 			array_merge(
@@ -100,30 +102,32 @@ class ShopAdmin extends ModelAdmin {
 	/**
 	 * @return ArrayList
 	 */
-	public function Breadcrumbs($unlinked = false) {
+	public function Breadcrumbs($unlinked = false)
+	{
 
 		$request = $this->getRequest();
 		$items = parent::Breadcrumbs($unlinked);
 		return $items;
 	}
 
-	public function getManagedModels() {
+	public function getManagedModels()
+	{
 		$models = $this->stat('managed_models');
-		if(is_string($models)) {
+		if (is_string($models)) {
 			$models = array($models);
 		}
-		if(!count($models)) {
+		if (!count($models)) {
 			user_error(
 				'ModelAdmin::getManagedModels(): 
 				You need to specify at least one DataObject subclass in private static $managed_models.
-				Make sure that this property is defined, and that its visibility is set to "public"', 
+				Make sure that this property is defined, and that its visibility is set to "public"',
 				E_USER_ERROR
 			);
 		}
 
 		// Normalize models to have their model class in array key
-		foreach($models as $k => $v) {
-			if(is_numeric($k)) {
+		foreach ($models as $k => $v) {
+			if (is_numeric($k)) {
 				$models[$v] = array('title' => singleton($v)->i18n_plural_name());
 				unset($models[$k]);
 			}
@@ -137,43 +141,48 @@ class ShopAdmin extends ModelAdmin {
 	 * @uses SearchFilter
 	 * @return SS_List of forms 
 	 */
-	protected function getManagedModelTabs() {
+	protected function getManagedModelTabs()
+	{
 
 		$forms  = new ArrayList();
 
 		$models = $this->getManagedModels();
-		foreach($models as $class => $options) { 
-			$forms->push(new ArrayData(array (
+		foreach ($models as $class => $options) {
+			$forms->push(new ArrayData(array(
 				'Title'     => $options['title'],
 				'ClassName' => $class,
 				'Link' => $this->Link($this->sanitiseClassName($class)),
 				'LinkOrCurrent' => ($class == $this->modelClass) ? 'current' : 'link'
 			)));
 		}
-		
+
 		return $forms;
 	}
 
-	public function Tools() {
+	public function Tools()
+	{
 		if ($this->modelClass == 'ShopConfig') return false;
 		else return parent::Tools();
 	}
 
-	public function Content() {
+	public function Content()
+	{
 		return $this->renderWith($this->getTemplatesWithSuffix('_Content'));
 	}
 
-	public function EditForm($request = null) {
+	public function EditForm($request = null)
+	{
 		return $this->getEditForm();
 	}
 
-	public function getEditForm($id = null, $fields = null) {
+	public function getEditForm($id = null, $fields = null)
+	{
 
 		//If editing the shop settings get the first back and edit that basically...
 		if ($this->modelClass == 'ShopConfig') {
 			return $this->renderWith('ShopAdmin_ConfigEditForm');
 		}
-		
+
 		$list = $this->getList();
 
 		$buttonAfter = new GridFieldButtonRow('after');
@@ -181,8 +190,8 @@ class ShopAdmin extends ModelAdmin {
 		$exportButton->setExportColumns($this->getExportFields());
 
 		$fieldConfig = GridFieldConfig_RecordEditor::create($this->stat('page_length'))
-				->addComponent($buttonAfter)
-				->addComponent($exportButton);
+			->addComponent($buttonAfter)
+			->addComponent($exportButton);
 
 		if ($this->modelClass == 'Order' || $this->modelClass == 'Customer') {
 			$fieldConfig->removeComponentsByType('GridFieldAddNewButton');
@@ -196,7 +205,7 @@ class ShopAdmin extends ModelAdmin {
 		);
 
 		// Validation
-		if(singleton($this->modelClass)->hasMethod('getCMSValidator')) {
+		if (singleton($this->modelClass)->hasMethod('getCMSValidator')) {
 			$detailValidator = singleton($this->modelClass)->getCMSValidator();
 			$listField->getConfig()->getComponentByType('GridFieldDetailForm')->setValidator($detailValidator);
 		}
@@ -213,19 +222,22 @@ class ShopAdmin extends ModelAdmin {
 		$form->setAttribute('data-pjax-fragment', 'CurrentForm');
 
 		$this->extend('updateEditForm', $form);
-		
+
 		return $form;
 	}
 
-	public function SettingsContent() {
+	public function SettingsContent()
+	{
 		return $this->renderWith('ShopAdminSettings_Content');
 	}
 
-	public function SettingsForm($request = null) {
+	public function SettingsForm($request = null)
+	{
 		return;
 	}
 
-	public function Snippets() {
+	public function Snippets()
+	{
 
 		$snippets = new ArrayList();
 		$subClasses = ClassInfo::subclassesFor('ShopAdmin');
@@ -249,10 +261,10 @@ class ShopAdmin extends ModelAdmin {
 		return $snippets;
 	}
 
-	public function getSnippet() {
+	public function getSnippet()
+	{
 		return false;
 	}
-
 }
 
 /**
@@ -263,10 +275,11 @@ class ShopAdmin extends ModelAdmin {
  * @package swipestripe
  * @subpackage admin
  */
-class ShopAdmin_EmailAdmin extends ShopAdmin {
-	
+class ShopAdmin_EmailAdmin extends ShopAdmin
+{
+
 	private static $tree_class = 'ShopConfig';
-	
+
 	private static $allowed_actions = array(
 		'EmailSettings',
 		'EmailSettingsForm',
@@ -282,14 +295,16 @@ class ShopAdmin_EmailAdmin extends ShopAdmin {
 		'ShopConfig/EmailSettings' => 'EmailSettings'
 	);
 
-	public function init() {
+	protected function init()
+	{
 		parent::init();
 		if (!in_array(get_class($this), self::$hidden_sections)) {
 			$this->modelClass = 'ShopConfig';
 		}
 	}
 
-	public function Breadcrumbs($unlinked = false) {
+	public function Breadcrumbs($unlinked = false)
+	{
 
 		$request = $this->getRequest();
 		$items = parent::Breadcrumbs($unlinked);
@@ -304,44 +319,49 @@ class ShopAdmin_EmailAdmin extends ShopAdmin {
 		return $items;
 	}
 
-	public function SettingsForm($request = null) {
+	public function SettingsForm($request = null)
+	{
 		return $this->EmailSettingsForm();
 	}
 
-	public function EmailSettings($request) {
+	public function EmailSettings($request)
+	{
 
 		if ($request->isAjax()) {
 			$controller = $this;
 			$responseNegotiator = new PjaxResponseNegotiator(
 				array(
-					'CurrentForm' => function() use(&$controller) {
+					'CurrentForm' => function () use (&$controller) {
 						return $controller->EmailSettingsForm()->forTemplate();
 					},
-					'Content' => function() use(&$controller) {
+					'Content' => function () use (&$controller) {
 						return $controller->renderWith('ShopAdminSettings_Content');
 					},
-					'Breadcrumbs' => function() use (&$controller) {
+					'Breadcrumbs' => function () use (&$controller) {
 						return $controller->renderWith('CMSBreadcrumbs');
 					},
-					'default' => function() use(&$controller) {
+					'default' => function () use (&$controller) {
 						return $controller->renderWith($controller->getViewer('show'));
 					}
 				),
 				$this->response
-			); 
+			);
 			return $responseNegotiator->respond($this->getRequest());
 		}
 
 		return $this->renderWith('ShopAdminSettings');
 	}
 
-	public function EmailSettingsForm() {
+	public function EmailSettingsForm()
+	{
 
 		$shopConfig = ShopConfig::get()->First();
 
 		$fields = new FieldList(
-			$rootTab = new TabSet("Root",
-				$tabMain = new Tab('Receipt',
+			$rootTab = new TabSet(
+				"Root",
+				$tabMain = new Tab(
+					'Receipt',
 					new HiddenField('ShopConfigSection', null, 'EmailSettings'),
 					new TextField('ReceiptFrom', _t('ShopConfig.FROM', 'From')),
 					TextField::create('ReceiptTo', _t('ShopConfig.TO', 'To'))
@@ -352,7 +372,8 @@ class ShopAdmin_EmailAdmin extends ShopAdmin {
 						->setRightTitle(_t('ShopConfig.MESSAGE_DETAILS', 'Order details are included in the email below this message')),
 					new TextareaField('EmailSignature', _t('ShopConfig.SIGNATURE', 'Signature'))
 				),
-				new Tab('Notification',
+				new Tab(
+					'Notification',
 					TextField::create('NotificationFrom', _t('ShopConfig.FROM', 'From'))
 						->setValue(_t('ShopConfig.NOTIFICATION_FROM', 'Customer email address'))
 						->performReadonlyTransformation(),
@@ -380,7 +401,7 @@ class ShopAdmin_EmailAdmin extends ShopAdmin {
 		$form->setTemplate('ShopAdminSettings_EditForm');
 		$form->setAttribute('data-pjax-fragment', 'CurrentForm');
 		$form->addExtraClass('cms-content cms-edit-form center ss-tabset');
-		if($form->Fields()->hasTabset()) $form->Fields()->findOrMakeTab('Root')->setTemplate('CMSTabSet');
+		if ($form->Fields()->hasTabset()) $form->Fields()->findOrMakeTab('Root')->setTemplate('CMSTabSet');
 		$form->setFormAction(Controller::join_links($this->Link($this->sanitiseClassName($this->modelClass)), 'EmailSettings/EmailSettingsForm'));
 
 		$form->loadDataFrom($shopConfig);
@@ -388,7 +409,8 @@ class ShopAdmin_EmailAdmin extends ShopAdmin {
 		return $form;
 	}
 
-	public function saveEmailSettings($data, $form) {
+	public function saveEmailSettings($data, $form)
+	{
 
 		//Hack for LeftAndMain::getRecord()
 		// self::$tree_class = 'ShopConfig';
@@ -401,26 +423,27 @@ class ShopAdmin_EmailAdmin extends ShopAdmin {
 		$controller = $this;
 		$responseNegotiator = new PjaxResponseNegotiator(
 			array(
-				'CurrentForm' => function() use(&$controller) {
+				'CurrentForm' => function () use (&$controller) {
 					//return $controller->renderWith('ShopAdminSettings_Content');
 					return $controller->EmailSettingsForm()->forTemplate();
 				},
-				'Content' => function() use(&$controller) {
+				'Content' => function () use (&$controller) {
 					//return $controller->renderWith($controller->getTemplatesWithSuffix('_Content'));
 				},
-				'Breadcrumbs' => function() use (&$controller) {
+				'Breadcrumbs' => function () use (&$controller) {
 					return $controller->renderWith('CMSBreadcrumbs');
 				},
-				'default' => function() use(&$controller) {
+				'default' => function () use (&$controller) {
 					return $controller->renderWith($controller->getViewer('show'));
 				}
 			),
 			$this->response
-		); 
+		);
 		return $responseNegotiator->respond($this->getRequest());
 	}
 
-	public function getSnippet() {
+	public function getSnippet()
+	{
 
 		if (!$member = Member::currentUser()) return false;
 		if (!Permission::check('CMS_ACCESS_' . get_class($this), 'any', $member)) return false;
@@ -432,7 +455,6 @@ class ShopAdmin_EmailAdmin extends ShopAdmin {
 			'LinkTitle' => 'Edit Email Settings'
 		))->renderWith('ShopAdmin_Snippet');
 	}
-
 }
 
 /**
@@ -443,10 +465,11 @@ class ShopAdmin_EmailAdmin extends ShopAdmin {
  * @package swipestripe
  * @subpackage admin
  */
-class ShopAdmin_BaseCurrency extends ShopAdmin {
-	
+class ShopAdmin_BaseCurrency extends ShopAdmin
+{
+
 	private static $tree_class = 'ShopConfig';
-	
+
 	private static $allowed_actions = array(
 		'BaseCurrencySettings',
 		'BaseCurrencySettingsForm',
@@ -462,14 +485,16 @@ class ShopAdmin_BaseCurrency extends ShopAdmin {
 		'ShopConfig/BaseCurrency' => 'BaseCurrencySettings'
 	);
 
-	public function init() {
+	protected function init()
+	{
 		parent::init();
 		if (!in_array(get_class($this), self::$hidden_sections)) {
 			$this->modelClass = 'ShopConfig';
 		}
 	}
 
-	public function Breadcrumbs($unlinked = false) {
+	public function Breadcrumbs($unlinked = false)
+	{
 
 		$request = $this->getRequest();
 		$items = parent::Breadcrumbs($unlinked);
@@ -484,44 +509,49 @@ class ShopAdmin_BaseCurrency extends ShopAdmin {
 		return $items;
 	}
 
-	public function SettingsForm($request = null) {
+	public function SettingsForm($request = null)
+	{
 		return $this->BaseCurrencySettingsForm();
 	}
 
-	public function BaseCurrencySettings($request) {
+	public function BaseCurrencySettings($request)
+	{
 
 		if ($request->isAjax()) {
 			$controller = $this;
 			$responseNegotiator = new PjaxResponseNegotiator(
 				array(
-					'CurrentForm' => function() use(&$controller) {
+					'CurrentForm' => function () use (&$controller) {
 						return $controller->BaseCurrencySettingsForm()->forTemplate();
 					},
-					'Content' => function() use(&$controller) {
+					'Content' => function () use (&$controller) {
 						return $controller->renderWith('ShopAdminSettings_Content');
 					},
-					'Breadcrumbs' => function() use (&$controller) {
+					'Breadcrumbs' => function () use (&$controller) {
 						return $controller->renderWith('CMSBreadcrumbs');
 					},
-					'default' => function() use(&$controller) {
+					'default' => function () use (&$controller) {
 						return $controller->renderWith($controller->getViewer('show'));
 					}
 				),
 				$this->response
-			); 
+			);
 			return $responseNegotiator->respond($this->getRequest());
 		}
 
 		return $this->renderWith('ShopAdminSettings');
 	}
 
-	public function BaseCurrencySettingsForm() {
+	public function BaseCurrencySettingsForm()
+	{
 
 		$shopConfig = ShopConfig::get()->First();
 
 		$fields = new FieldList(
-			$rootTab = new TabSet("Root",
-				$tabMain = new Tab('BaseCurrency',
+			$rootTab = new TabSet(
+				"Root",
+				$tabMain = new Tab(
+					'BaseCurrency',
 					TextField::create('BaseCurrency', _t('ShopConfig.BASE_CURRENCY', 'Base Currency'))
 						->setRightTitle('3 letter code for base currency - <a href="http://en.wikipedia.org/wiki/ISO_4217#Active_codes" target="_blank">available codes</a>'),
 					TextField::create('BaseCurrencySymbol', _t('ShopConfig.BASE_CURRENCY_SYMBOL', 'Base Currency Symbol'))
@@ -557,7 +587,7 @@ class ShopAdmin_BaseCurrency extends ShopAdmin {
 		$form->setTemplate('ShopAdminSettings_EditForm');
 		$form->setAttribute('data-pjax-fragment', 'CurrentForm');
 		$form->addExtraClass('cms-content cms-edit-form center ss-tabset');
-		if($form->Fields()->hasTabset()) $form->Fields()->findOrMakeTab('Root')->setTemplate('CMSTabSet');
+		if ($form->Fields()->hasTabset()) $form->Fields()->findOrMakeTab('Root')->setTemplate('CMSTabSet');
 		$form->setFormAction(Controller::join_links($this->Link($this->sanitiseClassName($this->modelClass)), 'BaseCurrency/BaseCurrencySettingsForm'));
 
 		$form->loadDataFrom($shopConfig);
@@ -565,7 +595,8 @@ class ShopAdmin_BaseCurrency extends ShopAdmin {
 		return $form;
 	}
 
-	public function saveBaseCurrencySettings($data, $form) {
+	public function saveBaseCurrencySettings($data, $form)
+	{
 
 		//Hack for LeftAndMain::getRecord()
 		self::$tree_class = 'ShopConfig';
@@ -578,26 +609,27 @@ class ShopAdmin_BaseCurrency extends ShopAdmin {
 		$controller = $this;
 		$responseNegotiator = new PjaxResponseNegotiator(
 			array(
-				'CurrentForm' => function() use(&$controller) {
+				'CurrentForm' => function () use (&$controller) {
 					//return $controller->renderWith('ShopAdminSettings_Content');
 					return $controller->BaseCurrencySettingsForm()->forTemplate();
 				},
-				'Content' => function() use(&$controller) {
+				'Content' => function () use (&$controller) {
 					//return $controller->renderWith($controller->getTemplatesWithSuffix('_Content'));
 				},
-				'Breadcrumbs' => function() use (&$controller) {
+				'Breadcrumbs' => function () use (&$controller) {
 					return $controller->renderWith('CMSBreadcrumbs');
 				},
-				'default' => function() use(&$controller) {
+				'default' => function () use (&$controller) {
 					return $controller->renderWith($controller->getViewer('show'));
 				}
 			),
 			$this->response
-		); 
+		);
 		return $responseNegotiator->respond($this->getRequest());
 	}
 
-	public function getSnippet() {
+	public function getSnippet()
+	{
 
 		if (!$member = Member::currentUser()) return false;
 		if (!Permission::check('CMS_ACCESS_' . get_class($this), 'any', $member)) return false;
@@ -609,7 +641,6 @@ class ShopAdmin_BaseCurrency extends ShopAdmin {
 			'LinkTitle' => 'Edit base currency'
 		))->renderWith('ShopAdmin_Snippet');
 	}
-
 }
 
 /**
@@ -620,10 +651,11 @@ class ShopAdmin_BaseCurrency extends ShopAdmin {
  * @package swipestripe
  * @subpackage admin
  */
-class ShopAdmin_Attribute extends ShopAdmin {
-	
+class ShopAdmin_Attribute extends ShopAdmin
+{
+
 	private static $tree_class = 'ShopConfig';
-	
+
 	private static $allowed_actions = array(
 		'AttributeSettings',
 		'AttributeSettingsForm',
@@ -639,14 +671,16 @@ class ShopAdmin_Attribute extends ShopAdmin {
 		'ShopConfig/Attribute' => 'AttributeSettings'
 	);
 
-	public function init() {
+	protected function init()
+	{
 		parent::init();
 		if (!in_array(get_class($this), self::$hidden_sections)) {
 			$this->modelClass = 'ShopConfig';
 		}
 	}
 
-	public function Breadcrumbs($unlinked = false) {
+	public function Breadcrumbs($unlinked = false)
+	{
 
 		$request = $this->getRequest();
 		$items = parent::Breadcrumbs($unlinked);
@@ -661,44 +695,49 @@ class ShopAdmin_Attribute extends ShopAdmin {
 		return $items;
 	}
 
-	public function SettingsForm($request = null) {
+	public function SettingsForm($request = null)
+	{
 		return $this->AttributeSettingsForm();
 	}
 
-	public function AttributeSettings($request) {
+	public function AttributeSettings($request)
+	{
 
 		if ($request->isAjax()) {
 			$controller = $this;
 			$responseNegotiator = new PjaxResponseNegotiator(
 				array(
-					'CurrentForm' => function() use(&$controller) {
+					'CurrentForm' => function () use (&$controller) {
 						return $controller->AttributeSettingsForm()->forTemplate();
 					},
-					'Content' => function() use(&$controller) {
+					'Content' => function () use (&$controller) {
 						return $controller->renderWith('ShopAdminSettings_Content');
 					},
-					'Breadcrumbs' => function() use (&$controller) {
+					'Breadcrumbs' => function () use (&$controller) {
 						return $controller->renderWith('CMSBreadcrumbs');
 					},
-					'default' => function() use(&$controller) {
+					'default' => function () use (&$controller) {
 						return $controller->renderWith($controller->getViewer('show'));
 					}
 				),
 				$this->response
-			); 
+			);
 			return $responseNegotiator->respond($this->getRequest());
 		}
 
 		return $this->renderWith('ShopAdminSettings');
 	}
 
-	public function AttributeSettingsForm() {
+	public function AttributeSettingsForm()
+	{
 
 		$shopConfig = ShopConfig::get()->First();
 
 		$fields = new FieldList(
-			$rootTab = new TabSet('Root',
-				$tabMain = new Tab('Attribute',
+			$rootTab = new TabSet(
+				'Root',
+				$tabMain = new Tab(
+					'Attribute',
 					GridField::create(
 						'Attributes',
 						'Attributes',
@@ -725,7 +764,7 @@ class ShopAdmin_Attribute extends ShopAdmin {
 		$form->setTemplate('ShopAdminSettings_EditForm');
 		$form->setAttribute('data-pjax-fragment', 'CurrentForm');
 		$form->addExtraClass('cms-content cms-edit-form center ss-tabset');
-		if($form->Fields()->hasTabset()) $form->Fields()->findOrMakeTab('Root')->setTemplate('CMSTabSet');
+		if ($form->Fields()->hasTabset()) $form->Fields()->findOrMakeTab('Root')->setTemplate('CMSTabSet');
 		$form->setFormAction(Controller::join_links($this->Link($this->sanitiseClassName($this->modelClass)), 'Attribute/AttributeSettingsForm'));
 
 		$form->loadDataFrom($shopConfig);
@@ -733,7 +772,8 @@ class ShopAdmin_Attribute extends ShopAdmin {
 		return $form;
 	}
 
-	public function saveAttributeSettings($data, $form) {
+	public function saveAttributeSettings($data, $form)
+	{
 
 		//Hack for LeftAndMain::getRecord()
 		self::$tree_class = 'ShopConfig';
@@ -746,26 +786,27 @@ class ShopAdmin_Attribute extends ShopAdmin {
 		$controller = $this;
 		$responseNegotiator = new PjaxResponseNegotiator(
 			array(
-				'CurrentForm' => function() use(&$controller) {
+				'CurrentForm' => function () use (&$controller) {
 					//return $controller->renderWith('ShopAdminSettings_Content');
 					return $controller->AttributeSettingsForm()->forTemplate();
 				},
-				'Content' => function() use(&$controller) {
+				'Content' => function () use (&$controller) {
 					//return $controller->renderWith($controller->getTemplatesWithSuffix('_Content'));
 				},
-				'Breadcrumbs' => function() use (&$controller) {
+				'Breadcrumbs' => function () use (&$controller) {
 					return $controller->renderWith('CMSBreadcrumbs');
 				},
-				'default' => function() use(&$controller) {
+				'default' => function () use (&$controller) {
 					return $controller->renderWith($controller->getViewer('show'));
 				}
 			),
 			$this->response
-		); 
+		);
 		return $responseNegotiator->respond($this->getRequest());
 	}
 
-	public function getSnippet() {
+	public function getSnippet()
+	{
 
 		if (!$member = Member::currentUser()) return false;
 		if (!Permission::check('CMS_ACCESS_' . get_class($this), 'any', $member)) return false;
@@ -777,7 +818,6 @@ class ShopAdmin_Attribute extends ShopAdmin {
 			'LinkTitle' => 'Edit default attributes'
 		))->renderWith('ShopAdmin_Snippet');
 	}
-
 }
 
 /**
@@ -788,13 +828,16 @@ class ShopAdmin_Attribute extends ShopAdmin {
  * @package swipestripe
  * @subpackage admin
  */
-class ShopAdmin_LeftAndMainExtension extends Extension {
+class ShopAdmin_LeftAndMainExtension extends Extension
+{
 
-	public function onAfterInit() {
+	public function onAfterInit()
+	{
 		Requirements::css('swipestripe/css/ShopAdmin.css');
 	}
 
-	public function alternateMenuDisplayCheck($className) {
+	public function alternateMenuDisplayCheck($className)
+	{
 		if (class_exists($className)) {
 			$obj = new $className();
 			if (is_subclass_of($obj, 'ShopAdmin')) {
@@ -804,4 +847,3 @@ class ShopAdmin_LeftAndMainExtension extends Extension {
 		return true;
 	}
 }
-

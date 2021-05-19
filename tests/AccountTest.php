@@ -65,7 +65,7 @@ class SWS_AccountTest extends \SWS_Test {
 
 		$this->loginAs($buyer);
 		$this->get(Director::makeRelative($order->Link()));
-		$this->assertTrue($this->Content() != "Action 'order' isn't allowed on class AccountPage_Controller");
+		$this->assertTrue($this->Content() != "Action 'order' isn't allowed on class AccountPageController");
 		$this->logOut();
 	}
 	
@@ -86,7 +86,7 @@ class SWS_AccountTest extends \SWS_Test {
 
 		$this->loginAs('admin');
 		$this->get(Director::makeRelative($order->Link()));
-		$this->assertTrue($this->Content() != "Action 'order' isn't allowed on class AccountPage_Controller");
+		$this->assertTrue($this->Content() != "Action 'order' isn't allowed on class AccountPageController");
 		$this->logOut();
 	}
 

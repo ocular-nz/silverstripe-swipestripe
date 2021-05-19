@@ -3,7 +3,7 @@
 namespace SwipeStripe\Product;
 
 use Page;
-use Page_Controller;
+use PageController;
 use SilverStripe\CMS\Forms\SiteTreeURLSegmentField;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
@@ -323,7 +323,7 @@ class Product extends Page
  * @package swipestripe
  * @subpackage product
  */
-class Product_Controller extends Page_Controller
+class ProductController extends PageController
 {
 
 	/**
@@ -338,9 +338,9 @@ class Product_Controller extends Page_Controller
 	/**
 	 * Include some CSS and set the dataRecord to the current Product that is being viewed.
 	 * 
-	 * @see Page_Controller::init()
+	 * @see PageController::init()
 	 */
-	public function init()
+	protected function init()
 	{
 		parent::init();
 
