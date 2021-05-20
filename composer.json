@@ -28,7 +28,9 @@
 	},
 	"extra": {
 		"expose": [
-            "css"
+            "css",
+			"images",
+			"javascript"
         ]
 	},
 	"suggest": {

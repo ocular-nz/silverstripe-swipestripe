@@ -7,6 +7,7 @@ use DateTime;
 use Payment\Payment;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Convert;
@@ -18,11 +19,15 @@ use SilverStripe\Forms\HiddenField;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\TabSet;
 use SilverStripe\Forms\Tab;
+use SilverStripe\Forms\TextField;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\DataQuery;
 use SilverStripe\ORM\DB;
 use SilverStripe\ORM\FieldType\DBDatetime;
+use SilverStripe\ORM\Filters\PartialMatchFilter;
+use SilverStripe\ORM\Queries\SQLSelect;
 use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
@@ -31,6 +36,7 @@ use SilverStripe\Security\Security;
 use SwipeStripe\Admin\GridFieldConfig_Basic;
 use SwipeStripe\Admin\ShopConfig;
 use SwipeStripe\Admin\ShopSearchContext_Order;
+use SwipeStripe\Admin\ShopSearchFilter_OptionSet;
 use SwipeStripe\Customer\AccountPage;
 use SwipeStripe\Customer\Customer;
 use SwipeStripe\Emails\NotificationEmail;
@@ -48,6 +54,10 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 {
 
 	use LoggerAwareTrait;
+
+	private static $dependencies = [
+		'Logger' => '%$' . LoggerInterface::class,
+	];
 
 	private static $table_name = 'Order';
 
@@ -95,9 +105,10 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	/**
 	 * Provides all Member properties, for use in summary_fields etc
 	 *
-	 * @param SQLQuery $query
+	 * @param SQLSelect $query
+	 * @param DataQuery $dataQuery
 	 */
-	public function augmentSQL(SQLQuery &$query)
+	public function augmentSQL(SQLSelect $query, DataQuery $dataQuery = null)
 	{
 		$query->addLeftJoin("Member", "\"Member\".\"ID\" = \"Order\".\"MemberID\"", "Member");
 	}
@@ -212,21 +223,21 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 */
 	private static $searchable_fields = array(
 		'ID' => array(
-			'field' => 'TextField',
-			'filter' => 'PartialMatchFilter',
+			'field' => TextField::class,
+			'filter' => PartialMatchFilter::class,
 			'title' => 'Order Number'
 		),
 		'Member.Surname' => array(
 			'title' => 'Customer Surname',
-			'filter' => 'PartialMatchFilter'
+			'filter' => PartialMatchFilter::class
 		),
 		'Member.Email' => array(
 			'title' => 'Customer Email',
-			'filter' => 'PartialMatchFilter'
+			'filter' => PartialMatchFilter::class
 		),
 		'Status' => array(
 			'title' => 'Status',
-			'filter' => 'ShopSearchFilter_OptionSet'
+			'filter' => ShopSearchFilter_OptionSet::class
 		)
 	);
 
@@ -461,8 +472,10 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 
 		ReceiptEmail::create($this->Member(), $this)
 			->send();
-		NotificationEmail::create($this->Member(), $this)
-			->send();
+		// NotificationEmail::create($this->Member(), $this)
+		// 	->send();
+
+		Injecto:inst()->get(HTTPRequest::class)->getSession()->clear('Cart.OrderID');
 
 		$this->extend('onAfterPayment');
 	}
@@ -486,7 +499,7 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 		//Override this in updateOrderCMSFields to change the order template in the CMS
 		$htmlSummary = $this->customise(array(
 			'MemberEmail' => $this->Member()->Email
-		))->renderWith('OrderAdmin');
+		))->renderWith('Includes\OrderAdmin');
 		$fields->addFieldToTab('Root.Order', new LiteralField('MainDetails', $htmlSummary));
 
 		//Updates

@@ -7,7 +7,7 @@
 	<title>$Title</title>
 </head>
 <body class="loading cms sws" lang="$Locale.RFC1766" data-frameworkpath="$ModulePath(framework)">
-	<% include CMSLoadingScreen %>
+	<% include SilverStripe\\Admin\\CMSLoadingScreen %>
 	
 	<div class="cms-container center" data-layout-type="border">
 		$Menu

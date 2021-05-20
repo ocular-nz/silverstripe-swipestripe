@@ -10,7 +10,9 @@ use SilverStripe\Control\Director;
 use SilverStripe\Core\Convert;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\LiteralField;
+use SilverStripe\Forms\TextField;
 use SilverStripe\ORM\ArrayList;
+use SilverStripe\ORM\Filters\PartialMatchFilter;
 use SilverStripe\ORM\ValidationResult;
 use SilverStripe\View\Requirements;
 use SwipeStripe\Admin\GridFieldConfig_BasicSortable;
@@ -118,8 +120,8 @@ class Product extends Page
 
 	private static $searchable_fields = array(
 		'Title' => array(
-			'field' => 'TextField',
-			'filter' => 'PartialMatchFilter',
+			'field' => TextField::class,
+			'filter' => PartialMatchFilter::class,
 			'title' => 'Name'
 		)
 	);

@@ -33,7 +33,7 @@ class Price extends DBMoney
 			if ($amount < 0) {
 				return '- ' . $this->symbol . abs($amount);
 			} else {
-				return $this->symbol . $amount;
+				return $this->symbol . sprintf('%0.2f', $amount);
 			}
 		} else {
 			return $this->symbol;

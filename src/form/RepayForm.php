@@ -7,6 +7,7 @@ use Payment\PaymentFactory;
 use Payment\PaymentProcessor;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\Session;
 use SilverStripe\Core\Injector\Injector;
@@ -31,6 +32,10 @@ class RepayForm extends Form implements LoggerAwareInterface
 {
 
 	use LoggerAwareTrait;
+
+	private static $dependencies = [
+		'Logger' => '%$' . LoggerInterface::class,
+	];
 
 	protected $order;
 	protected $customer;

@@ -27,8 +27,12 @@ use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
+use SilverStripe\Security\Security;
 use SilverStripe\View\ArrayData;
 use SilverStripe\View\Requirements;
+use SwipeStripe\Customer\Customer;
+use SwipeStripe\Order\Order;
+use SwipeStripe\Product\Product;
 
 /**
  * Shop admin area for managing orders, customers and shop settings.
@@ -47,13 +51,15 @@ class ShopAdmin extends ModelAdmin
 
 	private static $menu_title = 'Shop';
 
+	private static $menu_icon = 'swipestripe/images/basket.png';
+
 	public $showImportForm = false;
 
 	private static $managed_models = array(
-		//'Product',
-		'Order',
-		'Customer',
-		'ShopConfig'
+		// Product::class,
+		Order::class,
+		Customer::class,
+		ShopConfig::class
 	);
 
 	private static $url_handlers = array(
@@ -79,24 +85,24 @@ class ShopAdmin extends ModelAdmin
 
 		parent::init();
 
-		Requirements::css(CMS_DIR . '/css/screen.css');
-		Requirements::css('swipestripe/css/ShopAdmin.css');
+		//Requirements::css(CMS_DIR . '/css/screen.css');
+		//Requirements::css('swipestripe/css/ShopAdmin.css');
 
-		Requirements::combine_files(
-			'cmsmain.js',
-			array_merge(
-				array(
-					CMS_DIR . '/javascript/CMSMain.js',
-					CMS_DIR . '/javascript/CMSMain.EditForm.js',
-					CMS_DIR . '/javascript/CMSMain.AddForm.js',
-					CMS_DIR . '/javascript/CMSPageHistoryController.js',
-					CMS_DIR . '/javascript/CMSMain.Tree.js',
-					CMS_DIR . '/javascript/SilverStripeNavigator.js',
-					CMS_DIR . '/javascript/SiteTreeURLSegmentField.js'
-				),
-				Requirements::add_i18n_javascript(CMS_DIR . '/javascript/lang', true, true)
-			)
-		);
+		// Requirements::combine_files(
+		// 	'cmsmain.js',
+		// 	array_merge(
+		// 		array(
+		// 			CMS_DIR . '/javascript/CMSMain.js',
+		// 			CMS_DIR . '/javascript/CMSMain.EditForm.js',
+		// 			CMS_DIR . '/javascript/CMSMain.AddForm.js',
+		// 			CMS_DIR . '/javascript/CMSPageHistoryController.js',
+		// 			CMS_DIR . '/javascript/CMSMain.Tree.js',
+		// 			CMS_DIR . '/javascript/SilverStripeNavigator.js',
+		// 			CMS_DIR . '/javascript/SiteTreeURLSegmentField.js'
+		// 		),
+		// 		Requirements::add_i18n_javascript(CMS_DIR . '/javascript/lang', true, true)
+		// 	)
+		// );
 	}
 
 	/**
@@ -112,7 +118,7 @@ class ShopAdmin extends ModelAdmin
 
 	public function getManagedModels()
 	{
-		$models = $this->stat('managed_models');
+		$models = $this->config()->get('managed_models');
 		if (is_string($models)) {
 			$models = array($models);
 		}
@@ -161,8 +167,11 @@ class ShopAdmin extends ModelAdmin
 
 	public function Tools()
 	{
-		if ($this->modelClass == 'ShopConfig') return false;
-		else return parent::Tools();
+		if ($this->modelClass == ShopConfig::class) {
+			return false;
+		} else {
+			return parent::Tools();
+		}
 	}
 
 	public function Content()
@@ -179,8 +188,8 @@ class ShopAdmin extends ModelAdmin
 	{
 
 		//If editing the shop settings get the first back and edit that basically...
-		if ($this->modelClass == 'ShopConfig') {
-			return $this->renderWith('ShopAdmin_ConfigEditForm');
+		if ($this->modelClass == ShopConfig::class) {
+			return $this->renderWith('Includes\ShopAdmin_ConfigEditForm');
 		}
 
 		$list = $this->getList();
@@ -189,11 +198,11 @@ class ShopAdmin extends ModelAdmin
 		$exportButton = new GridFieldExportButton('buttons-after-left');
 		$exportButton->setExportColumns($this->getExportFields());
 
-		$fieldConfig = GridFieldConfig_RecordEditor::create($this->stat('page_length'))
+		$fieldConfig = GridFieldConfig_RecordEditor::create($this->config()->get('page_length'))
 			->addComponent($buttonAfter)
 			->addComponent($exportButton);
 
-		if ($this->modelClass == 'Order' || $this->modelClass == 'Customer') {
+		if ($this->modelClass == Order::class || $this->modelClass == Customer::class) {
 			$fieldConfig->removeComponentsByType('GridFieldAddNewButton');
 		}
 
@@ -226,6 +235,26 @@ class ShopAdmin extends ModelAdmin
 		return $form;
 	}
 
+	/**
+	 * Override list so only orders which have been processed are displayed
+	 * 
+	 * @return \SilverStripe\ORM\DataList
+	 */
+	public function getList()
+	{
+		$list = parent::getList();
+		if ($this->modelClass !== Order::class) {
+			return parent::getList();
+		}
+
+		return $list->leftJoin(
+			$table = 'Payment',
+			$onPredicate = "\"Payment\".\"OrderID\" = \"Order\".\"ID\"",
+			$tableAlias = 'Payment'
+		)->where('"Payment"."ID" IS NOT NULL');
+
+	}
+
 	public function SettingsContent()
 	{
 		return $this->renderWith('ShopAdminSettings_Content');
@@ -240,7 +269,7 @@ class ShopAdmin extends ModelAdmin
 	{
 
 		$snippets = new ArrayList();
-		$subClasses = ClassInfo::subclassesFor('ShopAdmin');
+		$subClasses = ClassInfo::subclassesFor(ShopAdmin::class);
 
 		$classes = array();
 		foreach ($subClasses as $className) {
@@ -299,7 +328,7 @@ class ShopAdmin_EmailAdmin extends ShopAdmin
 	{
 		parent::init();
 		if (!in_array(get_class($this), self::$hidden_sections)) {
-			$this->modelClass = 'ShopConfig';
+			$this->modelClass = ShopConfig::class;
 		}
 	}
 
@@ -445,15 +474,15 @@ class ShopAdmin_EmailAdmin extends ShopAdmin
 	public function getSnippet()
 	{
 
-		if (!$member = Member::currentUser()) return false;
+		if (!$member = Security::getCurrentUser()) return false;
 		if (!Permission::check('CMS_ACCESS_' . get_class($this), 'any', $member)) return false;
 
 		return $this->customise(array(
 			'Title' => 'Email Settings',
 			'Help' => 'Order notification and receipt details and recipeients.',
-			'Link' => Controller::join_links($this->Link('ShopConfig'), 'EmailSettings'),
+			'Link' => Controller::join_links($this->Link(ShopConfig::class), 'EmailSettings'),
 			'LinkTitle' => 'Edit Email Settings'
-		))->renderWith('ShopAdmin_Snippet');
+		))->renderWith('Includes\ShopAdmin_Snippet');
 	}
 }
 
@@ -468,7 +497,7 @@ class ShopAdmin_EmailAdmin extends ShopAdmin
 class ShopAdmin_BaseCurrency extends ShopAdmin
 {
 
-	private static $tree_class = 'ShopConfig';
+	private static $tree_class = ShopConfig::class;
 
 	private static $allowed_actions = array(
 		'BaseCurrencySettings',
@@ -489,7 +518,7 @@ class ShopAdmin_BaseCurrency extends ShopAdmin
 	{
 		parent::init();
 		if (!in_array(get_class($this), self::$hidden_sections)) {
-			$this->modelClass = 'ShopConfig';
+			$this->modelClass = ShopConfig::class;
 		}
 	}
 
@@ -599,7 +628,7 @@ class ShopAdmin_BaseCurrency extends ShopAdmin
 	{
 
 		//Hack for LeftAndMain::getRecord()
-		self::$tree_class = 'ShopConfig';
+		self::$tree_class = ShopConfig::class;
 
 		$config = ShopConfig::get()->First();
 		$form->saveInto($config);
@@ -631,7 +660,7 @@ class ShopAdmin_BaseCurrency extends ShopAdmin
 	public function getSnippet()
 	{
 
-		if (!$member = Member::currentUser()) return false;
+		if (!$member = Security::getCurrentUser()) return false;
 		if (!Permission::check('CMS_ACCESS_' . get_class($this), 'any', $member)) return false;
 
 		return $this->customise(array(
@@ -639,7 +668,7 @@ class ShopAdmin_BaseCurrency extends ShopAdmin
 			'Help' => 'Set base currency.',
 			'Link' => Controller::join_links($this->Link('ShopConfig'), 'BaseCurrency'),
 			'LinkTitle' => 'Edit base currency'
-		))->renderWith('ShopAdmin_Snippet');
+		))->renderWith('Includes\ShopAdmin_Snippet');
 	}
 }
 
@@ -654,7 +683,7 @@ class ShopAdmin_BaseCurrency extends ShopAdmin
 class ShopAdmin_Attribute extends ShopAdmin
 {
 
-	private static $tree_class = 'ShopConfig';
+	private static $tree_class = ShopConfig::class;
 
 	private static $allowed_actions = array(
 		'AttributeSettings',
@@ -675,7 +704,7 @@ class ShopAdmin_Attribute extends ShopAdmin
 	{
 		parent::init();
 		if (!in_array(get_class($this), self::$hidden_sections)) {
-			$this->modelClass = 'ShopConfig';
+			$this->modelClass = ShopConfig::class;
 		}
 	}
 
@@ -776,7 +805,7 @@ class ShopAdmin_Attribute extends ShopAdmin
 	{
 
 		//Hack for LeftAndMain::getRecord()
-		self::$tree_class = 'ShopConfig';
+		self::$tree_class = ShopConfig::class;
 
 		$config = ShopConfig::get()->First();
 		$form->saveInto($config);
@@ -808,7 +837,7 @@ class ShopAdmin_Attribute extends ShopAdmin
 	public function getSnippet()
 	{
 
-		if (!$member = Member::currentUser()) return false;
+		if (!$member = Security::getCurrentUser()) return false;
 		if (!Permission::check('CMS_ACCESS_' . get_class($this), 'any', $member)) return false;
 
 		return $this->customise(array(
@@ -816,7 +845,7 @@ class ShopAdmin_Attribute extends ShopAdmin
 			'Help' => 'Create default attributes',
 			'Link' => Controller::join_links($this->Link('ShopConfig'), 'Attribute'),
 			'LinkTitle' => 'Edit default attributes'
-		))->renderWith('ShopAdmin_Snippet');
+		))->renderWith('Includes\ShopAdmin_Snippet');
 	}
 }
 
@@ -840,7 +869,7 @@ class ShopAdmin_LeftAndMainExtension extends Extension
 	{
 		if (class_exists($className)) {
 			$obj = new $className();
-			if (is_subclass_of($obj, 'ShopAdmin')) {
+			if (is_subclass_of($obj, ShopAdmin::class)) {
 				return false;
 			}
 		}
