@@ -189,7 +189,7 @@ class ShopAdmin extends ModelAdmin
 
 		//If editing the shop settings get the first back and edit that basically...
 		if ($this->modelClass == ShopConfig::class) {
-			return $this->renderWith('Includes\ShopAdmin_ConfigEditForm');
+			return $this->renderWith('Includes/ShopAdmin_ConfigEditForm');
 		}
 
 		$list = $this->getList();
@@ -257,7 +257,7 @@ class ShopAdmin extends ModelAdmin
 
 	public function SettingsContent()
 	{
-		return $this->renderWith('ShopAdminSettings_Content');
+		return $this->renderWith('Includes/ShopAdminSettings_Content');
 	}
 
 	public function SettingsForm($request = null)
@@ -307,7 +307,7 @@ class ShopAdmin extends ModelAdmin
 class ShopAdmin_EmailAdmin extends ShopAdmin
 {
 
-	private static $tree_class = 'ShopConfig';
+	private static $tree_class = ShopConfig::class;
 
 	private static $allowed_actions = array(
 		'EmailSettings',
@@ -315,13 +315,13 @@ class ShopAdmin_EmailAdmin extends ShopAdmin
 		'saveEmailSettings'
 	);
 
-	private static $url_rule = 'ShopConfig/EmailSettings';
+	private static $url_rule = 'SwipeStripe-Admin-ShopConfig/EmailSettings';
 	private static $url_priority = 60;
 	private static $menu_title = 'Shop Emails';
 
 	private static $url_handlers = array(
-		'ShopConfig/EmailSettings/EmailSettingsForm' => 'EmailSettingsForm',
-		'ShopConfig/EmailSettings' => 'EmailSettings'
+		'SwipeStripe-Admin-ShopConfig/EmailSettings/EmailSettingsForm' => 'EmailSettingsForm',
+		'SwipeStripe-Admin-ShopConfig/EmailSettings' => 'EmailSettings'
 	);
 
 	protected function init()
@@ -364,10 +364,10 @@ class ShopAdmin_EmailAdmin extends ShopAdmin
 						return $controller->EmailSettingsForm()->forTemplate();
 					},
 					'Content' => function () use (&$controller) {
-						return $controller->renderWith('ShopAdminSettings_Content');
+						return $controller->renderWith('Includes/ShopAdminSettings_Content');
 					},
 					'Breadcrumbs' => function () use (&$controller) {
-						return $controller->renderWith('CMSBreadcrumbs');
+						return $controller->renderWith('Includes/CMSBreadcrumbs');
 					},
 					'default' => function () use (&$controller) {
 						return $controller->renderWith($controller->getViewer('show'));
@@ -378,7 +378,7 @@ class ShopAdmin_EmailAdmin extends ShopAdmin
 			return $responseNegotiator->respond($this->getRequest());
 		}
 
-		return $this->renderWith('ShopAdminSettings');
+		return $this->renderWith('SwipeStripe/Admin/ShopAdminSettings');
 	}
 
 	public function EmailSettingsForm()
@@ -453,7 +453,7 @@ class ShopAdmin_EmailAdmin extends ShopAdmin
 		$responseNegotiator = new PjaxResponseNegotiator(
 			array(
 				'CurrentForm' => function () use (&$controller) {
-					//return $controller->renderWith('ShopAdminSettings_Content');
+					//return $controller->renderWith('Includes/ShopAdminSettings_Content');
 					return $controller->EmailSettingsForm()->forTemplate();
 				},
 				'Content' => function () use (&$controller) {
@@ -480,9 +480,9 @@ class ShopAdmin_EmailAdmin extends ShopAdmin
 		return $this->customise(array(
 			'Title' => 'Email Settings',
 			'Help' => 'Order notification and receipt details and recipeients.',
-			'Link' => Controller::join_links($this->Link(ShopConfig::class), 'EmailSettings'),
+			'Link' => Controller::join_links($this->Link($this->sanitiseClassName(ShopConfig::class)), 'EmailSettings'),
 			'LinkTitle' => 'Edit Email Settings'
-		))->renderWith('Includes\ShopAdmin_Snippet');
+		))->renderWith('Includes/ShopAdmin_Snippet');
 	}
 }
 
@@ -505,13 +505,13 @@ class ShopAdmin_BaseCurrency extends ShopAdmin
 		'saveBaseCurrencySettings'
 	);
 
-	private static $url_rule = 'ShopConfig/BaseCurrency';
+	private static $url_rule = 'SwipeStripe-Admin-ShopConfig/BaseCurrency';
 	private static $url_priority = 65;
 	private static $menu_title = 'Shop Base Currency';
 
 	private static $url_handlers = array(
-		'ShopConfig/BaseCurrency/BaseCurrencySettingsForm' => 'BaseCurrencySettingsForm',
-		'ShopConfig/BaseCurrency' => 'BaseCurrencySettings'
+		'SwipeStripe-Admin-ShopConfig/BaseCurrency/BaseCurrencySettingsForm' => 'BaseCurrencySettingsForm',
+		'SwipeStripe-Admin-ShopConfig/BaseCurrency' => 'BaseCurrencySettings'
 	);
 
 	protected function init()
@@ -554,7 +554,7 @@ class ShopAdmin_BaseCurrency extends ShopAdmin
 						return $controller->BaseCurrencySettingsForm()->forTemplate();
 					},
 					'Content' => function () use (&$controller) {
-						return $controller->renderWith('ShopAdminSettings_Content');
+						return $controller->renderWith('Includes/ShopAdminSettings_Content');
 					},
 					'Breadcrumbs' => function () use (&$controller) {
 						return $controller->renderWith('CMSBreadcrumbs');
@@ -639,7 +639,7 @@ class ShopAdmin_BaseCurrency extends ShopAdmin
 		$responseNegotiator = new PjaxResponseNegotiator(
 			array(
 				'CurrentForm' => function () use (&$controller) {
-					//return $controller->renderWith('ShopAdminSettings_Content');
+					//return $controller->renderWith('Includes/ShopAdminSettings_Content');
 					return $controller->BaseCurrencySettingsForm()->forTemplate();
 				},
 				'Content' => function () use (&$controller) {
@@ -666,7 +666,7 @@ class ShopAdmin_BaseCurrency extends ShopAdmin
 		return $this->customise(array(
 			'Title' => 'Base Currency',
 			'Help' => 'Set base currency.',
-			'Link' => Controller::join_links($this->Link('ShopConfig'), 'BaseCurrency'),
+			'Link' => Controller::join_links($this->Link($this->sanitiseClassName(ShopConfig::class)), 'BaseCurrency'),
 			'LinkTitle' => 'Edit base currency'
 		))->renderWith('Includes\ShopAdmin_Snippet');
 	}
@@ -691,13 +691,13 @@ class ShopAdmin_Attribute extends ShopAdmin
 		'saveAttributeSettings'
 	);
 
-	private static $url_rule = 'ShopConfig/Attribute';
+	private static $url_rule = 'SwipeStripe-Admin-ShopConfig/Attribute';
 	private static $url_priority = 75;
 	private static $menu_title = 'Shop Product Attributes';
 
 	private static $url_handlers = array(
-		'ShopConfig/Attribute/AttributeSettingsForm' => 'AttributeSettingsForm',
-		'ShopConfig/Attribute' => 'AttributeSettings'
+		'SwipeStripe-Admin-ShopConfig/Attribute/AttributeSettingsForm' => 'AttributeSettingsForm',
+		'SwipeStripe-Admin-ShopConfig/Attribute' => 'AttributeSettings'
 	);
 
 	protected function init()
@@ -740,7 +740,7 @@ class ShopAdmin_Attribute extends ShopAdmin
 						return $controller->AttributeSettingsForm()->forTemplate();
 					},
 					'Content' => function () use (&$controller) {
-						return $controller->renderWith('ShopAdminSettings_Content');
+						return $controller->renderWith('Includes/ShopAdminSettings_Content');
 					},
 					'Breadcrumbs' => function () use (&$controller) {
 						return $controller->renderWith('CMSBreadcrumbs');
@@ -816,7 +816,7 @@ class ShopAdmin_Attribute extends ShopAdmin
 		$responseNegotiator = new PjaxResponseNegotiator(
 			array(
 				'CurrentForm' => function () use (&$controller) {
-					//return $controller->renderWith('ShopAdminSettings_Content');
+					//return $controller->renderWith('Includes/ShopAdminSettings_Content');
 					return $controller->AttributeSettingsForm()->forTemplate();
 				},
 				'Content' => function () use (&$controller) {
@@ -843,9 +843,9 @@ class ShopAdmin_Attribute extends ShopAdmin
 		return $this->customise(array(
 			'Title' => 'Attribute Management',
 			'Help' => 'Create default attributes',
-			'Link' => Controller::join_links($this->Link('ShopConfig'), 'Attribute'),
+			'Link' => Controller::join_links($this->Link($this->sanitiseClassName(ShopConfig::class)), 'Attribute'),
 			'LinkTitle' => 'Edit default attributes'
-		))->renderWith('Includes\ShopAdmin_Snippet');
+		))->renderWith('Includes/ShopAdmin_Snippet');
 	}
 }
 
