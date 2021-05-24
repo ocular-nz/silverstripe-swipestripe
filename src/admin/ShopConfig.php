@@ -4,6 +4,7 @@ namespace SwipeStripe\Admin;
 
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
+use SwipeStripe\Product\Attribute_Default;
 
 /**
  * Shop configuration object for containing all the shop settings.
@@ -42,7 +43,7 @@ class ShopConfig extends DataObject {
 	);
 
 	private static $has_many = array(
-		'Attributes' => 'Attribute_Default'
+		'Attributes' => Attribute_Default::class
 	);
 
 	private static $defaults = array(

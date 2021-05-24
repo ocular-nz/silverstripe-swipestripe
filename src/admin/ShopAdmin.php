@@ -86,7 +86,7 @@ class ShopAdmin extends ModelAdmin
 		parent::init();
 
 		//Requirements::css(CMS_DIR . '/css/screen.css');
-		//Requirements::css('swipestripe/css/ShopAdmin.css');
+		Requirements::css('swipestripe/css/ShopAdmin.css');
 
 		// Requirements::combine_files(
 		// 	'cmsmain.js',
@@ -367,7 +367,7 @@ class ShopAdmin_EmailAdmin extends ShopAdmin
 						return $controller->renderWith('Includes/ShopAdminSettings_Content');
 					},
 					'Breadcrumbs' => function () use (&$controller) {
-						return $controller->renderWith('Includes/CMSBreadcrumbs');
+						return $controller->renderWith('SilverStripe/Admin/Includes/CMSBreadcrumbs');
 					},
 					'default' => function () use (&$controller) {
 						return $controller->renderWith($controller->getViewer('show'));
@@ -417,8 +417,7 @@ class ShopAdmin_EmailAdmin extends ShopAdmin
 		$actions = new FieldList();
 		$actions->push(FormAction::create('saveEmailSettings', _t('GridFieldDetailForm.Save', 'Save'))
 			->setUseButtonTag(true)
-			->addExtraClass('ss-ui-action-constructive')
-			->setAttribute('data-icon', 'add'));
+			->addExtraClass('btn-primary font-icon-save'));
 
 		$form = new Form(
 			$this,
@@ -427,7 +426,7 @@ class ShopAdmin_EmailAdmin extends ShopAdmin
 			$actions
 		);
 
-		$form->setTemplate('ShopAdminSettings_EditForm');
+		$form->setTemplate('Includes/ShopAdminSettings_EditForm');
 		$form->setAttribute('data-pjax-fragment', 'CurrentForm');
 		$form->addExtraClass('cms-content cms-edit-form center ss-tabset');
 		if ($form->Fields()->hasTabset()) $form->Fields()->findOrMakeTab('Root')->setTemplate('CMSTabSet');
@@ -557,7 +556,7 @@ class ShopAdmin_BaseCurrency extends ShopAdmin
 						return $controller->renderWith('Includes/ShopAdminSettings_Content');
 					},
 					'Breadcrumbs' => function () use (&$controller) {
-						return $controller->renderWith('CMSBreadcrumbs');
+						return $controller->renderWith('SilverStripe/Admin/CMSBreadcrumbs');
 					},
 					'default' => function () use (&$controller) {
 						return $controller->renderWith($controller->getViewer('show'));
@@ -568,7 +567,7 @@ class ShopAdmin_BaseCurrency extends ShopAdmin
 			return $responseNegotiator->respond($this->getRequest());
 		}
 
-		return $this->renderWith('ShopAdminSettings');
+		return $this->renderWith('SwipeStripe/Admin/ShopAdminSettings');
 	}
 
 	public function BaseCurrencySettingsForm()
@@ -600,8 +599,7 @@ class ShopAdmin_BaseCurrency extends ShopAdmin
 		$actions = new FieldList();
 		$actions->push(FormAction::create('saveBaseCurrencySettings', _t('GridFieldDetailForm.Save', 'Save'))
 			->setUseButtonTag(true)
-			->addExtraClass('ss-ui-action-constructive')
-			->setAttribute('data-icon', 'add'));
+			->addExtraClass('btn-primary font-icon-save'));
 
 		$validator = new RequiredFields('BaseCurrency');
 
@@ -613,7 +611,7 @@ class ShopAdmin_BaseCurrency extends ShopAdmin
 			$validator
 		);
 
-		$form->setTemplate('ShopAdminSettings_EditForm');
+		$form->setTemplate('Includes/ShopAdminSettings_EditForm');
 		$form->setAttribute('data-pjax-fragment', 'CurrentForm');
 		$form->addExtraClass('cms-content cms-edit-form center ss-tabset');
 		if ($form->Fields()->hasTabset()) $form->Fields()->findOrMakeTab('Root')->setTemplate('CMSTabSet');
@@ -668,7 +666,7 @@ class ShopAdmin_BaseCurrency extends ShopAdmin
 			'Help' => 'Set base currency.',
 			'Link' => Controller::join_links($this->Link($this->sanitiseClassName(ShopConfig::class)), 'BaseCurrency'),
 			'LinkTitle' => 'Edit base currency'
-		))->renderWith('Includes\ShopAdmin_Snippet');
+		))->renderWith('Includes/ShopAdmin_Snippet');
 	}
 }
 
@@ -754,7 +752,7 @@ class ShopAdmin_Attribute extends ShopAdmin
 			return $responseNegotiator->respond($this->getRequest());
 		}
 
-		return $this->renderWith('ShopAdminSettings');
+		return $this->renderWith('SwipeStripe/Admin/ShopAdminSettings');
 	}
 
 	public function AttributeSettingsForm()
@@ -780,8 +778,7 @@ class ShopAdmin_Attribute extends ShopAdmin
 		$actions = new FieldList();
 		$actions->push(FormAction::create('saveAttributeSettings', _t('GridFieldDetailForm.Save', 'Save'))
 			->setUseButtonTag(true)
-			->addExtraClass('ss-ui-action-constructive')
-			->setAttribute('data-icon', 'add'));
+			->addExtraClass('btn-primary font-icon-save'));
 
 		$form = new Form(
 			$this,
@@ -790,7 +787,7 @@ class ShopAdmin_Attribute extends ShopAdmin
 			$actions
 		);
 
-		$form->setTemplate('ShopAdminSettings_EditForm');
+		$form->setTemplate('Includes/ShopAdminSettings_EditForm');
 		$form->setAttribute('data-pjax-fragment', 'CurrentForm');
 		$form->addExtraClass('cms-content cms-edit-form center ss-tabset');
 		if ($form->Fields()->hasTabset()) $form->Fields()->findOrMakeTab('Root')->setTemplate('CMSTabSet');

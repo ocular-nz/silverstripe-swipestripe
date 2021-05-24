@@ -14,6 +14,7 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
 use SilverStripe\View\Requirements;
+use SwipeStripe\Admin\GridFieldConfig_BasicSortable;
 use SwipeStripe\Admin\ShopConfig;
 
 /**
@@ -57,7 +58,7 @@ class Attribute extends DataObject implements PermissionProvider
 	 * @var Array
 	 */
 	private static $has_many = array(
-		'Options' => 'Option'
+		'Options' => Option::class
 	);
 
 	private static $has_one = array(
