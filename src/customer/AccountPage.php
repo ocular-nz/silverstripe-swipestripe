@@ -5,6 +5,7 @@ namespace SwipeStripe\Customer;
 use Page;
 use PageController;
 use SilverStripe\Control\Director;
+use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\Convert;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
@@ -215,9 +216,11 @@ class AccountPageController extends PageController
 		}
 	}
 
+	/**
+	 * @param HTTPRequest $request
+	 */
 	function repay($request)
 	{
-
 		Requirements::css('swipestripe/css/Shop.css');
 
 		if ($orderID = $request->param('ID')) {
@@ -235,10 +238,11 @@ class AccountPageController extends PageController
 				return $this->httpError(403, _t('AccountPage.CANNOT_VIEW_ORDER', 'You cannot view orders that do not belong to you.'));
 			}
 
-			Session::set('Repay', array(
+			$session = $request->getSession();
+			$session->set('Repay', array(
 				'OrderID' => $order->ID
 			));
-			Session::save();
+			$session->save($request);
 
 			return array(
 				'Order' => $order,

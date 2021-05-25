@@ -57,8 +57,6 @@ class RepayForm extends Form implements LoggerAwareInterface
 
 		parent::__construct($controller, $name, FieldList::create(), FieldList::create(), null);
 
-		Requirements::javascript(THIRDPARTY_DIR . '/jquery-entwine/dist/jquery.entwine-dist.js');
-
 		$orderID = Injector::inst()->get(HTTPRequest::class)->getSession()->get('Repay.OrderID');
 		if ($orderID) {
 			$this->order = DataObject::get_by_id('Order', $orderID);
@@ -69,7 +67,7 @@ class RepayForm extends Form implements LoggerAwareInterface
 		$this->actions = $this->createActions();
 		$this->validator = $this->createValidator();
 
-		$this->setupFormErrors();
+		$this->restoreFormState();
 
 		$this->setTemplate('RepayForm');
 		$this->addExtraClass('order-form');
@@ -79,12 +77,11 @@ class RepayForm extends Form implements LoggerAwareInterface
 	 * Set up current form errors in session to
 	 * the current form if appropriate.
 	 */
-	public function setupFormErrors()
+	public function restoreFormState()
 	{
-
 		//Only run when fields exist
 		if ($this->fields->exists()) {
-			parent::setupFormErrors();
+			parent::restoreFormState();
 		}
 	}
 
@@ -178,8 +175,8 @@ class RepayForm extends Form implements LoggerAwareInterface
 			if ($errors) {
 				// Load errors into session and post back
 				$data = $this->getData();
-				Session::set("FormInfo.{$this->FormName()}.errors", $errors);
-				Session::set("FormInfo.{$this->FormName()}.data", $data);
+				$this->getSession()->set("FormInfo.{$this->FormName()}.errors", $errors);
+				$this->getSession()->set("FormInfo.{$this->FormName()}.data", $data);
 				$valid = false;
 			}
 		}
@@ -204,11 +201,11 @@ class RepayForm extends Form implements LoggerAwareInterface
 
 		$member = Customer::currentUser();
 
-		$orderID = Session::get('Repay.OrderID');
+		$orderID = $this->getRequest()->getSession()->get('Repay.OrderID');
 		if ($orderID) {
 			$order = DataObject::get_by_id('Order', $orderID);
 		}
-		Session::clear('Repay.OrderID');
+		$this->getRequest()->getSession()->clear('Repay.OrderID');
 
 		$order->onBeforePayment();
 
@@ -242,7 +239,7 @@ class RepayForm extends Form implements LoggerAwareInterface
 	{
 
 		//Populate values in the form the first time
-		if (!Session::get("FormInfo.{$this->FormName()}.errors")) {
+		if (!$this->getRequest()->getSession()->get("FormInfo.{$this->FormName()}.errors")) {
 
 			$member = Customer::currentUser() ? Customer::currentUser() : singleton('Customer');
 			$data = array_merge(

@@ -14,6 +14,7 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
 use SilverStripe\View\Requirements;
+use SwipeStripe\Admin\GridFieldConfig_Basic;
 use SwipeStripe\Admin\GridFieldConfig_BasicSortable;
 use SwipeStripe\Admin\ShopConfig;
 

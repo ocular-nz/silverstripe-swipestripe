@@ -12,6 +12,7 @@ use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\Form;
 use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\GridField\GridField;
+use SilverStripe\Forms\GridField\GridFieldAddNewButton;
 use SilverStripe\Forms\GridField\GridFieldButtonRow;
 use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
 use SilverStripe\Forms\GridField\GridFieldExportButton;
@@ -86,7 +87,7 @@ class ShopAdmin extends ModelAdmin
 		parent::init();
 
 		//Requirements::css(CMS_DIR . '/css/screen.css');
-		Requirements::css('swipestripe/css/ShopAdmin.css');
+		//Requirements::css('swipestripe/css/ShopAdmin.css');
 
 		// Requirements::combine_files(
 		// 	'cmsmain.js',
@@ -203,7 +204,7 @@ class ShopAdmin extends ModelAdmin
 			->addComponent($exportButton);
 
 		if ($this->modelClass == Order::class || $this->modelClass == Customer::class) {
-			$fieldConfig->removeComponentsByType('GridFieldAddNewButton');
+			$fieldConfig->removeComponentsByType(GridFieldAddNewButton::class);
 		}
 
 		$listField = new GridField(
@@ -459,7 +460,7 @@ class ShopAdmin_EmailAdmin extends ShopAdmin
 					//return $controller->renderWith($controller->getTemplatesWithSuffix('_Content'));
 				},
 				'Breadcrumbs' => function () use (&$controller) {
-					return $controller->renderWith('CMSBreadcrumbs');
+					return $controller->renderWith('SilverStripe/Admin/Includes/CMSBreadcrumbs');
 				},
 				'default' => function () use (&$controller) {
 					return $controller->renderWith($controller->getViewer('show'));
@@ -556,7 +557,7 @@ class ShopAdmin_BaseCurrency extends ShopAdmin
 						return $controller->renderWith('Includes/ShopAdminSettings_Content');
 					},
 					'Breadcrumbs' => function () use (&$controller) {
-						return $controller->renderWith('SilverStripe/Admin/CMSBreadcrumbs');
+						return $controller->renderWith('SilverStripe/Admin/Includes/CMSBreadcrumbs');
 					},
 					'default' => function () use (&$controller) {
 						return $controller->renderWith($controller->getViewer('show'));
@@ -644,7 +645,7 @@ class ShopAdmin_BaseCurrency extends ShopAdmin
 					//return $controller->renderWith($controller->getTemplatesWithSuffix('_Content'));
 				},
 				'Breadcrumbs' => function () use (&$controller) {
-					return $controller->renderWith('CMSBreadcrumbs');
+					return $controller->renderWith('SilverStripe/Admin/Includes/CMSBreadcrumbs');
 				},
 				'default' => function () use (&$controller) {
 					return $controller->renderWith($controller->getViewer('show'));
@@ -741,7 +742,7 @@ class ShopAdmin_Attribute extends ShopAdmin
 						return $controller->renderWith('Includes/ShopAdminSettings_Content');
 					},
 					'Breadcrumbs' => function () use (&$controller) {
-						return $controller->renderWith('CMSBreadcrumbs');
+						return $controller->renderWith('SilverStripe/Admin/Includes/CMSBreadcrumbs');
 					},
 					'default' => function () use (&$controller) {
 						return $controller->renderWith($controller->getViewer('show'));
@@ -778,7 +779,9 @@ class ShopAdmin_Attribute extends ShopAdmin
 		$actions = new FieldList();
 		$actions->push(FormAction::create('saveAttributeSettings', _t('GridFieldDetailForm.Save', 'Save'))
 			->setUseButtonTag(true)
-			->addExtraClass('btn-primary font-icon-save'));
+			->addExtraClass('btn-outline-primary font-icon-tick action')
+			->setAttribute('data-btn-alternate-add', 'btn-primary font-icon-save')
+			->setAttribute('data-btn-alternate-remove', 'btn-outline-primary font-icon-tick'));
 
 		$form = new Form(
 			$this,
@@ -790,8 +793,9 @@ class ShopAdmin_Attribute extends ShopAdmin
 		$form->setTemplate('Includes/ShopAdminSettings_EditForm');
 		$form->setAttribute('data-pjax-fragment', 'CurrentForm');
 		$form->addExtraClass('cms-content cms-edit-form center ss-tabset');
-		if ($form->Fields()->hasTabset()) $form->Fields()->findOrMakeTab('Root')->setTemplate('CMSTabSet');
-		$form->setFormAction(Controller::join_links($this->Link($this->sanitiseClassName($this->modelClass)), 'Attribute/AttributeSettingsForm'));
+		if ($form->Fields()->hasTabset()) $form->Fields()->findOrMakeTab('Root')->setTemplate('SilverStripe/Forms/CMSTabSet');
+		
+		$form->setFormAction(Controller::join_links($this->Link($this->sanitiseClassName($this->modelTab)), 'Attribute/AttributeSettingsForm'));
 
 		$form->loadDataFrom($shopConfig);
 
@@ -820,7 +824,7 @@ class ShopAdmin_Attribute extends ShopAdmin
 					//return $controller->renderWith($controller->getTemplatesWithSuffix('_Content'));
 				},
 				'Breadcrumbs' => function () use (&$controller) {
-					return $controller->renderWith('CMSBreadcrumbs');
+					return $controller->renderWith('SilverStripe/Admin/Includes/CMSBreadcrumbs');
 				},
 				'default' => function () use (&$controller) {
 					return $controller->renderWith($controller->getViewer('show'));
@@ -859,7 +863,7 @@ class ShopAdmin_LeftAndMainExtension extends Extension
 
 	public function onAfterInit()
 	{
-		Requirements::css('swipestripe/css/ShopAdmin.css');
+		//Requirements::css('swipestripe/css/ShopAdmin.css');
 	}
 
 	public function alternateMenuDisplayCheck($className)

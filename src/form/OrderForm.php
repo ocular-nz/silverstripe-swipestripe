@@ -29,8 +29,11 @@ use SilverStripe\Forms\TextField;
 use SilverStripe\View\Requirements;
 use SilverStripe\Control\RequestHandler;
 use SilverStripe\ORM\FieldType\DBDatetime;
+use SilverStripe\Security\Security;
+use SwipeStripe\Admin\ShopConfig;
 use SwipeStripe\Customer\Cart;
 use SwipeStripe\Customer\Customer;
+use SwipeStripe\Order\Item;
 use SwipeStripe\Order\Order;
 use SwipeStripe\Order\Order_Update;
 
@@ -76,13 +79,13 @@ class OrderForm extends Form implements LoggerAwareInterface
 		Requirements::javascript('swipestripe/javascript/OrderForm.js');
 
 		$this->order = Cart::get_current_order();
-		$this->customer = Customer::currentUser() ? Customer::currentUser() : singleton('Customer');
+		$this->customer = Customer::currentUser() ?: singleton(Customer::class);
 
 		$this->fields = $this->createFields();
 		$this->actions = $this->createActions();
 		$this->validator = $this->createValidator();
 
-		$this->setupFormErrors();
+		$this->restoreFormState();
 
 		$this->setTemplate('OrderForm');
 		$this->addExtraClass('order-form');
@@ -92,12 +95,11 @@ class OrderForm extends Form implements LoggerAwareInterface
 	 * Set up current form errors in session to
 	 * the current form if appropriate.
 	 */
-	public function setupFormErrors()
+	public function restoreFormState()
 	{
-
 		//Only run when fields exist
 		if ($this->fields->exists()) {
-			parent::setupFormErrors();
+			parent::restoreFormState();
 		}
 	}
 
@@ -298,8 +300,8 @@ class OrderForm extends Form implements LoggerAwareInterface
 			if ($errors) {
 				// Load errors into session and post back
 				$data = $this->getData();
-				Session::set("FormInfo.{$this->FormName()}.errors", $errors);
-				Session::set("FormInfo.{$this->FormName()}.data", $data);
+				$this->getSession()->set("FormInfo.{$this->FormName()}.errors", $errors);
+				$this->getSession()->set("FormInfo.{$this->FormName()}.data", $data);
 				$valid = false;
 			}
 		}
@@ -324,7 +326,7 @@ class OrderForm extends Form implements LoggerAwareInterface
 		}
 
 		//Save or create a new customer/member
-		$member = Customer::currentUser() ? Customer::currentUser() : singleton('Customer');
+		$member = Customer::currentUser() ?: singleton(Customer::class);
 		if (!$member->exists()) {
 
 			$existingCustomer = Customer::get()->filter('Email', $data['Email']);
@@ -341,7 +343,7 @@ class OrderForm extends Form implements LoggerAwareInterface
 			$form->saveInto($member);
 			$member->write();
 			$member->addToGroupByCode('customers');
-			$member->logIn();
+			Security::setCurrentUser($member);
 		}
 
 		//Save the order
@@ -367,7 +369,7 @@ class OrderForm extends Form implements LoggerAwareInterface
 		//Add modifiers to order
 		$order->updateModifications($data)->write();
 
-		Session::clear('Cart.OrderID');
+		$this->getSession()->clear('Cart.OrderID');
 
 		$order->onBeforePayment();
 
@@ -405,7 +407,7 @@ class OrderForm extends Form implements LoggerAwareInterface
 
 		if ($request->isPOST()) {
 
-			$member = Customer::currentUser() ? Customer::currentUser() : singleton('Customer');
+			$member = Customer::currentUser() ?: singleton(Customer::class);
 			$order = Cart::get_current_order();
 
 			//Update the Order 
@@ -427,11 +429,11 @@ class OrderForm extends Form implements LoggerAwareInterface
 
 	public function populateFields()
 	{
-
+		
 		//Populate values in the form the first time
-		if (!Session::get("FormInfo.{$this->FormName()}.errors")) {
+		if (!$this->getRequest()->getSession()->get("FormInfo.{$this->FormName()}.errors")) {
 
-			$member = Customer::currentUser() ? Customer::currentUser() : singleton('Customer');
+			$member = Customer::currentUser() ?: singleton(Customer::class);
 			$data = array_merge(
 				$member->toMap()
 			);
@@ -474,10 +476,10 @@ class OrderForm_Validator extends RequiredFields
 		} else {
 			$validation = $currentOrder->validateForCart();
 
-			if (!$validation->valid()) {
+			if (!$validation->isValid()) {
 
 				$this->form->sessionMessage(
-					_t('Form.ORDER_IS_NOT_VALID', 'There seems to be a problem with your order. ' . $validation->message()),
+					_t('Form.ORDER_IS_NOT_VALID', 'There seems to be a problem with your order. ' . reset($validation->getMessages())),
 					'bad'
 				);
 
@@ -511,7 +513,7 @@ class OrderForm_ItemField extends FormField
 	 *
 	 * @var String
 	 */
-	protected $template = "OrderForm_ItemField";
+	protected $template = "Includes\\OrderForm_ItemField";
 
 	/**
 	 * Current {@link Item} this field represents.
@@ -598,9 +600,9 @@ class OrderForm_ItemField extends FormField
 
 			$validation = $item->validateForCart();
 
-			if (!$validation->valid()) {
+			if (!$validation->isValid()) {
 
-				$errorMessage = $validation->message();
+				$errorMessage = reset($validation->getMessages());
 				if ($msg = $this->getCustomValidationMessage()) {
 					$errorMessage = $msg;
 				}

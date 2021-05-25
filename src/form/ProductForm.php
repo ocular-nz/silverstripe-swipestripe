@@ -188,7 +188,7 @@ class ProductForm extends Form
 					}
 
 					// Load errors into session and post back
-					Session::set("FormInfo.{$this->FormName()}", array(
+					$this->getSession()->set("FormInfo.{$this->FormName()}", array(
 						'errors' => $errors,
 						'data' => $data,
 						'formError' => $formError

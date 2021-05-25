@@ -125,7 +125,7 @@ class GridFieldConfig_HasManyRelationEditor extends GridFieldConfig {
 		$this->addComponent($pagination = new GridFieldPaginator($itemsPerPage));
 
 		$detailForm = new GridFieldDetailForm();
-		$detailForm->setItemRequestClass('GridFieldDetailForm_HasManyItemRequest');
+		$detailForm->setItemRequestClass(GridFieldDetailForm_HasManyItemRequest::class);
 		$this->addComponent($detailForm);
 
 		$sort->setThrowExceptionOnBadDataType(false);

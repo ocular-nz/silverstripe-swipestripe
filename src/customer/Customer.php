@@ -141,6 +141,8 @@ class Customer extends Member {
 	 *                     user or FALSE.
 	 */
 	static function currentUser() {
-		return Security::getCurrentUser() ?? false;
+		$id = Security::getCurrentUser()->ID;
+		$customer = $id ? Customer::get_by_id($id) : false;
+		return false;
 	}
 }
