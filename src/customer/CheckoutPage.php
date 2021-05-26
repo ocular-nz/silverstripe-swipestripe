@@ -4,6 +4,8 @@ namespace SwipeStripe\Customer;
 
 use Page;
 use PageController;
+use SilverStripe\Dev\Debug;
+use SilverStripe\Forms\FormRequestHandler;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use SilverStripe\Security\Member;
@@ -142,7 +144,8 @@ class CheckoutPageController extends PageController
 
 	private static $allowed_actions = array(
 		'index',
-		'OrderForm'
+		'OrderForm',
+		'OrderFormUpdate'
 	);
 
 	/**
@@ -152,7 +155,7 @@ class CheckoutPageController extends PageController
 	 * 
 	 * @return Array Contents for page rendering
 	 */
-	function index()
+	public function index()
 	{
 
 		//Update stock levels
@@ -166,7 +169,7 @@ class CheckoutPageController extends PageController
 		);
 	}
 
-	function OrderForm()
+	public function OrderForm()
 	{
 
 		$order = Cart::get_current_order();
@@ -181,5 +184,10 @@ class CheckoutPageController extends PageController
 		$form->populateFields();
 
 		return $form;
+	}
+
+	public function OrderFormUpdate()
+	{
+		return $this->OrderForm()->update($this->getRequest());
 	}
 }

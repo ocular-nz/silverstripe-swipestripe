@@ -56,10 +56,10 @@ class Modification extends DataObject
 		$mods = new ArrayList();
 		$temp = array();
 
-		$classes = ClassInfo::subclassesFor('Modification');
+		$classes = ClassInfo::subclassesFor(Modification::class);
 		foreach ($classes as $class) {
 
-			if ($class != 'Modification') {
+			if ($class != Modification::class) {
 				$mod = new $class();
 				$temp[$mod->SortOrder] = $mod;
 			}

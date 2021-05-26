@@ -118,7 +118,7 @@ class ModificationField_Dropdown extends DropdownField
 	 *
 	 * @var String
 	 */
-	protected $template = "ModificationField_Dropdown";
+	protected $template = "Includes\\ModificationField_Dropdown";
 
 	/**
 	 * To hold the modifier (link FlatFeeShipping) class that will set the value for the 

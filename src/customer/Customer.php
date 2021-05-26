@@ -2,6 +2,7 @@
 
 namespace SwipeStripe\Customer;
 
+use SilverStripe\Dev\Debug;
 use SilverStripe\Forms\ConfirmedPasswordField;
 use SilverStripe\Forms\EmailField;
 use SilverStripe\Forms\FieldList;
@@ -137,12 +138,11 @@ class Customer extends Member {
 	/**
 	 * Returns the current logged in customer
 	 *
-	 * @return bool|Member Returns the member object of the current logged in
+	 * @return bool|Customer Returns the member object of the current logged in
 	 *                     user or FALSE.
 	 */
-	static function currentUser() {
-		$id = Security::getCurrentUser()->ID;
-		$customer = $id ? Customer::get_by_id($id) : false;
-		return false;
+	public static function currentUser() {
+		$member = Security::getCurrentUser();
+		return $member ? Customer::get()->byID($member->ID) : false;
 	}
 }

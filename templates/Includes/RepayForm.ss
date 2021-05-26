@@ -23,7 +23,7 @@
 		<% if Actions %>
 		<div class="Actions">
 			<div class="loading">
-				<img src="swipestripe/images/loading.gif" />
+				<img src="resources/swipestripe/images/loading.gif" />
 			</div>
 			<% loop Actions %>
 				$Field

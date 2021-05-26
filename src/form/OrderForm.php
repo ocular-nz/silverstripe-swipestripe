@@ -87,7 +87,7 @@ class OrderForm extends Form implements LoggerAwareInterface
 
 		$this->restoreFormState();
 
-		$this->setTemplate('OrderForm');
+		$this->setTemplate('Includes/OrderForm');
 		$this->addExtraClass('order-form');
 	}
 
@@ -123,7 +123,7 @@ class OrderForm extends Form implements LoggerAwareInterface
 			);
 
 			$personalFields = CompositeField::create(
-				new HeaderField(_t('CheckoutPage.ACCOUNT', "Account"), 3),
+				new HeaderField("AccountHeader", _t('CheckoutPage.ACCOUNT', "Account"), 3),
 				new CompositeField(
 					EmailField::create('Email', _t('CheckoutPage.EMAIL', 'Email'))
 						->setCustomValidationMessage(_t('CheckoutPage.PLEASE_ENTER_EMAIL_ADDRESS', "Please enter your email address."))
@@ -148,7 +148,7 @@ class OrderForm extends Form implements LoggerAwareInterface
 						"
 					)
 				)
-			)->setID('PersonalDetails')->setName('PersonaDetails');
+			)->setName('PersonalDetails');
 		}
 
 		//Order item fields
@@ -189,7 +189,7 @@ class OrderForm extends Form implements LoggerAwareInterface
 		}
 
 		$paymentFields = CompositeField::create(
-			new HeaderField(_t('CheckoutPage.PAYMENT', "Payment"), 3),
+			new HeaderField("PaymentHeader", _t('CheckoutPage.PAYMENT', "Payment"), 3),
 			DropdownField::create(
 				'PaymentMethod',
 				_t('CheckoutPage.SELECTPAYMENT', "Select Payment Method"),
@@ -394,7 +394,7 @@ class OrderForm extends Form implements LoggerAwareInterface
 			$payment = $paymentProcessor->payment;
 
 			//TODO: Need to get errors and save for display on order page
-			$this->logger->notice($result->message(), []);
+			$this->logger->notice(reset($result->getMessages()), []);
 			$this->logger->notice($e, []);
 
 
@@ -410,7 +410,7 @@ class OrderForm extends Form implements LoggerAwareInterface
 			$member = Customer::currentUser() ?: singleton(Customer::class);
 			$order = Cart::get_current_order();
 
-			//Update the Order 
+			// Update the Order 
 			$order->update($request->postVars());
 
 			$order->updateModifications($request->postVars())
@@ -423,7 +423,7 @@ class OrderForm extends Form implements LoggerAwareInterface
 
 			// $form->validate();
 
-			return $form->renderWith('OrderFormCart');
+			return $form->renderWith('Includes/OrderFormCart');
 		}
 	}
 
