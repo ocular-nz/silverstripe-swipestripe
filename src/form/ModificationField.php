@@ -14,12 +14,12 @@ use SilverStripe\Forms\HiddenField;
 class ModificationField_Hidden extends HiddenField
 {
 
-	/**
-	 * Template for rendering
-	 *
-	 * @var String
-	 */
-	protected $template = "ModificationField_Hidden";
+	// /**
+	//  * Template for rendering
+	//  *
+	//  * @var String
+	//  */
+	// protected $template = "Includes\\ModificationField_Hidden";
 
 	/**
 	 * To hold the modifier (link FlatFeeShipping) class that will set the value for the 
@@ -56,7 +56,7 @@ class ModificationField_Hidden extends HiddenField
 	 */
 	function FieldHolder($properties = array())
 	{
-		return $this->renderWith($this->template);
+		return $this->renderWith("Includes/ModificationField_Hidden_holder");
 	}
 
 	/**
@@ -113,12 +113,12 @@ class ModificationField_Hidden extends HiddenField
 class ModificationField_Dropdown extends DropdownField
 {
 
-	/**
-	 * Template for rendering
-	 *
-	 * @var String
-	 */
-	protected $template = "Includes\\ModificationField_Dropdown";
+	// /**
+	//  * Template for rendering
+	//  *
+	//  * @var String
+	//  */
+	// protected $template = "Includes\\ModificationField_Dropdown";
 
 	/**
 	 * To hold the modifier (link FlatFeeShipping) class that will set the value for the 
@@ -156,7 +156,7 @@ class ModificationField_Dropdown extends DropdownField
 	 */
 	function FieldHolder($properties = array())
 	{
-		return $this->renderWith($this->template);
+		return $this->renderWith("Includes/ModificationField_Dropdown_holder");
 	}
 
 	/**

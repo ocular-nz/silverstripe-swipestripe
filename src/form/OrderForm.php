@@ -75,7 +75,7 @@ class OrderForm extends Form implements LoggerAwareInterface
 
 		parent::__construct($controller, $name, FieldList::create(), FieldList::create(), null);
 
-		
+
 		Requirements::javascript('swipestripe/javascript/OrderForm.js');
 
 		$this->order = Cart::get_current_order();
@@ -195,6 +195,7 @@ class OrderForm extends Form implements LoggerAwareInterface
 				_t('CheckoutPage.SELECTPAYMENT', "Select Payment Method"),
 				$source
 			)->setCustomValidationMessage(_t('CheckoutPage.SELECT_PAYMENT_METHOD', "Please select a payment method."))
+			->setValue(array_key_first($source))
 		)->setName('PaymentFields');
 
 
@@ -429,7 +430,7 @@ class OrderForm extends Form implements LoggerAwareInterface
 
 	public function populateFields()
 	{
-		
+
 		//Populate values in the form the first time
 		if (!$this->getRequest()->getSession()->get("FormInfo.{$this->FormName()}.errors")) {
 

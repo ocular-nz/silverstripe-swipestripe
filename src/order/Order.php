@@ -10,8 +10,9 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
+use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\Convert;
-use SilverStripe\Dev\Debug;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\CheckboxSetField;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\FieldList;
@@ -40,7 +41,6 @@ use SwipeStripe\Admin\ShopSearchContext_Order;
 use SwipeStripe\Admin\ShopSearchFilter_OptionSet;
 use SwipeStripe\Customer\AccountPage;
 use SwipeStripe\Customer\Customer;
-use SwipeStripe\Emails\NotificationEmail;
 use SwipeStripe\Emails\ReceiptEmail;
 use SwipeStripe\Product\Price;
 use SwipeStripe\Product\Product;
@@ -476,7 +476,7 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 		// NotificationEmail::create($this->Member(), $this)
 		// 	->send();
 
-		Injecto:inst()->get(HTTPRequest::class)->getSession()->clear('Cart.OrderID');
+		Injector::inst()->get(HTTPRequest::class)->getSession()->clear('Cart.OrderID');
 
 		$this->extend('onAfterPayment');
 	}
@@ -850,28 +850,30 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 		$items = $this->Items();
 
 		if (!$this->BaseCurrency) {
-			$result->error(
+			$result->addError(
 				'Base currency is not set for this order',
 				'BaseCurrencyError'
 			);
 		}
 
 		if (!$items || !$items->exists()) {
-			$result->error(
+			$result->addError(
 				'There are no items in this order',
 				'ItemExistsError'
 			);
 		}
 
-		if ($items) foreach ($items as $item) {
+		if ($items) {
+			foreach ($items as $item) {
+				/** @var Item $item */
+				$validation = $item->validateForCart();
+				if (!$validation->isValid()) {
 
-			$validation = $item->validateForCart();
-			if (!$validation->valid()) {
-
-				$result->error(
-					'Some of the items in this order are no longer available, please go to the cart and remove them.',
-					'ItemValidationError'
-				);
+					$result->addError(
+						'Some of the items in this order are no longer available, please go to the cart and remove them.',
+						'ItemValidationError'
+					);
+				}
 			}
 		}
 

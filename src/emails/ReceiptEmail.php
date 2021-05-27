@@ -58,7 +58,7 @@ class ReceiptEmail extends ProcessedEmail
 
 		if ($siteConfig->EmailSignature) $this->signature = $siteConfig->EmailSignature;
 
-		//Get css for Email by reading css file and put css inline for emogrification
+		// Get css for Email by reading css file and put css inline for emogrification
 		$this->setTemplate('Order_ReceiptEmail');
 
 		if (file_exists(Director::getAbsFile($this->ThemeDir() . '/css/ShopEmail.css'))) {
