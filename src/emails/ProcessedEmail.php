@@ -3,6 +3,7 @@
 namespace SwipeStripe\Emails;
 
 use SilverStripe\Control\Email\Email;
+use Pelago\Emogrifier;
 
 /**
  * Same as the normal system email class, but runs the content through
@@ -12,46 +13,51 @@ use SilverStripe\Control\Email\Email;
  * @package swipestripe
  * @subpackage emails
  */
-class ProcessedEmail extends Email {
-	
+class ProcessedEmail extends Email
+{
+
 	/**
 	 * Email signature
 	 * 
-	 * @var String HTML content from central config for signature
+	 * @var string HTML content from central config for signature
 	 * @see ShopConfig
 	 */
 	public $signature;
 
 	/**
+	 * @var string The CSS to use for emogrification
+	 */
+	protected $css;
+
+	/**
 	 * Runs the content through Emogrifier to merge css style inline before sending
 	 * 
-	 * @see Email::parseVariables()
+	 * @see Email::render()
 	 */
-	protected function parseVariables($isPlain = false) {
-		parent::parseVariables($isPlain);
+	public function render($plainOnly = false)
+	{
+		// the parent class stores the rendered output in Body
+		parent::render($plainOnly);
 
 		// if it's an html email, filter it through emogrifier
-		if (!$isPlain && preg_match('/<style[^>]*>(?:<\!--)?(.*)(?:-->)?<\/style>/ims', $this->body, $match)){
-			$css = $match[1];
+		if (!$plainOnly && $this->css) {
+
 			$html = str_replace(
-				array(
+				[
 					"<p>\n<table>",
 					"</table>\n</p>",
 					'&copy ',
-					$match[0],
-				),
-				array(
+				],
+				[
 					"<table>",
 					"</table>",
 					'',
-					'',
-				), 
-				$this->body
+				],
+				$this->getBody()
 			);
 
-			$emog = new \Pelago\Emogrifier($html, $css);
-			$this->body = $emog->emogrify();
+			$emog = new Emogrifier($html, $this->css);
+			$this->setBody($emog->emogrify());
 		}
 	}
-	
 }
