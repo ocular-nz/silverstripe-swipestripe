@@ -8,6 +8,7 @@ use SilverStripe\Control\PjaxResponseNegotiator;
 use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Extension;
+use SilverStripe\Dev\Debug;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\Form;
 use SilverStripe\Forms\FormAction;
@@ -15,6 +16,7 @@ use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldAddNewButton;
 use SilverStripe\Forms\GridField\GridFieldButtonRow;
 use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
+use SilverStripe\Forms\GridField\GridFieldDetailForm;
 use SilverStripe\Forms\GridField\GridFieldExportButton;
 use SilverStripe\Forms\HiddenField;
 use SilverStripe\Forms\LiteralField;
@@ -217,7 +219,7 @@ class ShopAdmin extends ModelAdmin
 		// Validation
 		if (singleton($this->modelClass)->hasMethod('getCMSValidator')) {
 			$detailValidator = singleton($this->modelClass)->getCMSValidator();
-			$listField->getConfig()->getComponentByType('GridFieldDetailForm')->setValidator($detailValidator);
+			$listField->getConfig()->getComponentByType(GridFieldDetailForm::class)->setValidator($detailValidator);
 		}
 
 		$form = new Form(
@@ -329,7 +331,7 @@ class ShopAdmin_EmailAdmin extends ShopAdmin
 	{
 		parent::init();
 		if (!in_array(get_class($this), self::$hidden_sections)) {
-			$this->modelClass = ShopConfig::class;
+			$this->modelTab = ShopConfig::class;
 		}
 	}
 
@@ -430,7 +432,9 @@ class ShopAdmin_EmailAdmin extends ShopAdmin
 		$form->setTemplate('Includes/ShopAdminSettings_EditForm');
 		$form->setAttribute('data-pjax-fragment', 'CurrentForm');
 		$form->addExtraClass('cms-content cms-edit-form center ss-tabset');
-		if ($form->Fields()->hasTabset()) $form->Fields()->findOrMakeTab('Root')->setTemplate('CMSTabSet');
+		if ($form->Fields()->hasTabset()) { 
+			$form->Fields()->findOrMakeTab('Root')->setTemplate('SilverStripe/Forms/CMSTabSet');
+		}
 		$form->setFormAction(Controller::join_links($this->Link($this->sanitiseClassName($this->modelClass)), 'EmailSettings/EmailSettingsForm'));
 
 		$form->loadDataFrom($shopConfig);
