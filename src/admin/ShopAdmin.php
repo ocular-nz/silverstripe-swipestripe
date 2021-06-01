@@ -2,6 +2,7 @@
 
 namespace SwipeStripe\Admin;
 
+use SilverStripe\Admin\LeftAndMainFormRequestHandler;
 use SilverStripe\Admin\ModelAdmin;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\PjaxResponseNegotiator;
@@ -356,29 +357,22 @@ class ShopAdmin_EmailAdmin extends ShopAdmin
 		return $this->EmailSettingsForm();
 	}
 
+	public function getResponseNegotiator()
+	{
+		$responseNegotiator = parent::getResponseNegotiator();
+		// $responseNegotiator->setCallback('CurrentForm', function () {
+		// 	return $this->EmailSettingsForm()->forAjaxTemplate();
+		// });
+		$responseNegotiator->setCallback('Content', function () {
+			return $this->renderWith('Includes/ShopAdminSettings_Content');
+		});
+		return $responseNegotiator;
+	}
+
 	public function EmailSettings($request)
 	{
-
 		if ($request->isAjax()) {
-			$controller = $this;
-			$responseNegotiator = new PjaxResponseNegotiator(
-				array(
-					'CurrentForm' => function () use (&$controller) {
-						return $controller->EmailSettingsForm()->forTemplate();
-					},
-					'Content' => function () use (&$controller) {
-						return $controller->renderWith('Includes/ShopAdminSettings_Content');
-					},
-					'Breadcrumbs' => function () use (&$controller) {
-						return $controller->renderWith('SilverStripe/Admin/Includes/CMSBreadcrumbs');
-					},
-					'default' => function () use (&$controller) {
-						return $controller->renderWith($controller->getViewer('show'));
-					}
-				),
-				$this->response
-			);
-			return $responseNegotiator->respond($this->getRequest());
+			return $this->getResponseNegotiator()->respond($this->getRequest());
 		}
 
 		return $this->renderWith('SwipeStripe/Admin/ShopAdminSettings');
@@ -390,9 +384,9 @@ class ShopAdmin_EmailAdmin extends ShopAdmin
 		$shopConfig = ShopConfig::get()->First();
 
 		$fields = new FieldList(
-			$rootTab = new TabSet(
+			new TabSet(
 				"Root",
-				$tabMain = new Tab(
+				new Tab(
 					'Receipt',
 					new HiddenField('ShopConfigSection', null, 'EmailSettings'),
 					new TextField('ReceiptFrom', _t('ShopConfig.FROM', 'From')),
@@ -417,12 +411,12 @@ class ShopAdmin_EmailAdmin extends ShopAdmin
 			)
 		);
 
-		$actions = new FieldList();
-		$actions->push(FormAction::create('saveEmailSettings', _t('GridFieldDetailForm.Save', 'Save'))
+		$actions = FieldList::create();
+		$actions->push(FormAction::create('SaveEmailSettings', _t('GridFieldDetailForm.Save', 'Save'))
 			->setUseButtonTag(true)
-			->addExtraClass('btn-primary font-icon-save'));
+			->addExtraClass('btn-outline-primary font-icon-tick'));
 
-		$form = new Form(
+		$form = Form::create(
 			$this,
 			'EditForm',
 			$fields,
@@ -435,14 +429,14 @@ class ShopAdmin_EmailAdmin extends ShopAdmin
 		if ($form->Fields()->hasTabset()) { 
 			$form->Fields()->findOrMakeTab('Root')->setTemplate('SilverStripe/Forms/CMSTabSet');
 		}
-		$form->setFormAction(Controller::join_links($this->Link($this->sanitiseClassName($this->modelClass)), 'EmailSettings/EmailSettingsForm'));
+		$form->setFormAction(Controller::join_links($this->Link($this->sanitiseClassName($this->modelTab)), 'EmailSettings/EmailSettingsForm'));
 
 		$form->loadDataFrom($shopConfig);
 
 		return $form;
 	}
 
-	public function saveEmailSettings($data, $form)
+	public function SaveEmailSettings($data, $form)
 	{
 
 		//Hack for LeftAndMain::getRecord()
@@ -483,7 +477,7 @@ class ShopAdmin_EmailAdmin extends ShopAdmin
 
 		return $this->customise(array(
 			'Title' => 'Email Settings',
-			'Help' => 'Order notification and receipt details and recipeients.',
+			'Help' => 'Order notification and receipt details and recipients.',
 			'Link' => Controller::join_links($this->Link($this->sanitiseClassName(ShopConfig::class)), 'EmailSettings'),
 			'LinkTitle' => 'Edit Email Settings'
 		))->renderWith('Includes/ShopAdmin_Snippet');
@@ -522,7 +516,7 @@ class ShopAdmin_BaseCurrency extends ShopAdmin
 	{
 		parent::init();
 		if (!in_array(get_class($this), self::$hidden_sections)) {
-			$this->modelClass = ShopConfig::class;
+			$this->modelTab = ShopConfig::class;
 		}
 	}
 
@@ -604,7 +598,7 @@ class ShopAdmin_BaseCurrency extends ShopAdmin
 		$actions = new FieldList();
 		$actions->push(FormAction::create('saveBaseCurrencySettings', _t('GridFieldDetailForm.Save', 'Save'))
 			->setUseButtonTag(true)
-			->addExtraClass('btn-primary font-icon-save'));
+			->addExtraClass('btn-outline-primary font-icon-tick'));
 
 		$validator = new RequiredFields('BaseCurrency');
 
@@ -619,8 +613,10 @@ class ShopAdmin_BaseCurrency extends ShopAdmin
 		$form->setTemplate('Includes/ShopAdminSettings_EditForm');
 		$form->setAttribute('data-pjax-fragment', 'CurrentForm');
 		$form->addExtraClass('cms-content cms-edit-form center ss-tabset');
-		if ($form->Fields()->hasTabset()) $form->Fields()->findOrMakeTab('Root')->setTemplate('CMSTabSet');
-		$form->setFormAction(Controller::join_links($this->Link($this->sanitiseClassName($this->modelClass)), 'BaseCurrency/BaseCurrencySettingsForm'));
+		if ($form->Fields()->hasTabset()) {
+			$form->Fields()->findOrMakeTab('Root')->setTemplate('SilverStripe/Forms/CMSTabSet');
+		}
+		$form->setFormAction(Controller::join_links($this->Link($this->sanitiseClassName($this->modelTab)), 'BaseCurrency/BaseCurrencySettingsForm'));
 
 		$form->loadDataFrom($shopConfig);
 
@@ -636,7 +632,7 @@ class ShopAdmin_BaseCurrency extends ShopAdmin
 		$config = ShopConfig::get()->First();
 		$form->saveInto($config);
 		$config->write();
-		$form->sessionMessage('Saved BaseCurrency Key', ValidationResult::TYPE_GOOD);
+		$form->sessionMessage('Saved Base Currency Settings', ValidationResult::TYPE_GOOD);
 
 		$controller = $this;
 		$responseNegotiator = new PjaxResponseNegotiator(
@@ -707,7 +703,7 @@ class ShopAdmin_Attribute extends ShopAdmin
 	{
 		parent::init();
 		if (!in_array(get_class($this), self::$hidden_sections)) {
-			$this->modelClass = ShopConfig::class;
+			$this->modelTab = ShopConfig::class;
 		}
 	}
 
@@ -721,7 +717,7 @@ class ShopAdmin_Attribute extends ShopAdmin
 
 		$items->push(new ArrayData(array(
 			'Title' => 'Attribute Settings',
-			'Link' => $this->Link(Controller::join_links($this->sanitiseClassName($this->modelClass), 'Attribute'))
+			'Link' => $this->Link(Controller::join_links($this->sanitiseClassName($this->modelTab), 'Attribute'))
 		)));
 
 		return $items;
@@ -783,9 +779,7 @@ class ShopAdmin_Attribute extends ShopAdmin
 		$actions = new FieldList();
 		$actions->push(FormAction::create('saveAttributeSettings', _t('GridFieldDetailForm.Save', 'Save'))
 			->setUseButtonTag(true)
-			->addExtraClass('btn-outline-primary font-icon-tick action')
-			->setAttribute('data-btn-alternate-add', 'btn-primary font-icon-save')
-			->setAttribute('data-btn-alternate-remove', 'btn-outline-primary font-icon-tick'));
+			->addExtraClass('btn-outline-primary font-icon-tick action'));
 
 		$form = new Form(
 			$this,
@@ -797,7 +791,9 @@ class ShopAdmin_Attribute extends ShopAdmin
 		$form->setTemplate('Includes/ShopAdminSettings_EditForm');
 		$form->setAttribute('data-pjax-fragment', 'CurrentForm');
 		$form->addExtraClass('cms-content cms-edit-form center ss-tabset');
-		if ($form->Fields()->hasTabset()) $form->Fields()->findOrMakeTab('Root')->setTemplate('SilverStripe/Forms/CMSTabSet');
+		if ($form->Fields()->hasTabset()) {
+			$form->Fields()->findOrMakeTab('Root')->setTemplate('SilverStripe/Forms/CMSTabSet');
+		}
 		
 		$form->setFormAction(Controller::join_links($this->Link($this->sanitiseClassName($this->modelTab)), 'Attribute/AttributeSettingsForm'));
 

@@ -60,7 +60,7 @@
 
 		</div>
 
-		<div class="cms-content-actions toolbar--south">
+		<div class="cms-content-actions btn-toolbar toolbar--south" style="margin-bottom: 0;">
 			<% if Actions %>
 			<div class="Actions">
 				<% loop Actions %>
