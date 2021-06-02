@@ -25,11 +25,6 @@ class ProcessedEmail extends Email
 	public $signature;
 
 	/**
-	 * @var string The CSS to use for emogrification
-	 */
-	protected $css;
-
-	/**
 	 * Runs the content through Emogrifier to merge css style inline before sending
 	 * 
 	 * @see Email::render()
@@ -40,7 +35,7 @@ class ProcessedEmail extends Email
 		parent::render($plainOnly);
 
 		// if it's an html email, filter it through emogrifier
-		if (!$plainOnly && $this->css) {
+		if (!$plainOnly && isset($this->getData()['Css'])) {
 
 			$html = str_replace(
 				[
@@ -56,7 +51,7 @@ class ProcessedEmail extends Email
 				$this->getBody()
 			);
 
-			$emog = new Emogrifier($html, $this->css);
+			$emog = new Emogrifier($html, $this->getData()['Css']);
 			$this->setBody($emog->emogrify());
 		}
 	}
