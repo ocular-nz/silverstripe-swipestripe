@@ -6,7 +6,7 @@
 		</tr>
 		<tr>
 			<td>
-				$OrderedOn.Format(j M Y - g:i a)<br />
+				$OrderedOn.Format(d MMM y - h:mm a)<br />
 				($PaymentStatus)
 			</td>
 		</tr>

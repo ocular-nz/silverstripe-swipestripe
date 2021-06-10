@@ -18,7 +18,7 @@
 				<% loop Orders %>
 				<tr>
 					<td>$ID</td>
-					<td>$OrderedOn.Format(j M y)</td>
+					<td>$OrderedOn.Format(d MMM y)</td>
 					<td>$TotalPrice.Nice</td>
 					<td>$Status ($PaymentStatus)</td>
 					<td><a href="$Link"><% _t('AccountPage.VIEW_THIS_ORDER','View this order') %></a></td>

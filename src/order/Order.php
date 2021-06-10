@@ -498,9 +498,9 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 		));
 
 		//Override this in updateOrderCMSFields to change the order template in the CMS
-		$htmlSummary = $this->customise(array(
+		$htmlSummary = $this->customise([
 			'MemberEmail' => $this->Member()->Email
-		))->renderWith('Includes\OrderAdmin');
+		])->renderWith('Includes\OrderAdmin');
 		$fields->addFieldToTab('Root.Order', new LiteralField('MainDetails', $htmlSummary));
 
 		//Updates
