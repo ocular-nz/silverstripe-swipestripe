@@ -2,14 +2,12 @@
 
 namespace SwipeStripe\Admin;
 
-use SilverStripe\Admin\LeftAndMainFormRequestHandler;
 use SilverStripe\Admin\ModelAdmin;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\PjaxResponseNegotiator;
 use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Extension;
-use SilverStripe\Dev\Debug;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\Form;
 use SilverStripe\Forms\FormAction;
@@ -29,14 +27,11 @@ use SilverStripe\Forms\TextareaField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\ValidationResult;
-use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\Security;
 use SilverStripe\View\ArrayData;
-use SilverStripe\View\Requirements;
 use SwipeStripe\Customer\Customer;
 use SwipeStripe\Order\Order;
-use SwipeStripe\Product\Product;
 
 /**
  * Shop admin area for managing orders, customers and shop settings.

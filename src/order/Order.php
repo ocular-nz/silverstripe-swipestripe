@@ -402,21 +402,21 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 		return $fields;
 	}
 
-	/**
-	 * Get a new search context for filtering
-	 * the search results in OrderAdmin
-	 *
-	 * @see DataObject::getDefaultSearchContext()
-	 * @return ShopSearchContext
-	 */
-	public function getDefaultSearchContext()
-	{
-		return new ShopSearchContext_Order(
-			$this->class,
-			$this->scaffoldSearchFields(),
-			$this->defaultSearchFilters()
-		);
-	}
+	// /**
+	//  * Get a new search context for filtering
+	//  * the search results in OrderAdmin
+	//  *
+	//  * @see DataObject::getDefaultSearchContext()
+	//  * @return ShopSearchContext
+	//  */
+	// public function getDefaultSearchContext()
+	// {
+	// 	return new ShopSearchContext_Order(
+	// 		$this->class,
+	// 		$this->scaffoldSearchFields(),
+	// 		$this->defaultSearchFilters()
+	// 	);
+	// }
 
 	/**
 	 * Set the LastActive time when {@link Order} first created.

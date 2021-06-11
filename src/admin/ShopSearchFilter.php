@@ -25,7 +25,7 @@ class ShopSearchFilter_OptionSet extends SearchFilter {
 	public function apply(DataQuery $query) {
 		
 		$this->model = $query->applyRelation($this->relation);
-		$values = $this->getValue();
+		$values = explode(',', $this->getValue());
 
 		if (count($values)) {
 			foreach ($values as $value) {
