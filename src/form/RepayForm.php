@@ -23,6 +23,7 @@ use SilverStripe\Forms\RequiredFields;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\View\Requirements;
 use SwipeStripe\Customer\Customer;
+use SwipeStripe\Order\Order;
 
 /**
  * Form for displaying on the {@link CheckoutPage} with all the necessary details 
@@ -59,7 +60,7 @@ class RepayForm extends Form implements LoggerAwareInterface
 
 		$orderID = Injector::inst()->get(HTTPRequest::class)->getSession()->get('Repay.OrderID');
 		if ($orderID) {
-			$this->order = DataObject::get_by_id('Order', $orderID);
+			$this->order = DataObject::get_by_id(Order::class, $orderID);
 		}
 		$this->customer = Customer::currentUser() ? Customer::currentUser() : singleton(Customer::class);
 
@@ -69,7 +70,7 @@ class RepayForm extends Form implements LoggerAwareInterface
 
 		$this->restoreFormState();
 
-		$this->setTemplate('RepayForm');
+		$this->setTemplate('Includes\\RepayForm');
 		$this->addExtraClass('order-form');
 	}
 
@@ -110,6 +111,7 @@ class RepayForm extends Form implements LoggerAwareInterface
 				_t('CheckoutPage.SELECTPAYMENT', "Select Payment Method"),
 				$source
 			)->setCustomValidationMessage(_t('CheckoutPage.SELECT_PAYMENT_METHOD', "Please select a payment method."))
+			 ->setValue(array_key_first($source))
 		)->setName('PaymentFields');
 
 
@@ -191,11 +193,7 @@ class RepayForm extends Form implements LoggerAwareInterface
 			$paymentMethod = $data['PaymentMethod'];
 			$paymentProcessor = PaymentFactory::factory($paymentMethod);
 		} catch (Exception $e) {
-			Debug::friendlyError(
-				403,
-				_t('CheckoutPage.NOT_VALID_METHOD', "Sorry, that is not a valid payment method."),
-				_t('CheckoutPage.TRY_AGAIN', "Please go back and try again.")
-			);
+			$this->getRequestHandler()->httpError(403, "Sorry, that is not a valid payment method. Please go back and try again");
 			return;
 		}
 
@@ -203,7 +201,7 @@ class RepayForm extends Form implements LoggerAwareInterface
 
 		$orderID = $this->getRequest()->getSession()->get('Repay.OrderID');
 		if ($orderID) {
-			$order = DataObject::get_by_id('Order', $orderID);
+			$order = DataObject::get_by_id(Order::class, $orderID);
 		}
 		$this->getRequest()->getSession()->clear('Repay.OrderID');
 
