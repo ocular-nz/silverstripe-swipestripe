@@ -9,6 +9,7 @@ use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Convert;
 use SilverStripe\Forms\GridField\GridField;
+use SilverStripe\Forms\GridField\GridFieldDataColumns;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\ORM\ArrayList;
@@ -202,10 +203,10 @@ class Product extends Page
 				foreach ($attributes as $attribute) {
 					$variationFieldList['AttributeValue_' . $attribute->ID] = $attribute->Title;
 				}
-				$variationFieldList = array_merge($variationFieldList, singleton('Variation')->summaryFields());
+				$variationFieldList = array_merge($variationFieldList, singleton(Variation::class)->summaryFields());
 
 				$config = GridFieldConfig_HasManyRelationEditor::create();
-				$dataColumns = $config->getComponentByType('GridFieldDataColumns');
+				$dataColumns = $config->getComponentByType(GridFieldDataColumns::class);
 				$dataColumns->setDisplayFields($variationFieldList);
 
 				$listField = new GridField(
@@ -306,7 +307,7 @@ class Product extends Page
 			$variations = $this->Variations();
 
 			if (!in_array('Enabled', $variations->map('ID', 'Status')->toArray())) {
-				$result->error(
+				$result->addError(
 					'Cannot publish product when no variations are enabled. Please enable some product variations and try again.',
 					'VariationsDisabledError'
 				);

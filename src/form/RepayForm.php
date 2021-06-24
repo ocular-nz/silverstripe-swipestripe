@@ -9,9 +9,7 @@ use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use SilverStripe\Control\HTTPRequest;
-use SilverStripe\Control\Session;
 use SilverStripe\Core\Injector\Injector;
-use SilverStripe\Dev\Debug;
 use SilverStripe\Forms\CompositeField;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\FieldList;
@@ -21,7 +19,6 @@ use SilverStripe\Forms\HeaderField;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\RequiredFields;
 use SilverStripe\ORM\DataObject;
-use SilverStripe\View\Requirements;
 use SwipeStripe\Customer\Customer;
 use SwipeStripe\Order\Order;
 
@@ -226,8 +223,7 @@ class RepayForm extends Form implements LoggerAwareInterface
 			$payment = $paymentProcessor->payment;
 
 			//TODO: Need to get errors and save for display on order page
-			$this->logger->notice($e, []);
-			$this->logger->notice($result->message(), []);
+			$this->logger->notice($e, $result->getMessages());
 
 			$this->controller->redirect($order->Link());
 		}

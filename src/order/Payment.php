@@ -105,7 +105,7 @@ class Payment_ProcessorExtension extends Extension
 
 	public function onBeforeRedirect()
 	{
-
+		/** @var Order $order */
 		$order = $this->owner->payment->Order();
 		if ($order && $order->exists()) {
 			$order->onAfterPayment();

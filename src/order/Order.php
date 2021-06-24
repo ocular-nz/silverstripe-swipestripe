@@ -30,6 +30,7 @@ use SilverStripe\ORM\DB;
 use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\ORM\Filters\PartialMatchFilter;
 use SilverStripe\ORM\Queries\SQLSelect;
+use SilverStripe\ORM\Queries\SQLUpdate;
 use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
@@ -91,6 +92,8 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	private static $db = array(
 		'Status' => "Enum('Pending,Processing,Dispatched,Cancelled,Cart','Cart')",
 		'PaymentStatus' => "Enum('Unpaid,Paid','Unpaid')",
+
+		'RedirectUrlHit' => 'Boolean',
 
 		'TotalPrice' => 'Decimal(19,8)',
 		'SubTotalPrice' => 'Decimal(19,8)',
@@ -455,6 +458,11 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 
 	public function onBeforePayment()
 	{
+		$this->logger->debug('onBeforePayment', ['val' => $this->RedirectUrlHit]);
+		if ($this->RedirectUrlHit) {
+			$this->RedirectUrlHit = false;
+			$this->write();
+		}
 		$this->extend('onBeforePayment');
 	}
 
@@ -466,7 +474,20 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 */
 	public function onAfterPayment()
 	{
+		Injector::inst()->get(HTTPRequest::class)->getSession()->clear('Cart.OrderID');
 
+		// get this flag from the DB in case the value has changed since we instantiated
+		$hit = SQLSelect::create('RedirectUrlHit', '`Order`', ['ID' => $this->ID])->execute()->first();
+
+		if ($hit['RedirectUrlHit']) {
+			$this->logger->debug('Redirect url already hit');
+			return;
+		}
+
+		// update the flag ASAP without waiting for persistence layer
+		SQLUpdate::create('`Order`')->addWhere(['ID' => $this->ID])->assign('RedirectUrlHit', 1)->execute();
+
+		$this->RedirectUrlHit = true;
 		$this->Status = ($this->getPaid()) ? self::STATUS_PROCESSING :  self::STATUS_PENDING;
 		$this->PaymentStatus = ($this->getPaid()) ? 'Paid' : 'Unpaid';
 		$this->write();
@@ -475,8 +496,6 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 			->send();
 		// NotificationEmail::create($this->Member(), $this)
 		// 	->send();
-
-		Injector::inst()->get(HTTPRequest::class)->getSession()->clear('Cart.OrderID');
 
 		$this->extend('onAfterPayment');
 	}

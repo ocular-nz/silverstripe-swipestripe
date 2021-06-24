@@ -3,9 +3,7 @@
 namespace SwipeStripe\Form;
 
 use SilverStripe\Control\Director;
-use SilverStripe\Control\Session;
 use SilverStripe\Core\Convert;
-use SilverStripe\Dev\Debug;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\Form;
 use SilverStripe\Forms\FormAction;
@@ -167,33 +165,21 @@ class ProductForm extends Form
 			$errors = $this->validator->validate();
 
 			if ($errors) {
-				if (Director::is_ajax()) { // && $this->validator->getJavascriptValidationHandler() == 'prototype') {
+				$data = $this->getData();
 
-					FormResponse::status_message(_t('Form.VALIDATIONFAILED', 'Validation failed'), 'bad');
-					foreach ($errors as $error) {
-						FormResponse::add(sprintf(
-							"validationError('%s', '%s', '%s');\n",
-							Convert::raw2js($error['fieldName']),
-							Convert::raw2js($error['message']),
-							Convert::raw2js($error['messageType'])
-						));
-					}
-				} else {
-					$data = $this->getData();
-
-					$formError = array();
-					if ($formMessageType = $this->MessageType()) {
-						$formError['message'] = $this->Message();
-						$formError['messageType'] = $formMessageType;
-					}
-
-					// Load errors into session and post back
-					$this->getSession()->set("FormInfo.{$this->FormName()}", array(
-						'errors' => $errors,
-						'data' => $data,
-						'formError' => $formError
-					));
+				$formError = array();
+				if ($formMessageType = $this->MessageType()) {
+					$formError['message'] = $this->Message();
+					$formError['messageType'] = $formMessageType;
 				}
+
+				// Load errors into session and post back
+				$this->getSession()->set("FormInfo.{$this->FormName()}", array(
+					'errors' => $errors,
+					'data' => $data,
+					'formError' => $formError
+				));
+				
 				return false;
 			}
 		}

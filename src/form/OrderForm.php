@@ -318,11 +318,7 @@ class OrderForm extends Form implements LoggerAwareInterface
 			$paymentMethod = Convert::raw2sql($data['PaymentMethod']);
 			$paymentProcessor = PaymentFactory::factory($paymentMethod);
 		} catch (Exception $e) {
-			Debug::friendlyError(
-				403,
-				_t('CheckoutPage.NOT_VALID_METHOD', "Sorry, that is not a valid payment method."),
-				_t('CheckoutPage.TRY_AGAIN', "Please go back and try again.")
-			);
+			$this->getRequestHandler()->httpError(403, "Sorry, that is not a valid payment method. Please go back and try again");
 			return;
 		}
 
