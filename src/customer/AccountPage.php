@@ -6,6 +6,7 @@ use Page;
 use PageController;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
+use SilverStripe\Control\Middleware\HTTPCacheControlMiddleware;
 use SilverStripe\Core\Convert;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
@@ -160,6 +161,9 @@ class AccountPageController extends PageController
 		if (!Permission::check('VIEW_ORDER')) {
 			return $this->redirect(Director::absoluteBaseURL() . 'Security/login?BackURL=' . urlencode($this->getRequest()->getVar('url')));
 		}
+		
+        HTTPCacheControlMiddleware::singleton()
+		->privateCache(true);
 	}
 
 	/**

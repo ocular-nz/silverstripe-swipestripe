@@ -4,11 +4,9 @@ namespace SwipeStripe\Customer;
 
 use Page;
 use PageController;
-use SilverStripe\Dev\Debug;
-use SilverStripe\Forms\FormRequestHandler;
+use SilverStripe\Control\Middleware\HTTPCacheControlMiddleware;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
-use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
 use SilverStripe\View\Requirements;
 use SwipeStripe\Form\OrderForm;
@@ -148,11 +146,17 @@ class CheckoutPageController extends PageController
 		'OrderFormUpdate'
 	);
 
+	protected function init()
+	{
+		parent::init();
+
+		Requirements::css('swipestripe/css/Shop.css');
+
+        HTTPCacheControlMiddleware::singleton()
+		->privateCache(true);
+	}
+
 	/**
-	 * Include some CSS and javascript for the checkout page
-	 * 
-	 * TODO why didn't I use init() here?
-	 * 
 	 * @return Array Contents for page rendering
 	 */
 	public function index()
@@ -161,7 +165,6 @@ class CheckoutPageController extends PageController
 		//Update stock levels
 		//Order::delete_abandoned();
 
-		Requirements::css('swipestripe/css/Shop.css');
 
 		return array(
 			'Content' => $this->Content,
