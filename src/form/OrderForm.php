@@ -29,6 +29,7 @@ use SilverStripe\Forms\TextField;
 use SilverStripe\View\Requirements;
 use SilverStripe\Control\RequestHandler;
 use SilverStripe\ORM\FieldType\DBDatetime;
+use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Security\Security;
 use SwipeStripe\Admin\ShopConfig;
 use SwipeStripe\Customer\Cart;
@@ -463,8 +464,9 @@ class OrderForm_Validator extends RequiredFields
 		$currentOrder = Cart::get_current_order();
 		if (!$currentOrder) {
 			$this->form->sessionMessage(
-				_t('Form.ORDER_IS_NOT_VALID', 'Your cart seems to be empty, please add an item from the shop'),
-				'bad'
+				"<div class=\"alert alert-error\">The cart seems to be empty. If this doesn't seem right, please visit <a href=\"/account\">My Account</a> and view Past Orders to retrieve your order and complete payment.</div>",
+				'bad',
+				ValidationResult::CAST_HTML
 			);
 
 			//Have to set an error for Form::validate()
@@ -475,9 +477,14 @@ class OrderForm_Validator extends RequiredFields
 
 			if (!$validation->isValid()) {
 
+				$messages = $validation->getMessages();
+				$message = reset($messages);
+				$message = is_array($message) ? $message['message'] : '';
+				
 				$this->form->sessionMessage(
-					_t('Form.ORDER_IS_NOT_VALID', 'There seems to be a problem with your order. ' . reset($validation->getMessages())),
-					'bad'
+					'<div class="alert alert-error">Your order has failed to process due to an unexpected error. Please visit <a href="/account">My Account</a> and view Past Orders to retrieve your order and complete payment.</div>',
+					'bad',
+					ValidationResult::CAST_HTML
 				);
 
 				//Have to set an error for Form::validate()
