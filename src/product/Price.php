@@ -22,7 +22,7 @@ class Price extends DBMoney
 
 	public function getAmount()
 	{
-		return round($this->getField('Amount'), 2, PHP_ROUND_HALF_EVEN);
+		return round($this->getField('Amount') ?? 0, 2);
 	}
 
 	public function Nice($options = array())
