@@ -159,7 +159,12 @@ class AccountPageController extends PageController
 		parent::init();
 
 		if (!Permission::check('VIEW_ORDER')) {
-			return $this->redirect(Director::absoluteBaseURL() . 'Security/login?BackURL=' . urlencode($this->getRequest()->getVar('url')));
+			$redirectUrl = Director::absoluteBaseURL() . 'Security/login';
+			if ($this->getRequest()->getVar('url')) {
+				$redirectUrl .= urlencode($this->getRequest()->getVar('url'));
+			}
+
+			return $this->redirect($redirectUrl);
 		}
 		
         HTTPCacheControlMiddleware::singleton()
@@ -181,7 +186,7 @@ class AccountPageController extends PageController
 			'Content' => $this->Content,
 			'Form' => $this->Form,
 			'Orders' => Order::get()
-				->where("MemberID = " . Convert::raw2sql(Security::getCurrentUser()->ID))
+				->filter('MemberID', Security::getCurrentUser()->ID)
 				->sort('Created DESC'),
 			'Customer' => Customer::currentUser()
 		);
@@ -197,12 +202,11 @@ class AccountPageController extends PageController
 
 		Requirements::css('swipestripe/css/Shop.css');
 
-		if ($orderID = $request->param('ID')) {
+		$orderID = $request->param('ID');
+		if (!empty($orderID)) {
 
 			$member = Customer::currentUser();
-			$order = Order::get()
-				->where("\"Order\".\"ID\" = " . Convert::raw2sql($orderID))
-				->First();
+			$order = Order::get()->byID($orderID);
 
 			if (!$order || !$order->exists()) {
 				return $this->httpError(403, _t('AccountPage.NO_ORDER_EXISTS', 'Order does not exist.'));
@@ -227,12 +231,11 @@ class AccountPageController extends PageController
 	{
 		Requirements::css('swipestripe/css/Shop.css');
 
-		if ($orderID = $request->param('ID')) {
+		$orderID = $request->param('ID');
+		if (!empty($orderID)) {
 
 			$member = Customer::currentUser();
-			$order = Order::get()
-				->where("\"Order\".\"ID\" = " . Convert::raw2sql($orderID))
-				->First();
+			$order = Order::get()->byID($orderID);
 
 			if (!$order || !$order->exists()) {
 				return $this->httpError(403, _t('AccountPage.NO_ORDER_EXISTS', 'Order does not exist.'));
