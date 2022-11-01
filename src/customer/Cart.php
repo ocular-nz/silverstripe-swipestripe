@@ -73,6 +73,64 @@ class Cart extends Extension
 	 */
 	public static function get_current_order($persist = false)
 	{
+		$customer = Customer::currentUser();
+
+		if (!empty($customer)) {
+			// if logged in, get current order from customer
+			// this may be a cart or a standing order currently selected for editing
+			$order = $customer->getCurrentOrder();
+
+			if (empty($order)) {
+				// if there's no order, attempt to migrate one from the session
+				$order = self::getOrderFromSession();
+				if (!empty($order)) {
+					$customer->setCurrentOrder($order);
+				}
+			}
+		} else {
+			$order = self::getOrderFromSession();
+		}
+
+		// otherwise create a new one and return that
+		if (empty($order) || !$order->exists()) {
+			$order = Order::create();
+
+			if ($persist) {
+				$order->MemberID = $customer->ID;
+				$order->write();
+				if (empty($customer)) {
+					self::saveOrderIntoSession($order);
+				} else {
+					$customer->setCurrentOrder($order);
+					$customer->write();
+				}
+			}
+		}
+
+		return $order;
+	}
+
+	/**
+	 * We only use the session when a logged in user is not present
+	 * When logged in we use the customer's CurrentOrderID field instead
+	 */
+	protected static function saveOrderIntoSession(Order $order)
+	{
+		/** @var HTTPRequest $request */
+		$request = Injector::inst()->get(HTTPRequest::class);
+		$session = $request->getSession();
+		$session->set('Cart', [
+			'OrderID' => $order->ID
+		]);
+		$session->save($request);
+	}
+
+	/**
+	 * We only use the session when a logged in user is not present
+	 * When logged in we use the customer's CurrentOrderID field instead
+	 */
+	protected static function getOrderFromSession(): ?Order
+	{
 		/** @var HTTPRequest $request */
 		$request = Injector::inst()->get(HTTPRequest::class);
 		$session = $request->getSession();
@@ -84,17 +142,6 @@ class Cart extends Extension
 			$order = DataObject::get_by_id(Order::class, $orderID);
 		}
 
-		if (!$orderID || !$order || !$order->exists()) {
-			$order = Order::create();
-
-			if ($persist) {
-				$order->write();
-				$session->set('Cart', array(
-					'OrderID' => $order->ID
-				));
-				$session->save($request);
-			}
-		}
 		return $order;
 	}
 

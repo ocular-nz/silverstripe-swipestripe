@@ -30,7 +30,8 @@ class Customer extends Member {
 
 	private static $db = array(
 		'Phone' => 'Text',
-		'Code' => 'Int' //Just to trigger creating a Customer table
+		'Code' => 'Int',
+		'CurrentOrderID' => 'Int'
 	);
 	
 	/**
@@ -46,6 +47,27 @@ class Customer extends Member {
 		'Surname',
 		'Email'
 	);
+
+	/**
+	 * Get current order from stored order ID, but only if the order is a 
+	 * cart or standing order belonging to the customer.
+	 */
+	public function getCurrentOrder(): ?Order
+	{
+		if (empty($this->CurrentOrderID)) {
+			return null;
+		}
+		$orderIDs = $this->Orders(all: true)->filterAny(['Status' => 'Cart', 'IsStandingOrder' => true])->column('ID');
+		if (!in_array($this->CurrentOrderID, $orderIDs)) {
+			return null;
+		}
+		return Order::get_by_id($this->CurrentOrderID);
+	}
+
+	public function setCurrentOrder(Order $order)
+	{
+		$this->CurrentOrderID = $order->ID;
+	}
 	
 	/**
 	 * Prevent customers from being deleted.
@@ -127,12 +149,15 @@ class Customer extends Member {
 	/**
 	 * Overload getter to return only non-cart orders
 	 * 
-	 * @return ArrayList Set of previous orders for this member
+	 * @return DataList Set of previous orders for this member
 	 */
-	public function Orders() {
-		return Order::get()
-			->where("\"MemberID\" = " . $this->ID . " AND \"Order\".\"Status\" != 'Cart'")
-			->sort("\"Created\" DESC");
+	public function Orders(bool $all = false) 
+	{
+		$orders = Order::get()->filter('MemberID', $this->ID)->sort('"Created" DESC');
+		if (!$all) {
+			$orders->exclude('Status', 'Cart');
+		}
+		return $orders;
 	}
 	
 	/**
