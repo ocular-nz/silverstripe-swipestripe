@@ -37,6 +37,7 @@ use SwipeStripe\Customer\Customer;
 use SwipeStripe\Order\Item;
 use SwipeStripe\Order\Order;
 use SwipeStripe\Order\Order_Update;
+use SwipeStripe\Order\StandingOrder;
 
 /**
  * Form for displaying on the {@link CheckoutPage} with all the necessary details 
@@ -408,11 +409,21 @@ class OrderForm extends Form implements LoggerAwareInterface
 			$member = Customer::currentUser() ?: singleton(Customer::class);
 			$order = Cart::get_current_order();
 
+			if ($request->postVar('IsStandingOrder') && $order->getClassName() !== StandingOrder::class) {
+				// cast to a standing order
+				$order = $order->newClassInstance(StandingOrder::class);
+			}
+
+			if (!$request->postVar('IsStandingOrder') && $order->getClassName() !== Order::class) {
+				// cast to a normal order
+				$order = $order->newClassInstance(Order::class);
+			}
+
 			// Update the Order 
 			$order->update($request->postVars());
 
 			$order->updateModifications($request->postVars())
-				->write();
+				->write(); 
 
 			$form = OrderForm::create(
 				$this->controller,

@@ -15,6 +15,7 @@ use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\Security;
 use SwipeStripe\Order\Order;
+use SwipeStripe\Order\StandingOrder;
 
 /**
  * Represents a {@link Customer}, a type of {@link Member}.
@@ -57,7 +58,7 @@ class Customer extends Member {
 		if (empty($this->CurrentOrderID)) {
 			return null;
 		}
-		$orderIDs = $this->Orders(all: true)->filterAny(['Status' => 'Cart', 'IsStandingOrder' => true])->column('ID');
+		$orderIDs = $this->Orders(all: true)->filterAny([ 'Status' => 'Cart', 'ClassName' => StandingOrder::class ])->column('ID');
 		if (!in_array($this->CurrentOrderID, $orderIDs)) {
 			return null;
 		}
