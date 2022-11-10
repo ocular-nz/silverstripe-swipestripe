@@ -969,6 +969,11 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	{
 		return $this->Updates()->where("\"Visible\" = 1");
 	}
+
+	public function CartName()
+    {
+        return 'Cart';
+    }
 }
 
 class Order_Update extends DataObject

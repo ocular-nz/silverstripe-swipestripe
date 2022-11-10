@@ -62,12 +62,13 @@ class Customer extends Member {
 		if (!in_array($this->CurrentOrderID, $orderIDs)) {
 			return null;
 		}
-		return Order::get_by_id($this->CurrentOrderID);
+		return Order::get()->byID($this->CurrentOrderID);
 	}
 
-	public function setCurrentOrder(Order $order)
+	public function setCurrentOrder(Order|int $order): static
 	{
-		$this->CurrentOrderID = $order->ID;
+		$this->CurrentOrderID = ($order instanceof Order) ? $order->ID : $order;
+		return $this;
 	}
 	
 	/**

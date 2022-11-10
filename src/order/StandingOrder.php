@@ -94,4 +94,9 @@ class StandingOrder extends Order
 
         return true;
     }
+
+    public function CartName()
+    {
+        return $this->Name ?: 'Standing Order #' . $this->ID;
+    }
 }
