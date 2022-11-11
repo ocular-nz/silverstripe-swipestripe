@@ -33,35 +33,22 @@ class Item extends DataObject
 
 	public function Amount()
 	{
-
-		// TODO: Multi currency
-
 		$order = $this->Order();
+		$price = Price::create();
+		$amount = $this->Price;
 
-		$amount = Price::create();
-		$amount->setAmount($this->Price);
-		$amount->setCurrency($order->BaseCurrency);
-		$amount->setSymbol($order->BaseCurrencySymbol);
+		// for standing orders we always want the current price
+		if ($order->IsStandingOrder()) {
+			$amount = $this->Product()?->Amount()->getAmount();
+		}
 
-		$this->extend('updateAmount', $amount);
+		$price->setAmount($amount);
+		$price->setCurrency($order->BaseCurrency);
+		$price->setSymbol($order->BaseCurrencySymbol);
 
-		return $amount;
-	}
+		$this->extend('updateAmount', $price);
 
-	/**
-	 * Display price, can decorate for multiple currency etc.
-	 * 
-	 * @return Price
-	 */
-	public function Price()
-	{
-
-		$amount = $this->Amount();
-
-		//Transform price here for display in different currencies etc.
-		$this->extend('updatePrice', $amount);
-
-		return $amount;
+		return $price;
 	}
 
 	/**
@@ -109,6 +96,22 @@ class Item extends DataObject
 		}
 	}
 
+	/**
+	 * Display price, can decorate for multiple currency etc.
+	 * 
+	 * @return Price
+	 */
+	public function Price()
+	{
+
+		$amount = $this->Amount();
+
+		//Transform price here for display in different currencies etc.
+		$this->extend('updatePrice', $amount);
+
+		return $amount;
+	}
+
 	public function UnitAmount()
 	{
 
@@ -132,7 +135,6 @@ class Item extends DataObject
 	 */
 	public function UnitPrice()
 	{
-
 		$itemPrice = $this->Price();
 		$amount = $itemPrice->getAmount();
 
@@ -154,7 +156,6 @@ class Item extends DataObject
 	 */
 	public function Total()
 	{
-
 		$unitAmount = $this->UnitAmount();
 		$unitAmount->setAmount($unitAmount->getAmount() * $this->Quantity);
 		return $unitAmount;
@@ -162,7 +163,6 @@ class Item extends DataObject
 
 	public function TotalPrice()
 	{
-
 		$unitPrice = $this->UnitPrice();
 		$unitPrice->setAmount($unitPrice->getAmount() * $this->Quantity);
 		return $unitPrice;
@@ -174,8 +174,11 @@ class Item extends DataObject
 	 * 
 	 * @return Mixed Variation if it exists, otherwise null
 	 */
-	function Variation()
+	function Variation(bool $ignoreVersion = false)
 	{
+		if ($ignoreVersion || $this->Order()->IsStandingOrder()) {
+			return Variation::get()->byID($this->VariationID);
+		}
 		return ($this->VariationID) ? Versioned::get_version(Variation::class, $this->VariationID, $this->VariationVersion) : null;
 	}
 
@@ -184,8 +187,11 @@ class Item extends DataObject
 	 * 
 	 * @return Mixed Product if it exists, otherwise null
 	 */
-	function Product()
+	function Product(bool $ignoreVersion = false)
 	{
+		if ($ignoreVersion || $this->Order()->IsStandingOrder()) {
+			return Product::get()->byID($this->ProductID);
+		}
 		return Versioned::get_version(Product::class, $this->ProductID, $this->ProductVersion);
 	}
 

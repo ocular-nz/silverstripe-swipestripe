@@ -130,6 +130,19 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	}
 
 	/**
+	 * Summed totals of all items
+	 */
+	public function ItemCount()
+	{
+		$count = 0;
+		foreach ($this->Items() as $item)
+		{
+			$count += $item->Quantity;
+		}
+		return $count;
+	}
+
+	/**
 	 * Display price, can decorate for multiple currency etc.
 	 *
 	 * @return Price
@@ -674,8 +687,6 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 				$item->ProductID = $product->ID;
 				$item->ProductVersion = $product->Version;
 
-				//TODO: Think about percentage discounts and stuff like that, needs to apply to variation as well for total price to be correct
-				//TODO: Do not use Amount() here, need another accessor to support price discounts and changes though
 				$item->Price = $product->Amount()->getAmount();
 				$item->Currency = $product->Amount()->getCurrency();
 
@@ -683,7 +694,6 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 					$item->VariationID = $variation->ID;
 					$item->VariationVersion = $variation->Version;
 
-					//TODO: Do not use Amount() here, need another accessor to support price discounts and changes though
 					$item->Price += $variation->Amount()->getAmount();
 				}
 
@@ -721,19 +731,18 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 */
 	public function findIdenticalItem($product, $variation, ArrayList $options)
 	{
-
 		$items = $this->Items();
 
-		$filtered = $items->filter(array(
+		$filtered = $items->filter([
 			'ProductID' => $product->ID,
 			'ProductVersion' => $product->Version
-		));
+		]);
 
 		if ($variation && $variation->exists()) {
-			$filtered = $filtered->filter(array(
+			$filtered = $filtered->filter([
 				'VariationID' => $variation->ID,
 				'VariationVersion' => $variation->Version
-			));
+			]);
 		}
 
 		//Could have many products of same variation at this point, need to check product options carefully
@@ -741,9 +750,9 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 		$existingItems = clone $filtered;
 		foreach ($existingItems as $existingItem) {
 
-			$existingOptionsMap = $existingItem->ItemOptions()->map('Description', 'Price')->toArray();
+			$existingOptionsMap = $existingItem->ItemOptions()->map('Description', 'Price');
 
-			if ($optionsMap != $existingOptionsMap) {
+			if ($optionsMap->toArray() != $existingOptionsMap->toArray()) {
 				$filtered = $filtered->exclude('ID', $existingItem->ID);
 			}
 		}
