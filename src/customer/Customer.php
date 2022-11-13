@@ -9,6 +9,7 @@ use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\Tab;
 use SilverStripe\Forms\TabSet;
 use SilverStripe\Forms\TextField;
+use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Group;
 use SilverStripe\Security\Member;
@@ -58,17 +59,32 @@ class Customer extends Member {
 		if (empty($this->CurrentOrderID)) {
 			return null;
 		}
-		$orderIDs = $this->Orders(all: true)->filterAny([ 'Status' => 'Cart', 'ClassName' => StandingOrder::class ])->column('ID');
-		if (!in_array($this->CurrentOrderID, $orderIDs)) {
-			return null;
+		if ($this->isSelectableOrder($this->CurrentOrderID)) {
+			return Order::get()->byID($this->CurrentOrderID);
 		}
-		return Order::get()->byID($this->CurrentOrderID);
+		return null;
 	}
 
 	public function setCurrentOrder(Order|int $order): static
 	{
-		$this->CurrentOrderID = ($order instanceof Order) ? $order->ID : $order;
+		if ($this->isSelectableOrder($order)) {
+			$this->CurrentOrderID = ($order instanceof Order) ? $order->ID : $order;
+		}
 		return $this;
+	}
+
+	/**
+	 * order is one of the orders this customer is allowed to select, or zero
+	 */
+	public function isSelectableOrder(Order|int $order): bool
+	{
+		$orderID = is_int($order) ? $order : $order->ID;
+		return $this->SelectableOrders()->find('ID', $orderID)?->exists() || $orderID === 0;
+	}
+
+	public function SelectableOrders(): DataList
+	{
+		return $this->Orders(all: true)->filterAny([ 'Status' => 'Cart', 'ClassName' => StandingOrder::class ]);
 	}
 	
 	/**
