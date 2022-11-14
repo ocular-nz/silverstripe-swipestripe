@@ -222,8 +222,13 @@ class OrderForm extends Form implements LoggerAwareInterface
 
 	public function createActions()
 	{
+		$buttonText = 'Proceed to pay';
+		if ($this->order->IsConfirmedStandingOrder()) {
+			$buttonText = 'Finished editing';
+		}
+
 		$actions = FieldList::create(
-			new FormAction('process', _t('CheckoutPage.PROCEED_TO_PAY', 'Proceed to pay'))
+			new FormAction('process', $buttonText)
 		);
 
 		$this->extend('updateActions', $actions);
