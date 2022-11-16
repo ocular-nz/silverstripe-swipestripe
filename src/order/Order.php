@@ -85,13 +85,20 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	const STATUS_DISPATCHED = 'Dispatched';
 
 	/**
+	 * Order status for standing orders
+	 *
+	 * @var String
+	 */
+	const STATUS_STANDING = 'Standing Order';
+
+	/**
 	 * DB fields for Order, such as Stauts, Payment Status etc.
 	 *
 	 * @var Array
 	 */
 	private static $db = array(
-		'Status' => "Enum('Pending,Processing,Dispatched,Cancelled,Cart','Cart')",
-		'PaymentStatus' => "Enum('Unpaid,Paid','Unpaid')",
+		'Status' => "Enum('Pending,Processing,Dispatched,Cancelled,Cart,Standing Order','Cart')",
+		'PaymentStatus' => "Enum('Unpaid,Paid,Standing','Unpaid')",
 
 		'RedirectUrlHit' => 'Boolean',
 
@@ -344,7 +351,7 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 			return $extended;
 		}
 
-		return Permission::check('ADMIN');
+		return Permission::check('ADMIN') || $this->Member->isSelectableOrder($this);
 	}
 
 	/**
@@ -410,9 +417,10 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 		$statusVal = isset($query['Status']) ? $query['Status'] : array();
 
 		$fields->push(CheckboxSetField::create('Status', 'Status', array(
-			'Pending' => 'Pending',
-			'Processing' => 'Processing',
-			'Dispatched' => 'Dispatched'
+			'Pending' => Order::STATUS_PENDING,
+			'Processing' => Order::STATUS_PROCESSING,
+			'Dispatched' => Order::STATUS_DISPATCHED,
+			'Standing Order' => Order::STATUS_STANDING
 		))->setValue($statusVal));
 
 		return $fields;
@@ -502,7 +510,12 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 
 		$this->RedirectUrlHit = true;
 		$this->Status = ($this->getPaid()) ? self::STATUS_PROCESSING :  self::STATUS_PENDING;
+
 		$this->PaymentStatus = ($this->getPaid()) ? 'Paid' : 'Unpaid';
+		if ($this->isStandingOrder()) {
+			$this->Status = self::STATUS_STANDING;
+			$this->PaymentStatus = 'Standing';
+		}
 		$this->write();
 
 		ReceiptEmail::create($this->Member(), $this)

@@ -25,6 +25,10 @@ class StandingOrder extends Order
         'Orders' => Order::class
     ];
 
+    private static $cascade_duplicates = [
+        'Updates'
+    ];
+
     public function Period(): ?CarbonPeriod
     {
         if (empty($this->StartDate)) {
