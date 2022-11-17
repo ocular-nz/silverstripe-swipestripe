@@ -46,6 +46,10 @@ class ReceiptEmail extends ProcessedEmail
 		if ($siteConfig->ReceiptBody) {
 			$this->body = $siteConfig->ReceiptBody;
 		}
+
+		if ($order->isStandingOrder()) {
+			$this->subject = 'Your Standing Order from Commonsense Organics - ' . $order->CartName();
+		}
 		
 		$adminEmail = Config::inst()->get(Email::class, 'admin_email');
 		if ($siteConfig->ReceiptFrom) {
