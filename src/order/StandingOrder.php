@@ -29,6 +29,10 @@ class StandingOrder extends Order
         'Updates'
     ];
 
+    /**
+     * The start date of the period is a day before the date given by the user
+     * so that orders are placed a day ahead of the chosen dates
+     */
     public function Period(): ?CarbonPeriod
     {
         if (empty($this->StartDate)) {
@@ -45,9 +49,12 @@ class StandingOrder extends Order
             return null;
         }
 
+        // we actually want to place the order a day ahead for next-day delivery
+        $startDate = Carbon::parse($this->StartDate)->subDay();
+
         // set for infinite recurrences. if future requirements call for an end date 
         // to the standing order, we can plug that in here.
-        return CarbonPeriod::create($this->StartDate, $interval, INF);
+        return CarbonPeriod::create($startDate, $interval, INF);
     }
 
     public function onBeforeWrite()
@@ -93,6 +100,12 @@ class StandingOrder extends Order
         // $periodDate can be assumed not to be in the future, since we used the untilNow() modifier
         if (!$periodDate->isToday()) {
             $this->logger->info('Standing order placement was missed and the window has expired', [$this->ID, $periodDate->toString()]);
+            return false;
+        }
+
+        // don't place an order if there are no items in the order
+        if ($this->ItemCount() <= 0) {
+            $this->logger->info('Standing order skipped because it has no items', [$this->ID, $periodDate->toString()]);
             return false;
         }
 

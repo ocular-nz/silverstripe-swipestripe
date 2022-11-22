@@ -7,7 +7,7 @@
 	<body>
 	
 		<h3><% _t('Order_ReceiptEmail.GREETING', 'Hi') %> $Customer.Name,</h3>
-		<% if isStandingOrder %>
+		<% if IsStandingOrder %>
 			<p>We've received your order. You will be billed and sent your items automatically at the selected frequency.<p>
 			<p>You can view and make changes to your order at any time <a href="$Link" id="OrderLink">here</a>.</p>
 			<p>Your order details are below.</p>

@@ -47,7 +47,7 @@ class ReceiptEmail extends ProcessedEmail
 			$this->body = $siteConfig->ReceiptBody;
 		}
 
-		if ($order->isStandingOrder()) {
+		if ($order->IsStandingOrder()) {
 			$this->subject = 'Your Standing Order from Commonsense Organics - ' . $order->CartName();
 		}
 		
