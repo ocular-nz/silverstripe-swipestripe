@@ -29,6 +29,21 @@ class StandingOrder extends Order
         'Updates'
     ];
 
+    public function Items()
+	{
+        // check items in standing order are still valid 
+        // and clean up any invalid ones before returning
+        $items = parent::Items();
+        foreach ($items as $item) {
+            $validation = $item->validateForCart();
+            if (!$validation->isValid()) {
+                $item->delete();
+            }
+        }
+		
+		return parent::Items();
+	}
+
     /**
      * The start date of the period is a day before the date given by the user
      * so that orders are placed a day ahead of the chosen dates

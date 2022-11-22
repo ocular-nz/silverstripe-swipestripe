@@ -149,23 +149,6 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 		return $count;
 	}
 
-	public function Items()
-	{
-		if ($this->IsStandingOrder()) {
-			// check items in standing order are still valid 
-			// and clean up any invalid ones before returning
-			$items = parent::Items();
-			foreach ($items as $item) {
-				$validation = $item->validateForCart();
-				if (!$validation->isValid()) {
-					$item->delete();
-				}
-			}
-		} 
-		
-		return parent::Items();
-	}
-
 	/**
 	 * Display price, can decorate for multiple currency etc.
 	 *
