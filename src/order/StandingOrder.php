@@ -102,6 +102,11 @@ class StandingOrder extends Order
             return false;
         }
 
+        if (!$this->Enabled) {
+            $this->logger->info('Standing order is disabled', [$this->ID]);
+            return false;
+        }
+
         // the most recent recurrence date
         $periodDate = $period->untilNow()->last();
 
