@@ -86,9 +86,7 @@ class StandingOrder extends Order
 
     public function shouldRun(): bool
     {
-        $now = date_create();
-
-        $latestOrderDate = Carbon::parse($this->Orders()->filter('Created:LessThanOrEqual', $now->format('Y-m-d'))->max('Created') ?: '1980-01-01');
+        $latestOrderDate = Carbon::parse($this->Orders()->max('Created') ?: '1980-01-01');
 
         $period = $this->Period();
 
