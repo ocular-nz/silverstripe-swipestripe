@@ -96,11 +96,11 @@ class Cart extends Extension
 			$order = Order::create();
 
 			if ($persist) {
-				$order->MemberID = $customer->ID;
-				$order->write();
 				if (empty($customer)) {
 					self::saveOrderIntoSession($order);
 				} else {
+					$order->MemberID = $customer->ID;
+					$order->write();
 					$customer->setCurrentOrder($order);
 					$customer->write();
 				}
