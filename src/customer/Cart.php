@@ -94,13 +94,13 @@ class Cart extends Extension
 		// otherwise create a new one and return that
 		if (empty($order) || !$order->exists()) {
 			$order = Order::create();
+			$order->write();
 
 			if ($persist) {
 				if (empty($customer)) {
 					self::saveOrderIntoSession($order);
 				} else {
 					$order->MemberID = $customer->ID;
-					$order->write();
 					$customer->setCurrentOrder($order);
 					$customer->write();
 				}
@@ -139,7 +139,7 @@ class Cart extends Extension
 		$order = null;
 
 		if ($orderID) {
-			$order = DataObject::get_by_id(Order::class, $orderID);
+			$order = Order::get()->byID($orderID);
 		}
 
 		return $order;
