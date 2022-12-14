@@ -101,6 +101,7 @@ class Cart extends Extension
 					self::saveOrderIntoSession($order);
 				} else {
 					$order->MemberID = $customer->ID;
+					$order->write();
 					$customer->setCurrentOrder($order);
 					$customer->write();
 				}
