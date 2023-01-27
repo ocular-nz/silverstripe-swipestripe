@@ -100,6 +100,11 @@ class StandingOrder extends Order
             return false;
         }
 
+        if (empty($this->Member->WindcaveBillingId)) {
+            $this->logger->info('Member DPSBillingID not saved', [$this->ID]);
+            return false;
+        }
+
         if (!$this->Enabled) {
             $this->logger->info('Standing order is disabled', [$this->ID]);
             return false;
