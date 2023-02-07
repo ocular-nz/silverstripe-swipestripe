@@ -35,7 +35,9 @@ class RepayForm extends Form implements LoggerAwareInterface
 		'Logger' => '%$' . LoggerInterface::class,
 	];
 
+	/** @var Order */
 	protected $order;
+	/** @var Customer */
 	protected $customer;
 
 	/**
@@ -98,11 +100,18 @@ class RepayForm extends Form implements LoggerAwareInterface
 			$source[$methodName] = $methodConfig['title'];
 		}
 
-		$outstanding = $order->TotalOutstanding()->Nice();
+		if ($order->IsStandingOrder()) {
+			$header = 'Update Card';
+			$message = 'A $1.00 hold will be placed on your card, and we will update your payment information.';
+
+		} else {
+			$header = _t('CheckoutPage.PAYMENT', "Payment");
+			$message = 'Process a payment for the outstanding amount: ' . $order->TotalOutstanding()->Nice();
+		}		
 
 		$paymentFields = CompositeField::create(
-			new HeaderField(_t('CheckoutPage.PAYMENT', "Payment"), 3),
-			LiteralField::create('RepayLit', "<p>Process a payment for the oustanding amount: $outstanding</p>"),
+			new HeaderField($header),
+			LiteralField::create('RepayLit', "<p>$message</p>"),
 			DropdownField::create(
 				'PaymentMethod',
 				_t('CheckoutPage.SELECTPAYMENT', "Select Payment Method"),
@@ -206,11 +215,19 @@ class RepayForm extends Form implements LoggerAwareInterface
 
 		try {
 
+			
+
 			$paymentData = array(
 				'Amount' => number_format($order->TotalOutstanding()->getAmount(), 2, '.', ''),
 				'Currency' => $order->TotalOutstanding()->getCurrency(),
-				'Reference' => $order->ID
+				'Reference' => $order->ID,
+				'EnableAddBillCard' => $order->IsStandingOrder(),
 			);
+
+			if ($order->IsStandingOrder()) {
+				$paymentData['Amount'] = '1.00';
+			}
+
 			$paymentProcessor->payment->OrderID = $order->ID;
 			$paymentProcessor->payment->PaidByID = $member->ID;
 
