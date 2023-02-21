@@ -2,6 +2,7 @@
 
 namespace SwipeStripe\Customer;
 
+use Psr\Log\LoggerInterface;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\Session;
@@ -73,6 +74,8 @@ class Cart extends Extension
 	 */
 	public static function get_current_order($persist = false)
 	{
+		$logger = Injector::inst()->get(LoggerInterface::class);
+
 		$customer = Customer::currentUser();
 
 		if (!empty($customer)) {
@@ -84,7 +87,11 @@ class Cart extends Extension
 				// if there's no order, attempt to migrate one from the session
 				$order = self::getOrderFromSession();
 				if (!empty($order)) {
+					$order->MemberID = $customer->ID;
+					$order->write();
 					$customer->setCurrentOrder($order);
+					$customer->write();
+					$logger->info('Moved order from session to customer', ['Order' => $order->ID, 'Customer' => $customer->ID]);
 				}
 			}
 		} else {
@@ -94,16 +101,20 @@ class Cart extends Extension
 		// otherwise create a new one and return that
 		if (empty($order) || !$order->exists()) {
 			$order = Order::create();
-			$order->write();
 
 			if ($persist) {
+				$order->write();
+				$logger->info('Created order', [$order->ID]);
+
 				if (empty($customer)) {
 					self::saveOrderIntoSession($order);
+					$logger->info('Saved order to session', [$order->ID]);
 				} else {
 					$order->MemberID = $customer->ID;
 					$order->write();
 					$customer->setCurrentOrder($order);
 					$customer->write();
+					$logger->info('Saved new order to customer', ['Order' => $order->ID, 'Customer' => $customer->ID]);
 				}
 			}
 		}
