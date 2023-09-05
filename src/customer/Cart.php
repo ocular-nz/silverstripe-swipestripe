@@ -119,6 +119,8 @@ class Cart extends Extension
 			}
 		}
 
+		$order->updateTotal();
+
 		return $order;
 	}
 
