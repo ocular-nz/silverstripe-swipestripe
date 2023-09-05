@@ -31,17 +31,23 @@ class StandingOrder extends Order
 
     public function Items()
 	{
-        // check items in standing order are still valid 
-        // and clean up any invalid ones before returning
-        $items = parent::Items();
-        foreach ($items as $item) {
-            $validation = $item->validateForCart();
-            if (!$validation->isValid()) {
-                $item->delete();
-            }
-        }
+        // // check items in standing order are still valid 
+        // // and clean up any invalid ones before returning
+        // $items = parent::Items();
+        // foreach ($items as $item) {
+        //     $validation = $item->validateForCart();
+        //     if (!$validation->isValid()) {
+        //         $item->delete();
+        //     }
+        // }
 		
-		return parent::Items();
+		// return parent::Items();
+
+        // instead of deleting, let's filter out the ones that are invalid
+        return parent::Items()->filterByCallback(function ($item) {
+            $validation = $item->validateForCart();
+            return $validation->isValid();
+        });
 	}
 
     /**

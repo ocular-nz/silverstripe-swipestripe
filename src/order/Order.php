@@ -126,6 +126,7 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 
 	public function Total()
 	{
+		$this->updateTotal();
 
 		// TODO: Multi currency
 
@@ -164,7 +165,7 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 
 	public function SubTotal()
 	{
-
+		$this->updateTotal();
 		// TODO: Multi currency
 
 		$amount = Price::create();
