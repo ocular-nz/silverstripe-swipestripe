@@ -78,6 +78,15 @@ class StandingOrder extends Order
         return CarbonPeriod::create($startDate, $interval, INF);
     }
 
+    public function DayOfWeek()
+    {
+        if (empty($this->StartDate)) {
+            return null;
+        }
+
+        return Carbon::parse($this->StartDate)->format('l');
+    }
+
     public function onBeforeWrite()
     {
         parent::onBeforeWrite();
