@@ -807,7 +807,10 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 		$this->TotalPrice = $total;
 
 		//TODO: change this so doesn't write() in here
-		$this->write();
+		// don't write if order is not persisted 
+		if ($this->ID) {
+			$this->write();
+		}
 	}
 
 	/**
