@@ -58,7 +58,7 @@ class CartForm extends Form implements LoggerAwareInterface
 
 		parent::__construct($controller, $name, FieldList::create(), FieldList::create(), null);
 
-		Requirements::javascript('silverstripe/admin:thirdparty/jquery-entwine/dist/jquery.entwine-dist.js');
+		Requirements::javascript('silverstripe/admin:thirdparty/jquery-entwine/jquery.entwine.js');
 		Requirements::javascript('swipestripe/javascript/CartForm.js');
 
 		$this->order = Cart::get_current_order();
