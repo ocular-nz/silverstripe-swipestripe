@@ -18,9 +18,9 @@
 	],
 	"require":
 	{
-		"silverstripe/recipe-cms": "^4.7",
-		"silverstripe/payment": "^1.1.0-dev",
-		"pelago/emogrifier": "0.1.1"
+		"silverstripe/recipe-cms": "^5.0|^6.0", 
+		"silverstripe/payment": "dev-v5",
+		"pelago/emogrifier": "^7.3.0"
 	},
 	"require-dev": 
 	{
