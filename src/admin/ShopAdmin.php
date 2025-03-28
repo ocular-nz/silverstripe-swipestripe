@@ -352,7 +352,7 @@ class ShopAdmin_EmailAdmin extends ShopAdmin
 		return $this->EmailSettingsForm();
 	}
 
-	public function getResponseNegotiator()
+	public function getResponseNegotiator(): PjaxResponseNegotiator
 	{
 		$responseNegotiator = parent::getResponseNegotiator();
 		// $responseNegotiator->setCallback('CurrentForm', function () {
