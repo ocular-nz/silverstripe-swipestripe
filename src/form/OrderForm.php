@@ -293,28 +293,26 @@ class OrderForm extends Form implements LoggerAwareInterface
 		return $this->order;
 	}
 
-	/**
-	 * Overloaded so that form error messages are displayed.
-	 * 
-	 * @see OrderFormValidator::php()
-	 * @see Form::validate()
-	 */
-	public function validate()
-	{
-		$valid = true;
-		if ($this->validator) {
-			$errors = $this->validator->validate();
+	// /**
+	//  * Overridden so that form error messages are displayed.
+	//  * 
+	//  * The parent function also does something with the error messages.
+	//  * So I'm commenting this out and if there's a problem with the error messages
+	//  * we can bring this override back
+	//  * 
+	//  * @see OrderFormValidator::php()
+	//  * @see Form::validate()
+	//  */
+	// public function validate(): ValidationResult
+	// {
+	// 	$validationResult = parent::validate();
 
-			if ($errors) {
-				// Load errors into session and post back
-				$data = $this->getData();
-				$this->getSession()->set("FormInfo.{$this->FormName()}.errors", $errors);
-				$this->getSession()->set("FormInfo.{$this->FormName()}.data", $data);
-				$valid = false;
-			}
-		}
-		return $valid;
-	}
+	// 	$data = $this->getData();
+	// 	$this->getSession()->set("FormInfo.{$this->FormName()}.data", $data);
+	// 	$this->getSession()->set("FormInfo.{$this->FormName()}.errors", $validationResult);
+		
+	// 	return $validationResult;
+	// }
 
 	public function process($data, $form)
 	{

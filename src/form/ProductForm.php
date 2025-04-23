@@ -152,39 +152,39 @@ class ProductForm extends Form
 		return $validator;
 	}
 
-	/**
-	 * Overloaded so that form error messages are displayed.
-	 * 
-	 * @see OrderFormValidator::php()
-	 * @see Form::validate()
-	 */
-	public function validate()
-	{
+	// /**
+	//  * Overloaded so that form error messages are displayed.
+	//  * 
+	//  * @see OrderFormValidator::php()
+	//  * @see Form::validate()
+	//  */
+	// public function validate()
+	// {
 
-		if ($this->validator) {
-			$errors = $this->validator->validate();
+	// 	if ($this->validator) {
+	// 		$errors = $this->validator->validate();
 
-			if ($errors) {
-				$data = $this->getData();
+	// 		if ($errors) {
+	// 			$data = $this->getData();
 
-				$formError = array();
-				if ($formMessageType = $this->MessageType()) {
-					$formError['message'] = $this->Message();
-					$formError['messageType'] = $formMessageType;
-				}
+	// 			$formError = array();
+	// 			if ($formMessageType = $this->MessageType()) {
+	// 				$formError['message'] = $this->Message();
+	// 				$formError['messageType'] = $formMessageType;
+	// 			}
 
-				// Load errors into session and post back
-				$this->getSession()->set("FormInfo.{$this->FormName()}", array(
-					'errors' => $errors,
-					'data' => $data,
-					'formError' => $formError
-				));
+	// 			// Load errors into session and post back
+	// 			$this->getSession()->set("FormInfo.{$this->FormName()}", array(
+	// 				'errors' => $errors,
+	// 				'data' => $data,
+	// 				'formError' => $formError
+	// 			));
 				
-				return false;
-			}
-		}
-		return true;
-	}
+	// 			return false;
+	// 		}
+	// 	}
+	// 	return true;
+	// }
 
 	/**
 	 * Add an item to the current cart ({@link Order}) for a given {@link Product}.

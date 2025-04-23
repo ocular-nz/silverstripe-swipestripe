@@ -168,28 +168,28 @@ class RepayForm extends Form implements LoggerAwareInterface
 		return $this->order;
 	}
 
-	/**
-	 * Overloaded so that form error messages are displayed.
-	 * 
-	 * @see OrderFormValidator::php()
-	 * @see Form::validate()
-	 */
-	function validate()
-	{
-		$valid = true;
-		if ($this->validator) {
-			$errors = $this->validator->validate();
+	// /**
+	//  * Overloaded so that form error messages are displayed.
+	//  * 
+	//  * @see OrderFormValidator::php()
+	//  * @see Form::validate()
+	//  */
+	// function validate()
+	// {
+	// 	$valid = true;
+	// 	if ($this->validator) {
+	// 		$errors = $this->validator->validate();
 
-			if ($errors) {
-				// Load errors into session and post back
-				$data = $this->getData();
-				$this->getSession()->set("FormInfo.{$this->FormName()}.errors", $errors);
-				$this->getSession()->set("FormInfo.{$this->FormName()}.data", $data);
-				$valid = false;
-			}
-		}
-		return $valid;
-	}
+	// 		if ($errors) {
+	// 			// Load errors into session and post back
+	// 			$data = $this->getData();
+	// 			$this->getSession()->set("FormInfo.{$this->FormName()}.errors", $errors);
+	// 			$this->getSession()->set("FormInfo.{$this->FormName()}.data", $data);
+	// 			$valid = false;
+	// 		}
+	// 	}
+	// 	return $valid;
+	// }
 
 	public function process($data, $form)
 	{
