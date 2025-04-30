@@ -2,40 +2,45 @@
 
 namespace SwipeStripe\Emails;
 
+use Pelago\Emogrifier\CssInliner;
 use SilverStripe\Control\Email\Email;
-use Pelago\Emogrifier;
+use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\View\ViewableData;
 
 /**
- * Same as the normal system email class, but runs the content through
- * Emogrifier to merge css rules inline before sending.
- * 
- * @author Mark Guinn
- * @package swipestripe
- * @subpackage emails
+ * Decorator for the Email class to allow for inlined CSS
  */
-class ProcessedEmail extends Email
+class ProcessedEmail
 {
+	use Injectable;
 
-	/**
-	 * Email signature
-	 * 
-	 * @var string HTML content from central config for signature
-	 * @see ShopConfig
-	 */
-	public $signature;
+	protected Email $mail;
+
+	protected string $template;
+
+	public function __construct()
+	{
+		$this->mail = Email::create();
+	}
 
 	/**
 	 * Runs the content through Emogrifier to merge css style inline before sending
-	 * 
-	 * @see Email::render()
 	 */
-	public function render($plainOnly = false)
+	public function renderBody(array $data = [], ?string $template = null): void
 	{
-		// the parent class stores the rendered output in Body
-		parent::render($plainOnly);
+		$viewModel = ViewableData::create();
 
-		// if it's an html email, filter it through emogrifier
-		if (!$plainOnly && isset($this->getData()['Css'])) {
+		$template ??= $this->template;
+
+		if (empty($template)) {
+			throw new \InvalidArgumentException('Template not set');
+		}
+
+		$html = $viewModel->renderWith($template, $data);
+
+		$css = $data['Css'] ?? null;
+
+		if (!empty($css)) {
 
 			$html = str_replace(
 				[
@@ -48,11 +53,24 @@ class ProcessedEmail extends Email
 					"</table>",
 					'',
 				],
-				$this->getBody()
+				$html
 			);
 
-			$emog = new Emogrifier($html, $this->getData()['Css']);
-			$this->setBody($emog->emogrify());
+			$inlined = CssInliner::fromHtml($html)
+				->inlineCss($css)
+				->render();
 		}
+		
+		$this->mail->setBody($inlined);
+	}
+
+	public function send(): void
+	{
+		$this->mail->send();
+	}
+
+	public function setSubject(string $subject): void
+	{
+		$this->mail->setSubject($subject);
 	}
 }
