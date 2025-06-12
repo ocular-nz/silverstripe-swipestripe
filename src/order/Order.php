@@ -487,6 +487,11 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 		$this->extend('onBeforePayment');
 	}
 
+	public function onAfterConfirm()
+	{
+		$this->extend('onAfterConfirm');
+	}
+
 	/**
 	 * Processed if payment is successfully written, send a receipt to the customer
 	 * and notification to the admin
