@@ -3,6 +3,8 @@
 namespace SwipeStripe\Tasks;
 
 use SilverStripe\Dev\BuildTask;
+use SilverStripe\PolyExecution\PolyOutput;
+use Symfony\Component\Console\Input\InputInterface;
 use SwipeStripe\Order\Order;
 
 /**
@@ -29,8 +31,9 @@ class RemoveAbandonedCartsTask extends BuildTask
 	 * @see Order::delete_abandoned()
 	 * @see CliController::process()
 	 */
-	function run($request) {
+	protected function execute(InputInterface $input, PolyOutput $output): int {
 		date_default_timezone_set('Pacific/Auckland');
 		Order::delete_abandoned();
+		return 0;
 	} 
 }

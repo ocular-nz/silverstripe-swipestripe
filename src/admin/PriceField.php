@@ -3,6 +3,7 @@
 namespace SwipeStripe\Admin;
 
 use SilverStripe\Forms\CurrencyField;
+use SilverStripe\Core\Validation\ValidationResult;
 
 /**
  * Price field for managing prices.
@@ -46,22 +47,19 @@ class PriceField extends CurrencyField
 		return $this;
 	}
 
-	public function validate($validator)
+	public function validate(): ValidationResult
 	{
+		$result = ValidationResult::create();
 		if (
 			!empty($this->value)
 			//validate against any number of digits after the decimal place
 			&& !preg_match('/^\s*(\-?\$?|\$\-?)?(\d{1,3}(\,\d{3})*|(\d+))(\.\d+)?\s*$/', $this->value)
 		) {
-
-			$validator->validationError(
+			$result->addFieldError(
 				$this->name,
-				_t('Form.VALIDCURRENCY', "Please enter a valid currency"),
-				"validation",
-				false
+				_t('Form.VALIDCURRENCY', "Please enter a valid currency")
 			);
-			return false;
 		}
-		return true;
+		return $result;
 	}
 }

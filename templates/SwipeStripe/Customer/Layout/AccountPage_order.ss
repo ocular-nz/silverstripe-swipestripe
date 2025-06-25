@@ -24,7 +24,7 @@
 			
 			<% if TotalOutstanding.Amount != 0 %>
 				<p class="alert alert-error">
-					<strong class="alert-heading"><% _t('AccountPage_order.WARNING','Warning!') %></strong>
+					<strong class="alert-heading"><%t AccountPage_order.WARNING "Warning!" %></strong>
 					There is an outstanding amount on this order, please <a href="/account/repay/{$ID}">complete payment for this order here</a>.
 				</p>
 			<% end_if %>
@@ -36,7 +36,7 @@
 		<% end_with %>
 	<% else %>
 		<p class="alert alert-error">
-			<strong class="alert-heading"><% _t('AccountPage_order.WARNING','Warning!') %></strong>
+			<strong class="alert-heading"><%t AccountPage_order.WARNING "Warning!" %></strong>
 			$Message.Raw
 		</p>
 	<% end_if %>

@@ -114,8 +114,7 @@ class Customer extends Member {
 		parent::requireDefaultRecords();
 
 		//Create a new group for customers
-		$allGroups = DataObject::get(Group::class);
-		$existingCustomerGroup = $allGroups->find('Title', 'Customers');
+		$existingCustomerGroup = Group::get()->find('Title', 'Customers');
 		if (!$existingCustomerGroup) {
 			
 			$customerGroup = new Group();

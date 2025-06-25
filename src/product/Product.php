@@ -12,9 +12,9 @@ use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldDataColumns;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\TextField;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\Filters\PartialMatchFilter;
-use SilverStripe\ORM\ValidationResult;
+use SilverStripe\Core\Validation\ValidationResult;
 use SilverStripe\View\Requirements;
 use SwipeStripe\Admin\GridFieldConfig_BasicSortable;
 use SwipeStripe\Admin\GridFieldConfig_HasManyRelationEditor;
@@ -297,7 +297,7 @@ class Product extends Page
 	 * @see DataObject::validate()
 	 * @return ValidationResult
 	 */
-	public function validate()
+	public function validate(): ValidationResult
 	{
 
 		$result = new ValidationResult();

@@ -9,12 +9,12 @@ use SilverStripe\Forms\Form;
 use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\HiddenField;
 use SilverStripe\Forms\NumericField;
-use SilverStripe\Forms\RequiredFields;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Forms\Validation\RequiredFieldsValidator;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\ORM\FieldType\DBHTMLText;
-use SilverStripe\ORM\ValidationResult;
+use SilverStripe\Core\Validation\ValidationResult;
 use SilverStripe\View\Requirements;
 use SwipeStripe\Admin\ShopConfig;
 use SwipeStripe\Customer\Cart;
@@ -301,7 +301,7 @@ class ProductForm extends Form
  * Validator for {@link AddToCartForm} which validates that the product {@link Variation} is 
  * correct for the {@link Product} being added to the cart.
  */
-class ProductForm_Validator extends RequiredFields
+class ProductForm_Validator extends RequiredFieldsValidator
 {
 
 	/**
@@ -370,7 +370,7 @@ class ProductForm_Validator extends RequiredFields
 	 * 
 	 * @return Form The current form
 	 */
-	public function getForm()
+	public function getForm(): Form
 	{
 		return $this->form;
 	}
@@ -391,12 +391,11 @@ class ProductForm_QuantityField extends NumericField
 	 * Validate the quantity is above 0.
 	 * 
 	 * @see FormField::validate()
-	 * @return Boolean
+	 * @return ValidationResult
 	 */
-	public function validate($validator)
+	public function validate(): ValidationResult
 	{
-
-		$valid = true;
+		$result = ValidationResult::create();
 		$quantity = $this->Value();
 
 		if ($quantity == null || !is_numeric($quantity)) {
@@ -405,39 +404,24 @@ class ProductForm_QuantityField extends NumericField
 				$errorMessage = $msg;
 			}
 
-			$validator->validationError(
-				$this->getName(),
-				$errorMessage,
-				"error"
-			);
-			$valid = false;
+			$result->addFieldError($this->getName(), $errorMessage);
 		} else if ($quantity <= 0) {
 			$errorMessage = _t('ProductForm.ITEM_QUANTITY_LESS_ONE', 'The quantity must be at least 1');
 			if ($msg = $this->getCustomValidationMessage()) {
 				$errorMessage = $msg;
 			}
 
-			$validator->validationError(
-				$this->getName(),
-				$errorMessage,
-				"error"
-			);
-			$valid = false;
+			$result->addFieldError($this->getName(), $errorMessage);
 		} else if ($quantity > 2147483647) {
 			$errorMessage = _t('ProductForm.ITEM_QUANTITY_INCORRECT', 'The quantity must be less than 2,147,483,647');
 			if ($msg = $this->getCustomValidationMessage()) {
 				$errorMessage = $msg;
 			}
 
-			$validator->validationError(
-				$this->getName(),
-				$errorMessage,
-				"error"
-			);
-			$valid = false;
+			$result->addFieldError($this->getName(), $errorMessage);
 		}
 
 
-		return $valid;
+		return $result;
 	}
 }

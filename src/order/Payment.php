@@ -5,7 +5,6 @@ namespace SwipeStripe\Order;
 use SilverStripe\Core\Extension;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\TextField;
-use SilverStripe\ORM\DataExtension;
 
 /**
  * Mixin to augment the {@link Payment} class.
@@ -16,7 +15,7 @@ use SilverStripe\ORM\DataExtension;
  * @package swipestripe
  * @subpackage order
  */
-class Payment_Extension extends DataExtension
+class Payment_Extension extends Extension
 {
 
 	private static $has_one = array(

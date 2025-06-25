@@ -4,6 +4,7 @@ namespace SwipeStripe\Form;
 
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\HiddenField;
+use SilverStripe\Core\Validation\ValidationResult;
 
 /**
  * For displaying a {@link Modifier} on the {@link CheckoutPage} which will inject details
@@ -64,9 +65,9 @@ class ModificationField_Hidden extends HiddenField
 	 * 
 	 * @see FormField::validate()
 	 */
-	function validate($validator)
+	function validate(): ValidationResult
 	{
-		return true;
+		return ValidationResult::create();
 	}
 
 	/**
@@ -164,9 +165,9 @@ class ModificationField_Dropdown extends DropdownField
 	 * 
 	 * @see FormField::validate()
 	 */
-	function validate($validator)
+	function validate(): ValidationResult
 	{
-		return true;
+		return ValidationResult::create();
 	}
 
 	/**

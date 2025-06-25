@@ -3,7 +3,7 @@
 namespace SwipeStripe\Order;
 
 use SilverStripe\ORM\DataObject;
-use SilverStripe\ORM\ValidationResult;
+use SilverStripe\Core\Validation\ValidationResult;
 use SilverStripe\Versioned\Versioned;
 use SwipeStripe\Product\Price;
 use SwipeStripe\Product\Product;
@@ -89,10 +89,12 @@ class Item extends DataObject
 	{
 		parent::onBeforeDelete();
 
-		$itemOptions = DataObject::get(ItemOption::class, 'ItemID = ' . $this->ID);
-		if ($itemOptions && $itemOptions->exists()) foreach ($itemOptions as $itemOption) {
-			$itemOption->delete();
-			$itemOption->destroy();
+		$itemOptions = $this->ItemOptions();
+		if ($itemOptions && $itemOptions->exists()) {
+			foreach ($itemOptions as $itemOption) {
+				$itemOption->delete();
+				$itemOption->destroy();
+			}
 		}
 	}
 
@@ -212,7 +214,7 @@ class Item extends DataObject
 	 * @see DataObject::validate()
 	 * @return ValidationResult
 	 */
-	function validate()
+	function validate(): ValidationResult
 	{
 
 		$result = new ValidationResult();

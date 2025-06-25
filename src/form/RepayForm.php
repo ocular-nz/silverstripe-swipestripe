@@ -17,7 +17,7 @@ use SilverStripe\Forms\Form;
 use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\HeaderField;
 use SilverStripe\Forms\LiteralField;
-use SilverStripe\Forms\RequiredFields;
+use SilverStripe\Forms\Validation\RequiredFieldsValidator;
 use SilverStripe\ORM\DataObject;
 use SwipeStripe\Customer\Customer;
 use SwipeStripe\Order\Order;
@@ -144,7 +144,7 @@ class RepayForm extends Form implements LoggerAwareInterface
 	public function createValidator()
 	{
 
-		$validator = RequiredFields::create(
+		$validator = RequiredFieldsValidator::create(
 			'PaymentMethod'
 		);
 

@@ -20,16 +20,16 @@ use SilverStripe\Forms\GridField\GridFieldExportButton;
 use SilverStripe\Forms\HiddenField;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\NumericField;
-use SilverStripe\Forms\RequiredFields;
+use SilverStripe\Forms\Validation\RequiredFieldsValidator;
 use SilverStripe\Forms\Tab;
 use SilverStripe\Forms\TabSet;
 use SilverStripe\Forms\TextareaField;
 use SilverStripe\Forms\TextField;
-use SilverStripe\ORM\ArrayList;
-use SilverStripe\ORM\ValidationResult;
+use SilverStripe\Model\List\ArrayList;
+use SilverStripe\Core\Validation\ValidationResult;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\Security;
-use SilverStripe\View\ArrayData;
+use SilverStripe\Model\ArrayData;
 use SwipeStripe\Customer\Customer;
 use SwipeStripe\Order\Order;
 
@@ -595,7 +595,7 @@ class ShopAdmin_BaseCurrency extends ShopAdmin
 			->setUseButtonTag(true)
 			->addExtraClass('btn-outline-primary font-icon-tick'));
 
-		$validator = new RequiredFields('BaseCurrency');
+		$validator = new RequiredFieldsValidator('BaseCurrency');
 
 		$form = new Form(
 			$this,

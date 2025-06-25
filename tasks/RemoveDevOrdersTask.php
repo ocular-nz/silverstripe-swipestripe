@@ -3,6 +3,8 @@
 namespace SwipeStripe\Tasks;
 
 use SilverStripe\Dev\BuildTask;
+use SilverStripe\PolyExecution\PolyOutput;
+use Symfony\Component\Console\Input\InputInterface;
 use SwipeStripe\Order\Order;
 
 /**
@@ -17,11 +19,11 @@ use SwipeStripe\Order\Order;
 
 class RemoveDevOrdersTask extends BuildTask
 {	
-	protected $title = "Remove testing orders";
+	protected string $title = "Remove testing orders";
 	
-	protected $description = "Remove orders that were placed while website was in 'dev' mode.";
+	protected static string $description = "Remove orders that were placed while website was in 'dev' mode.";
 
-	function run($request) {
+	protected function execute(InputInterface $input, PolyOutput $output): int {
 		$orders = Order::get()
 			->where("\"Order\".\"Env\" = 'dev'");
 
@@ -29,5 +31,6 @@ class RemoveDevOrdersTask extends BuildTask
 			$order->delete();
 			$order->destroy();
 		}
+		return 0;
 	}
 }

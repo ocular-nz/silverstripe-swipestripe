@@ -21,15 +21,15 @@ use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\Form;
 use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\FormField;
+use SilverStripe\Core\Validation\ValidationResult;
 use SilverStripe\Forms\HeaderField;
 use SilverStripe\Forms\LiteralField;
-use SilverStripe\Forms\RequiredFields;
+use SilverStripe\Forms\Validation\RequiredFieldsValidator;
 use SilverStripe\Forms\TextareaField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\View\Requirements;
 use SilverStripe\Control\RequestHandler;
 use SilverStripe\ORM\FieldType\DBDatetime;
-use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Security\Security;
 use SwipeStripe\Admin\ShopConfig;
 use SwipeStripe\Customer\Cart;
@@ -459,7 +459,7 @@ class OrderForm extends Form implements LoggerAwareInterface
 /**
  * Validate the {@link OrderForm}, check that the current {@link Order} is valid.
  */
-class OrderForm_Validator extends RequiredFields
+class OrderForm_Validator extends RequiredFieldsValidator
 {
 
 	/**
@@ -514,7 +514,7 @@ class OrderForm_Validator extends RequiredFields
 	 * 
 	 * @return Form
 	 */
-	public function getForm()
+	public function getForm(): Form
 	{
 		return $this->form;
 	}
@@ -590,12 +590,11 @@ class OrderForm_ItemField extends FormField
 	 * {@link Order} and the item is valid for adding to the cart.
 	 * 
 	 * @see FormField::validate()
-	 * @return Boolean
+	 * @return ValidationResult
 	 */
-	public function validate($validator)
+	public function validate(): ValidationResult
 	{
-
-		$valid = true;
+		$result = ValidationResult::create();
 		$item = $this->Item();
 		$currentOrder = Cart::get_current_order();
 		$items = $currentOrder->Items();
@@ -608,12 +607,7 @@ class OrderForm_ItemField extends FormField
 				$errorMessage = $msg;
 			}
 
-			$validator->validationError(
-				$this->getName(),
-				$errorMessage,
-				"error"
-			);
-			$valid = false;
+			$result->addFieldError($this->getName(), $errorMessage);
 		} else if ($item) {
 
 			$validation = $item->validateForCart();
@@ -634,6 +628,6 @@ class OrderForm_ItemField extends FormField
 			}
 		}
 
-		return $valid;
+		return $result;
 	}
 }

@@ -8,7 +8,7 @@ use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\Tab;
 use SilverStripe\Forms\TabSet;
 use SilverStripe\ORM\DataObject;
-use SilverStripe\ORM\ValidationResult;
+use SilverStripe\Core\Validation\ValidationResult;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
 use SilverStripe\Versioned\Versioned;
@@ -164,7 +164,7 @@ class Variation extends DataObject implements PermissionProvider
 	 * @see ViewableData::__get()
 	 * @see Product::getCMSFields()
 	 */
-	public function __get($property)
+	public function __get(string $property): mixed
 	{
 
 		if (strpos($property, 'AttributeValue_') === 0) {
@@ -390,7 +390,7 @@ class Variation extends DataObject implements PermissionProvider
 		if ($variationAttributeOptions) {
 
 			$product = $this->Product();
-			$variations = DataObject::get('Variation', "\"Variation\".\"ProductID\" = " . $product->ID . " AND \"Variation\".\"ID\" != " . $this->ID);
+			$variations = Variation::get()->filter(['ProductID' => $product->ID])->exclude(['ID' => $this->ID]);
 
 			if ($variations) foreach ($variations as $variation) {
 
@@ -451,7 +451,7 @@ class Variation extends DataObject implements PermissionProvider
 	 * @see DataObject::validate()
 	 * @return ValidationResult
 	 */
-	public function validate()
+	public function validate(): ValidationResult
 	{
 
 		$result = new ValidationResult();
@@ -479,7 +479,7 @@ class Variation extends DataObject implements PermissionProvider
 	 * 
 	 * @see DataObject::onAfterWrite()
 	 */
-	protected function onAfterWrite()
+	public function onAfterWrite()
 	{
 		parent::onAfterWrite();
 

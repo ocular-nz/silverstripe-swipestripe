@@ -4,7 +4,7 @@ namespace SwipeStripe\Order;
 
 use SilverStripe\Core\ClassInfo;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\DataObject;
 use SwipeStripe\Product\Price;
 

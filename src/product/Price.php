@@ -7,7 +7,7 @@ use SilverStripe\ORM\FieldType\DBMoney;
 class Price extends DBMoney
 {
 
-	protected $symbol;
+	protected string $symbol;
 
 	public function setSymbol($symbol)
 	{
@@ -15,17 +15,17 @@ class Price extends DBMoney
 		return $this;
 	}
 
-	public function getSymbol($currency = null, $locale = null)
+	public function getSymbol($currency = null, $locale = null): string
 	{
 		return $this->symbol;
 	}
 
-	public function getAmount()
+	public function getAmount(): float 
 	{
 		return round($this->getField('Amount') ?? 0, 2);
 	}
 
-	public function Nice($options = array())
+	public function Nice(): string
 	{
 		$amount = $this->getAmount();
 

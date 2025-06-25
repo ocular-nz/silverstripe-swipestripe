@@ -8,7 +8,7 @@ use Psr\Log\LoggerInterface;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\Form;
 use SilverStripe\Forms\FormAction;
-use SilverStripe\Forms\RequiredFields;
+use SilverStripe\Forms\Validation\RequiredFieldsValidator;
 use SilverStripe\Forms\TextField;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\View\Requirements;
@@ -17,6 +17,7 @@ use SwipeStripe\Order\Item;
 use SilverStripe\Control\RequestHandler;
 use SilverStripe\Dev\Debug;
 use SilverStripe\Forms\NumericField;
+use SilverStripe\Core\Validation\ValidationResult;
 use SwipeStripe\Customer\CheckoutPage;
 
 /**
@@ -120,7 +121,7 @@ class CartForm extends Form implements LoggerAwareInterface
 	public function createValidator()
 	{
 
-		$validator = RequiredFields::create();
+		$validator = RequiredFieldsValidator::create();
 
 		$items = $this->order->Items();
 		if ($items) foreach ($items as $item) {
@@ -260,16 +261,15 @@ class CartForm_QuantityField extends NumericField
 	 * {@Link Order} and is valid for adding to the cart.
 	 * 
 	 * @see FormField::validate()
-	 * @return Boolean
+	 * @return ValidationResult
 	 */
-	function validate($validator)
+	function validate(): ValidationResult
 	{
-
-		$valid = true;
+		$result = ValidationResult::create();
 		$item = $this->Item();
 		$currentOrder = Cart::get_current_order();
 		$items = $currentOrder->Items();
-		$quantity = $this->Value();
+		$quantity = $this->getValue();
 
 		$removingItem = false;
 		if ($quantity <= 0) {
@@ -284,12 +284,7 @@ class CartForm_QuantityField extends NumericField
 				$errorMessage = $msg;
 			}
 
-			$validator->validationError(
-				$this->getName(),
-				$errorMessage,
-				"error"
-			);
-			$valid = false;
+			$result->addFieldError($this->getName(), $errorMessage);
 		} else if ($item) {
 
 			//If removing item, cannot subtract past 0
@@ -336,9 +331,10 @@ class CartForm_QuantityField extends NumericField
 				}
 
 				$validation = $item->validateForCart();
-				if (!$validation->valid()) {
+				if (!$validation->isValid()) {
 
-					$errorMessage = $validation->message();
+					$messages = $validation->getMessages();
+					$errorMessage = !empty($messages) ? implode(', ', array_map(function($msg) { return $msg['message']; }, $messages)) : 'Validation error';
 					if ($msg = $this->getCustomValidationMessage()) {
 						$errorMessage = $msg;
 					}
@@ -353,7 +349,7 @@ class CartForm_QuantityField extends NumericField
 			}
 		}
 
-		return $valid;
+		return $result;
 	}
 
 	public function Type()

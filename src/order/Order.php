@@ -22,7 +22,7 @@ use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\TabSet;
 use SilverStripe\Forms\Tab;
 use SilverStripe\Forms\TextField;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DataQuery;
@@ -31,7 +31,7 @@ use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\ORM\Filters\PartialMatchFilter;
 use SilverStripe\ORM\Queries\SQLSelect;
 use SilverStripe\ORM\Queries\SQLUpdate;
-use SilverStripe\ORM\ValidationResult;
+use SilverStripe\Core\Validation\ValidationResult;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
@@ -934,7 +934,7 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 	 *
 	 * @see DataObject::validate()
 	 */
-	public function validate()
+	public function validate(): ValidationResult
 	{
 		$result = parent::validate();
 		return $result;
