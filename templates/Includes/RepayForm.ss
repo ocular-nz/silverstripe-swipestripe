@@ -11,9 +11,7 @@
 	<fieldset>
 	 
 		<section class="payment-details">
-			<% loop PaymentFields %>
-				$FieldHolder
-			<% end_loop %>
+			$PaymentFields.FieldHolder
 		</section>
 
 		<div class="clear" />

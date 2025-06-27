@@ -29,236 +29,235 @@ use SwipeStripe\Order\Order;
 class RepayForm extends Form implements LoggerAwareInterface
 {
 
-	use LoggerAwareTrait;
+    use LoggerAwareTrait;
 
-	private static $dependencies = [
-		'Logger' => '%$' . LoggerInterface::class,
-	];
+    private static $dependencies = [
+        'Logger' => '%$' . LoggerInterface::class,
+    ];
 
-	/** @var Order */
-	protected $order;
-	/** @var Customer */
-	protected $customer;
+    /** @var Order */
+    protected $order;
+    /** @var Customer */
+    protected $customer;
 
-	/**
-	 * Construct the form, get the grouped fields and set the fields for this form appropriately,
-	 * the fields are passed in an associative array so that the fields can be grouped into sets 
-	 * making it easier for the template to grab certain fields for different parts of the form.
-	 * 
-	 * @param RequestHandler|null $controller
-	 * @param String $name
-	 * @param Array $groupedFields Associative array of fields grouped into sets
-	 * @param FieldList $actions
-	 * @param Validator $validator
-	 * @param Order $currentOrder
-	 */
-	function __construct($controller, $name)
-	{
+    /**
+     * Construct the form, get the grouped fields and set the fields for this form appropriately,
+     * the fields are passed in an associative array so that the fields can be grouped into sets 
+     * making it easier for the template to grab certain fields for different parts of the form.
+     * 
+     * @param RequestHandler|null $controller
+     * @param String $name
+     * @param Array $groupedFields Associative array of fields grouped into sets
+     * @param FieldList $actions
+     * @param Validator $validator
+     * @param Order $currentOrder
+     */
+    function __construct($controller, $name)
+    {
 
-		parent::__construct($controller, $name, FieldList::create(), FieldList::create(), null);
+        parent::__construct($controller, $name, FieldList::create(), FieldList::create(), null);
 
-		$orderID = Injector::inst()->get(HTTPRequest::class)->getSession()->get('Repay.OrderID');
-		if ($orderID) {
-			$this->order = DataObject::get_by_id(Order::class, $orderID);
-		}
-		$this->customer = Customer::currentUser() ? Customer::currentUser() : singleton(Customer::class);
+        $orderID = Injector::inst()->get(HTTPRequest::class)->getSession()->get('Repay.OrderID');
+        if ($orderID) {
+            $this->order = DataObject::get_by_id(Order::class, $orderID);
+        }
+        $this->customer = Customer::currentUser() ? Customer::currentUser() : singleton(Customer::class);
 
-		$this->fields = $this->createFields();
-		$this->actions = $this->createActions();
-		$this->validator = $this->createValidator();
+        $this->fields = $this->createFields();
+        $this->actions = $this->createActions();
+        $this->validator = $this->createValidator();
 
-		$this->restoreFormState();
+        $this->restoreFormState();
 
-		$this->setTemplate('Includes\\RepayForm');
-		$this->addExtraClass('order-form');
-	}
+        $this->setTemplate('Includes\\RepayForm');
+        $this->addExtraClass('order-form');
+    }
 
-	/**
-	 * Set up current form errors in session to
-	 * the current form if appropriate.
-	 */
-	public function restoreFormState()
-	{
-		//Only run when fields exist
-		if ($this->fields->exists()) {
-			parent::restoreFormState();
-		}
-	}
+    /**
+     * Set up current form errors in session to
+     * the current form if appropriate.
+     */
+    public function restoreFormState()
+    {
+        //Only run when fields exist
+        if ($this->fields->exists()) {
+            parent::restoreFormState();
+        }
+    }
 
-	public function createFields()
-	{
+    public function createFields()
+    {
 
-		$order = $this->order;
-		$member = $this->customer;
+        $order = $this->order;
+        $member = $this->customer;
 
-		//Payment fields
-		$supported_methods = PaymentProcessor::get_supported_methods();
+        //Payment fields
+        $supported_methods = PaymentProcessor::get_supported_methods();
 
-		$source = array();
-		foreach ($supported_methods as $methodName) {
-			$methodConfig = PaymentFactory::get_factory_config($methodName);
-			$source[$methodName] = $methodConfig['title'];
-		}
+        $source = array();
+        foreach ($supported_methods as $methodName) {
+            $methodConfig = PaymentFactory::get_factory_config($methodName);
+            $source[$methodName] = $methodConfig['title'];
+        }
 
-		if ($order->IsStandingOrder()) {
-			$header = 'Update Card';
-			$message = 'A $1.00 hold will be placed on your card, and we will update your payment information.';
+        if ($order->IsStandingOrder()) {
+            $header = 'Update Card';
+            $message = 'A $1.00 hold will be placed on your card, and we will update your payment information.';
+        } else {
+            $header = _t('CheckoutPage.PAYMENT', "Payment");
+            $message = 'Process a payment for the outstanding amount: ' . $order->TotalOutstanding()->Nice();
+        }
 
-		} else {
-			$header = _t('CheckoutPage.PAYMENT', "Payment");
-			$message = 'Process a payment for the outstanding amount: ' . $order->TotalOutstanding()->Nice();
-		}		
-
-		$paymentFields = CompositeField::create(
-			new HeaderField($header),
-			LiteralField::create('RepayLit', "<p>$message</p>"),
-			DropdownField::create(
-				'PaymentMethod',
-				_t('CheckoutPage.SELECTPAYMENT', "Select Payment Method"),
-				$source
-			)->setCustomValidationMessage(_t('CheckoutPage.SELECT_PAYMENT_METHOD', "Please select a payment method."))
-			 ->setValue(array_key_first($source))
-		)->setName('PaymentFields');
+        $paymentFields = CompositeField::create(
+            new HeaderField($header),
+            LiteralField::create('RepayLit', "<p>$message</p>"),
+            DropdownField::create(
+                'PaymentMethod',
+                _t('CheckoutPage.SELECTPAYMENT', "Select Payment Method"),
+                $source
+            )->setCustomValidationMessage(_t('CheckoutPage.SELECT_PAYMENT_METHOD', "Please select a payment method."))
+                ->setValue(array_key_first($source))
+        )->setName('PaymentFields');
 
 
-		$fields = FieldList::create(
-			$paymentFields
-		);
+        $fields = FieldList::create(
+            $paymentFields
+        );
 
-		$this->extend('updateFields', $fields);
-		$fields->setForm($this);
-		return $fields;
-	}
+        $this->extend('updateFields', $fields);
+        $fields->setForm($this);
+        return $fields;
+    }
 
-	public function createActions()
-	{
-		$actions = FieldList::create(
-			new FormAction('process', _t('CheckoutPage.PROCEED_TO_PAY', "Proceed to pay"))
-		);
+    public function createActions()
+    {
+        $actions = FieldList::create(
+            new FormAction('process', _t('CheckoutPage.PROCEED_TO_PAY', "Proceed to pay"))
+        );
 
-		$this->extend('updateActions', $actions);
-		$actions->setForm($this);
-		return $actions;
-	}
+        $this->extend('updateActions', $actions);
+        $actions->setForm($this);
+        return $actions;
+    }
 
-	public function createValidator()
-	{
+    public function createValidator()
+    {
 
-		$validator = RequiredFieldsValidator::create(
-			'PaymentMethod'
-		);
+        $validator = RequiredFieldsValidator::create(
+            'PaymentMethod'
+        );
 
-		$this->extend('updateValidator', $validator);
-		$validator->setForm($this);
-		return $validator;
-	}
+        $this->extend('updateValidator', $validator);
+        $validator->setForm($this);
+        return $validator;
+    }
 
-	public function getPaymentFields()
-	{
-		return $this->Fields()->fieldByName('PaymentFields');
-	}
+    public function getPaymentFields()
+    {
+        return $this->Fields()->fieldByName('PaymentFields');
+    }
 
-	/**
-	 * Helper function to return the current {@link Order}, used in the template for this form
-	 * 
-	 * @return Order
-	 */
-	function Cart()
-	{
-		return $this->order;
-	}
+    /**
+     * Helper function to return the current {@link Order}, used in the template for this form
+     * 
+     * @return Order
+     */
+    function Cart()
+    {
+        return $this->order;
+    }
 
-	// /**
-	//  * Overloaded so that form error messages are displayed.
-	//  * 
-	//  * @see OrderFormValidator::php()
-	//  * @see Form::validate()
-	//  */
-	// function validate()
-	// {
-	// 	$valid = true;
-	// 	if ($this->validator) {
-	// 		$errors = $this->validator->validate();
+    // /**
+    //  * Overloaded so that form error messages are displayed.
+    //  * 
+    //  * @see OrderFormValidator::php()
+    //  * @see Form::validate()
+    //  */
+    // function validate()
+    // {
+    // 	$valid = true;
+    // 	if ($this->validator) {
+    // 		$errors = $this->validator->validate();
 
-	// 		if ($errors) {
-	// 			// Load errors into session and post back
-	// 			$data = $this->getData();
-	// 			$this->getSession()->set("FormInfo.{$this->FormName()}.errors", $errors);
-	// 			$this->getSession()->set("FormInfo.{$this->FormName()}.data", $data);
-	// 			$valid = false;
-	// 		}
-	// 	}
-	// 	return $valid;
-	// }
+    // 		if ($errors) {
+    // 			// Load errors into session and post back
+    // 			$data = $this->getData();
+    // 			$this->getSession()->set("FormInfo.{$this->FormName()}.errors", $errors);
+    // 			$this->getSession()->set("FormInfo.{$this->FormName()}.data", $data);
+    // 			$valid = false;
+    // 		}
+    // 	}
+    // 	return $valid;
+    // }
 
-	public function process($data, $form)
-	{
+    public function process($data, $form)
+    {
 
-		//Check payment type
-		try {
-			$paymentMethod = $data['PaymentMethod'];
-			$paymentProcessor = PaymentFactory::factory($paymentMethod);
-		} catch (Exception $e) {
-			$this->getRequestHandler()->httpError(403, "Sorry, that is not a valid payment method. Please go back and try again");
-			return;
-		}
+        //Check payment type
+        try {
+            $paymentMethod = $data['PaymentMethod'];
+            $paymentProcessor = PaymentFactory::factory($paymentMethod);
+        } catch (Exception $e) {
+            $this->getRequestHandler()->httpError(403, "Sorry, that is not a valid payment method. Please go back and try again");
+            return;
+        }
 
-		$member = Customer::currentUser();
+        $member = Customer::currentUser();
 
-		$orderID = $this->getRequest()->getSession()->get('Repay.OrderID');
-		if ($orderID) {
-			$order = DataObject::get_by_id(Order::class, $orderID);
-		}
-		$this->getRequest()->getSession()->clear('Repay.OrderID');
+        $orderID = $this->getRequest()->getSession()->get('Repay.OrderID');
+        if ($orderID) {
+            $order = DataObject::get_by_id(Order::class, $orderID);
+        }
+        $this->getRequest()->getSession()->clear('Repay.OrderID');
 
-		$order->onBeforePayment();
+        $order->onBeforePayment();
 
-		try {
+        try {
 
-			
 
-			$paymentData = array(
-				'Amount' => number_format($order->TotalOutstanding()->getAmount(), 2, '.', ''),
-				'Currency' => $order->TotalOutstanding()->getCurrency(),
-				'Reference' => $order->ID,
-				'EnableAddBillCard' => $order->IsStandingOrder(),
-			);
 
-			if ($order->IsStandingOrder()) {
-				$paymentData['Amount'] = '1.00';
-			}
+            $paymentData = array(
+                'Amount' => number_format($order->TotalOutstanding()->getAmount(), 2, '.', ''),
+                'Currency' => $order->TotalOutstanding()->getCurrency(),
+                'Reference' => $order->ID,
+                'EnableAddBillCard' => $order->IsStandingOrder(),
+            );
 
-			$paymentProcessor->payment->OrderID = $order->ID;
-			$paymentProcessor->payment->PaidByID = $member->ID;
+            if ($order->IsStandingOrder()) {
+                $paymentData['Amount'] = '1.00';
+            }
 
-			$paymentProcessor->setRedirectURL($order->Link());
-			$paymentProcessor->capture($paymentData);
-		} catch (\Exception $e) {
+            $paymentProcessor->payment->OrderID = $order->ID;
+            $paymentProcessor->payment->PaidByID = $member->ID;
 
-			//This is where we catch gateway validation or gateway unreachable errors
-			$result = $paymentProcessor->gateway->getValidationResult();
-			$payment = $paymentProcessor->payment;
+            $paymentProcessor->setRedirectURL($order->Link());
+            $paymentProcessor->capture($paymentData);
+        } catch (\Exception $e) {
 
-			//TODO: Need to get errors and save for display on order page
-			$this->logger->notice($e, $result->getMessages());
+            //This is where we catch gateway validation or gateway unreachable errors
+            $result = $paymentProcessor->gateway->getValidationResult();
+            $payment = $paymentProcessor->payment;
 
-			$this->controller->redirect($order->Link());
-		}
-	}
+            //TODO: Need to get errors and save for display on order page
+            $this->logger->notice($e, $result->getMessages());
 
-	function populateFields()
-	{
+            $this->controller->redirect($order->Link());
+        }
+    }
 
-		//Populate values in the form the first time
-		if (!$this->getRequest()->getSession()->get("FormInfo.{$this->FormName()}.errors")) {
+    function populateFields()
+    {
 
-			$member = Customer::currentUser() ? Customer::currentUser() : singleton('Customer');
-			$data = array_merge(
-				$member->toMap()
-			);
+        //Populate values in the form the first time
+        if (!$this->getRequest()->getSession()->get("FormInfo.{$this->FormName()}.errors")) {
 
-			$this->extend('updatePopulateFields', $data);
-			$this->loadDataFrom($data);
-		}
-	}
+            $member = Customer::currentUser() ? Customer::currentUser() : singleton('Customer');
+            $data = array_merge(
+                $member->toMap()
+            );
+
+            $this->extend('updatePopulateFields', $data);
+            $this->loadDataFrom($data);
+        }
+    }
 }

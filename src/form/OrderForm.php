@@ -46,414 +46,414 @@ use SwipeStripe\Order\StandingOrder;
 class OrderForm extends Form implements LoggerAwareInterface
 {
 
-	use LoggerAwareTrait;
+    use LoggerAwareTrait;
 
-	private static $dependencies = [
-		'Logger' => '%$' . LoggerInterface::class,
-	];
+    private static $dependencies = [
+        'Logger' => '%$' . LoggerInterface::class,
+    ];
 
-	protected $order;
-	protected $customer;
+    protected $order;
+    protected $customer;
 
-	private static $allowed_actions = array(
-		'process',
-		'update'
-	);
+    private static $allowed_actions = array(
+        'process',
+        'update'
+    );
 
-	/**
-	 * Construct the form, get the grouped fields and set the fields for this form appropriately,
-	 * the fields are passed in an associative array so that the fields can be grouped into sets 
-	 * making it easier for the template to grab certain fields for different parts of the form.
-	 * 
-	 * @param RequestHandler $controller
-	 * @param String $name
-	 * @param Array $groupedFields Associative array of fields grouped into sets
-	 * @param FieldList $actions
-	 * @param Validator $validator
-	 * @param Order $currentOrder
-	 */
-	function __construct($controller, $name)
-	{
+    /**
+     * Construct the form, get the grouped fields and set the fields for this form appropriately,
+     * the fields are passed in an associative array so that the fields can be grouped into sets 
+     * making it easier for the template to grab certain fields for different parts of the form.
+     * 
+     * @param RequestHandler $controller
+     * @param String $name
+     * @param Array $groupedFields Associative array of fields grouped into sets
+     * @param FieldList $actions
+     * @param Validator $validator
+     * @param Order $currentOrder
+     */
+    function __construct($controller, $name)
+    {
 
-		parent::__construct($controller, $name, FieldList::create(), FieldList::create(), null);
+        parent::__construct($controller, $name, FieldList::create(), FieldList::create(), null);
 
 
-		Requirements::javascript('swipestripe/javascript/OrderForm.js');
+        Requirements::javascript('swipestripe/javascript/OrderForm.js');
 
-		$this->order = Cart::get_current_order();
-		$this->customer = Customer::currentUser() ?: singleton(Customer::class);
+        $this->order = Cart::get_current_order();
+        $this->customer = Customer::currentUser() ?: singleton(Customer::class);
 
-		$this->fields = $this->createFields();
-		$this->actions = $this->createActions();
-		$this->validator = $this->createValidator();
+        $this->fields = $this->createFields();
+        $this->actions = $this->createActions();
+        $this->validator = $this->createValidator();
 
-		$this->restoreFormState();
+        $this->restoreFormState();
 
-		$this->setTemplate('Includes/OrderForm');
-		$this->addExtraClass('order-form');
-	}
+        $this->setTemplate('Includes/OrderForm');
+        $this->addExtraClass('order-form');
+    }
 
-	/**
-	 * Set up current form errors in session to
-	 * the current form if appropriate.
-	 */
-	public function restoreFormState()
-	{
-		//Only run when fields exist
-		if ($this->fields->exists()) {
-			parent::restoreFormState();
-		}
-	}
+    /**
+     * Set up current form errors in session to
+     * the current form if appropriate.
+     */
+    public function restoreFormState()
+    {
+        //Only run when fields exist
+        if ($this->fields->exists()) {
+            parent::restoreFormState();
+        }
+    }
 
-	public function createFields()
-	{
+    public function createFields()
+    {
 
-		$order = $this->order;
-		$member = $this->customer;
+        $order = $this->order;
+        $member = $this->customer;
 
-		//Personal details fields
-		if (!$member->ID || $member->Password == '') {
+        //Personal details fields
+        if (!$member->ID || $member->Password == '') {
 
-			$link = $this->controller->Link();
+            $link = $this->controller->Link();
 
-			$note = _t('CheckoutPage.NOTE', 'NOTE:');
-			$passwd = _t('CheckoutPage.PLEASE_CHOOSE_PASSWORD', 'Please choose a password, so you can login and check your order history in the future.');
-			$mber = sprintf(
-				_t('CheckoutPage.ALREADY_MEMBER', 'If you are already a member please %s log in. %s'),
-				"<a href=\"Security/login?BackURL=$link\">",
-				'</a>'
-			);
+            $note = _t('CheckoutPage.NOTE', 'NOTE:');
+            $passwd = _t('CheckoutPage.PLEASE_CHOOSE_PASSWORD', 'Please choose a password, so you can login and check your order history in the future.');
+            $mber = sprintf(
+                _t('CheckoutPage.ALREADY_MEMBER', 'If you are already a member please %s log in. %s'),
+                "<a href=\"Security/login?BackURL=$link\">",
+                '</a>'
+            );
 
-			$personalFields = CompositeField::create(
-				new HeaderField("AccountHeader", _t('CheckoutPage.ACCOUNT', "Account"), 3),
-				new CompositeField(
-					EmailField::create('Email', _t('CheckoutPage.EMAIL', 'Email'))
-						->setCustomValidationMessage(_t('CheckoutPage.PLEASE_ENTER_EMAIL_ADDRESS', "Please enter your email address."))
-				),
-				new CompositeField(
-					TextField::create('Phone', _t('CheckoutPage.PHONE', 'Phone'))
-				),
-				new CompositeField(
-					new FieldGroup(
-						new ConfirmedPasswordField('Password', _t('CheckoutPage.PASSWORD', "Password"))
-					)
-				),
-				new CompositeField(
-					new LiteralField(
-						'AccountInfo',
-						"
+            $personalFields = CompositeField::create(
+                new HeaderField("AccountHeader", _t('CheckoutPage.ACCOUNT', "Account"), 3),
+                new CompositeField(
+                    EmailField::create('Email', _t('CheckoutPage.EMAIL', 'Email'))
+                        ->setCustomValidationMessage(_t('CheckoutPage.PLEASE_ENTER_EMAIL_ADDRESS', "Please enter your email address."))
+                ),
+                new CompositeField(
+                    TextField::create('Phone', _t('CheckoutPage.PHONE', 'Phone'))
+                ),
+                new CompositeField(
+                    new FieldGroup(
+                        new ConfirmedPasswordField('Password', _t('CheckoutPage.PASSWORD', "Password"))
+                    )
+                ),
+                new CompositeField(
+                    new LiteralField(
+                        'AccountInfo',
+                        "
 						<p class=\"alert alert-info\">
 							<strong class=\"alert-heading\">$note</strong>
 							$passwd <br /><br />
 							$mber
 						</p>
 						"
-					)
-				)
-			)->setName('PersonalDetails');
-		}
+                    )
+                )
+            )->setName('PersonalDetails');
+        }
 
-		//Order item fields
-		$items = $order->Items();
-		$itemFields = CompositeField::create()->setName('ItemsFields');
-		if ($items) foreach ($items as $item) {
-			$itemFields->push(new OrderForm_ItemField($item));
-		}
+        //Order item fields
+        $items = $order->Items();
+        $itemFields = CompositeField::create()->setName('ItemsFields');
+        if ($items) foreach ($items as $item) {
+            $itemFields->push(new OrderForm_ItemField($item));
+        }
 
-		//Order modifications fields
-		$subTotalModsFields = CompositeField::create()->setName('SubTotalModificationsFields');
-		$subTotalMods = $order->SubTotalModifications();
+        //Order modifications fields
+        $subTotalModsFields = CompositeField::create()->setName('SubTotalModificationsFields');
+        $subTotalMods = $order->SubTotalModifications();
 
-		if ($subTotalMods && $subTotalMods->exists()) foreach ($subTotalMods as $modification) {
-			$modFields = $modification->getFormFields();
-			foreach ($modFields as $field) {
-				$subTotalModsFields->push($field);
-			}
-		}
+        if ($subTotalMods && $subTotalMods->exists()) foreach ($subTotalMods as $modification) {
+            $modFields = $modification->getFormFields();
+            foreach ($modFields as $field) {
+                $subTotalModsFields->push($field);
+            }
+        }
 
-		$totalModsFields = CompositeField::create()->setName('TotalModificationsFields');
-		$totalMods = $order->TotalModifications();
+        $totalModsFields = CompositeField::create()->setName('TotalModificationsFields');
+        $totalMods = $order->TotalModifications();
 
-		if ($totalMods && $totalMods->exists()) foreach ($totalMods as $modification) {
-			$modFields = $modification->getFormFields();
-			foreach ($modFields as $field) {
-				$totalModsFields->push($field);
-			}
-		}
+        if ($totalMods && $totalMods->exists()) foreach ($totalMods as $modification) {
+            $modFields = $modification->getFormFields();
+            foreach ($modFields as $field) {
+                $totalModsFields->push($field);
+            }
+        }
 
-		//Payment fields
-		$supported_methods = PaymentProcessor::get_supported_methods();
+        //Payment fields
+        $supported_methods = PaymentProcessor::get_supported_methods();
 
-		$source = array();
-		foreach ($supported_methods as $methodName) {
-			$methodConfig = PaymentFactory::get_factory_config($methodName);
-			$source[$methodName] = $methodConfig['title'];
-		}
+        $source = array();
+        foreach ($supported_methods as $methodName) {
+            $methodConfig = PaymentFactory::get_factory_config($methodName);
+            $source[$methodName] = $methodConfig['title'];
+        }
 
-		$paymentFields = CompositeField::create(
-			new HeaderField("PaymentHeader", _t('CheckoutPage.PAYMENT', "Payment"), 3),
-			DropdownField::create(
-				'PaymentMethod',
-				_t('CheckoutPage.SELECTPAYMENT', "Select Payment Method"),
-				$source
-			)->setCustomValidationMessage(_t('CheckoutPage.SELECT_PAYMENT_METHOD', "Please select a payment method."))
-			->setValue(array_key_first($source))
-		)->setName('PaymentFields');
-
-
-		$fields = FieldList::create(
-			$itemFields,
-			$subTotalModsFields,
-			$totalModsFields,
-			$notesFields = CompositeField::create(
-				TextareaField::create('Notes', _t('CheckoutPage.NOTES_ABOUT_ORDER', "Notes about this order"))
-			)->setName('NotesFields'),
-			$paymentFields
-		);
-
-		if (isset($personalFields)) {
-			$fields->push($personalFields);
-		}
-
-		$this->extend('updateFields', $fields);
-		$fields->setForm($this);
-		return $fields;
-	}
-
-	public function createActions()
-	{
-		$buttonText = 'Proceed to pay';
-		if ($this->order->IsConfirmedStandingOrder()) {
-			$buttonText = 'Finished editing';
-		}
-
-		$actions = FieldList::create(
-			new FormAction('process', $buttonText)
-		);
-
-		$this->extend('updateActions', $actions);
-		$actions->setForm($this);
-		return $actions;
-	}
-
-	public function createValidator()
-	{
-
-		$validator = OrderForm_Validator::create(
-			'PaymentMethod'
-		);
-
-		if (!$this->customer->ID || $this->customer->Password == '') {
-			$validator->addRequiredField('Password');
-			$validator->addRequiredField('Email');
-		}
-
-		$this->extend('updateValidator', $validator);
-		$validator->setForm($this);
-		return $validator;
-	}
-
-	public function getPersonalDetailsFields()
-	{
-		return $this->Fields()->fieldByName('PersonalDetails');
-	}
-
-	public function getItemsFields()
-	{
-		return $this->Fields()->fieldByName('ItemsFields')->FieldList();
-	}
-
-	public function getSubTotalModificationsFields()
-	{
-		return $this->Fields()->fieldByName('SubTotalModificationsFields')->FieldList();
-	}
-
-	public function getTotalModificationsFields()
-	{
-		return $this->Fields()->fieldByName('TotalModificationsFields')->FieldList();
-	}
-
-	public function getNotesFields()
-	{
-		return $this->Fields()->fieldByName('NotesFields');
-	}
-
-	public function getPaymentFields()
-	{
-		return $this->Fields()->fieldByName('PaymentFields');
-	}
-
-	/**
-	 * Helper function to return the current {@link Order}, used in the template for this form
-	 * 
-	 * @return Order
-	 */
-	public function Cart()
-	{
-		return $this->order;
-	}
-
-	// /**
-	//  * Overridden so that form error messages are displayed.
-	//  * 
-	//  * The parent function also does something with the error messages.
-	//  * So I'm commenting this out and if there's a problem with the error messages
-	//  * we can bring this override back
-	//  * 
-	//  * @see OrderFormValidator::php()
-	//  * @see Form::validate()
-	//  */
-	// public function validate(): ValidationResult
-	// {
-	// 	$validationResult = parent::validate();
-
-	// 	$data = $this->getData();
-	// 	$this->getSession()->set("FormInfo.{$this->FormName()}.data", $data);
-	// 	$this->getSession()->set("FormInfo.{$this->FormName()}.errors", $validationResult);
-		
-	// 	return $validationResult;
-	// }
-
-	public function process($data, $form)
-	{
-		$this->extend('onBeforeProcess', $data);
-
-		//Check payment type
-		try {
-			$paymentMethod = Convert::raw2sql($data['PaymentMethod']);
-			$paymentProcessor = PaymentFactory::factory($paymentMethod);
-		} catch (Exception $e) {
-			$this->getRequestHandler()->httpError(403, "Sorry, that is not a valid payment method. Please go back and try again");
-			return;
-		}
-
-		//Save or create a new customer/member
-		$member = Customer::currentUser() ?: singleton(Customer::class);
-		if (!$member->exists()) {
-
-			$existingCustomer = Customer::get()->filter('Email', $data['Email']);
-			if ($existingCustomer && $existingCustomer->exists()) {
-				$form->sessionMessage(
-					_t('CheckoutPage.MEMBER_ALREADY_EXISTS', 'Sorry, a member already exists with that email address. If this is your email address, please log in first before placing your order.'),
-					'bad'
-				);
-				$this->controller->redirectBack();
-				return false;
-			}
-
-			$member = Customer::create();
-			$form->saveInto($member);
-			$member->write();
-			$member->addToGroupByCode('customers');
-			Security::setCurrentUser($member);
-		}
-
-		//Save the order
-		$order = Cart::get_current_order();
-		$items = $order->Items();
-
-		$form->saveInto($order);
-		$order->MemberID = $member->ID;
-		$order->Status = Order::STATUS_PENDING;
-		$order->OrderedOn = DBDatetime::now()->getValue();
-		$order->write();
-
-		//Saving an update on the order
-		if ($notes = $data['Notes']) {
-			$update = new Order_Update();
-			$update->Note = $notes;
-			$update->Visible = true;
-			$update->OrderID = $order->ID;
-			$update->MemberID = $member->ID;
-			$update->write();
-		}
-
-		//Add modifiers to order
-		$order->updateModifications($data)->write();
-
-		$this->getSession()->clear('Cart.OrderID');
-
-		$order->onBeforePayment();
-
-		try {
-			$shopConfig = ShopConfig::current_shop_config();
-			$precision = $shopConfig->BaseCurrencyPrecision;
-
-			$paymentData = array(
-				'Amount' => number_format($order->Total()->getAmount(), $precision, '.', ''),
-				'Currency' => $order->Total()->getCurrency(),
-				'Reference' => $order->ID
-			);
-			$paymentProcessor->payment->OrderID = $order->ID;
-			$paymentProcessor->payment->PaidByID = $member->ID;
-
-			$paymentProcessor->setRedirectURL($order->Link());
-			$paymentProcessor->capture($paymentData);
-		} catch (\Exception $e) {
-
-			//This is where we catch gateway validation or gateway unreachable errors
-			$result = $paymentProcessor->gateway->getValidationResult();
-			$payment = $paymentProcessor->payment;
-
-			//TODO: Need to get errors and save for display on order page
-			$this->logger->notice(reset($result->getMessages()), []);
-			$this->logger->notice($e, []);
+        $paymentFields = CompositeField::create(
+            new HeaderField("PaymentHeader", _t('CheckoutPage.PAYMENT', "Payment"), 3),
+            DropdownField::create(
+                'PaymentMethod',
+                _t('CheckoutPage.SELECTPAYMENT', "Select Payment Method"),
+                $source
+            )->setCustomValidationMessage(_t('CheckoutPage.SELECT_PAYMENT_METHOD', "Please select a payment method."))
+                ->setValue(array_key_first($source))
+        )->setName('PaymentFields');
 
 
-			$this->controller->redirect($order->Link());
-		}
-	}
+        $fields = FieldList::create(
+            $itemFields,
+            $subTotalModsFields,
+            $totalModsFields,
+            $notesFields = CompositeField::create(
+                TextareaField::create('Notes', _t('CheckoutPage.NOTES_ABOUT_ORDER', "Notes about this order"))
+            )->setName('NotesFields'),
+            $paymentFields
+        );
 
-	public function update(HTTPRequest $request)
-	{
+        if (isset($personalFields)) {
+            $fields->push($personalFields);
+        }
 
-		if ($request->isPOST()) {
+        $this->extend('updateFields', $fields);
+        $fields->setForm($this);
+        return $fields;
+    }
 
-			$member = Customer::currentUser() ?: singleton(Customer::class);
-			$order = Cart::get_current_order();
+    public function createActions()
+    {
+        $buttonText = 'Proceed to pay';
+        if ($this->order->IsConfirmedStandingOrder()) {
+            $buttonText = 'Finished editing';
+        }
 
-			if ($request->postVar('IsStandingOrder') && $order->getClassName() !== StandingOrder::class) {
-				// cast to a standing order
-				$order = $order->newClassInstance(StandingOrder::class);
-			}
+        $actions = FieldList::create(
+            new FormAction('process', $buttonText)
+        );
 
-			if (!$request->postVar('IsStandingOrder') && $order->getClassName() !== Order::class) {
-				// cast to a normal order
-				$order = $order->newClassInstance(Order::class);
-			}
+        $this->extend('updateActions', $actions);
+        $actions->setForm($this);
+        return $actions;
+    }
 
-			// Update the Order 
-			$order->update($request->postVars());
+    public function createValidator()
+    {
 
-			$order->updateModifications($request->postVars())
-				->write(); 
+        $validator = OrderForm_Validator::create(
+            'PaymentMethod'
+        );
 
-			$form = OrderForm::create(
-				$this->controller,
-				'OrderForm'
-			)->disableSecurityToken();
+        if (!$this->customer->ID || $this->customer->Password == '') {
+            $validator->addRequiredField('Password');
+            $validator->addRequiredField('Email');
+        }
 
-			// $form->validate();
+        $this->extend('updateValidator', $validator);
+        $validator->setForm($this);
+        return $validator;
+    }
 
-			return $form->renderWith('Includes/OrderFormCart');
-		}
-	}
+    public function getPersonalDetailsFields()
+    {
+        return $this->Fields()->fieldByName('PersonalDetails');
+    }
 
-	public function populateFields()
-	{
+    public function getItemsFields()
+    {
+        return $this->Fields()->fieldByName('ItemsFields')->FieldList();
+    }
 
-		//Populate values in the form the first time
-		if (!$this->getRequest()->getSession()->get("FormInfo.{$this->FormName()}.errors")) {
+    public function getSubTotalModificationsFields()
+    {
+        return $this->Fields()->fieldByName('SubTotalModificationsFields')->FieldList();
+    }
 
-			$member = Customer::currentUser() ?: singleton(Customer::class);
-			$data = array_merge(
-				$member->toMap()
-			);
+    public function getTotalModificationsFields()
+    {
+        return $this->Fields()->fieldByName('TotalModificationsFields')->FieldList();
+    }
 
-			$this->extend('updatePopulateFields', $data);
-			$this->loadDataFrom($data);
-		}
-	}
+    public function getNotesFields()
+    {
+        return $this->Fields()->fieldByName('NotesFields');
+    }
+
+    public function getPaymentFields()
+    {
+        return $this->Fields()->fieldByName('PaymentFields');
+    }
+
+    /**
+     * Helper function to return the current {@link Order}, used in the template for this form
+     * 
+     * @return Order
+     */
+    public function Cart()
+    {
+        return $this->order;
+    }
+
+    // /**
+    //  * Overridden so that form error messages are displayed.
+    //  * 
+    //  * The parent function also does something with the error messages.
+    //  * So I'm commenting this out and if there's a problem with the error messages
+    //  * we can bring this override back
+    //  * 
+    //  * @see OrderFormValidator::php()
+    //  * @see Form::validate()
+    //  */
+    // public function validate(): ValidationResult
+    // {
+    // 	$validationResult = parent::validate();
+
+    // 	$data = $this->getData();
+    // 	$this->getSession()->set("FormInfo.{$this->FormName()}.data", $data);
+    // 	$this->getSession()->set("FormInfo.{$this->FormName()}.errors", $validationResult);
+
+    // 	return $validationResult;
+    // }
+
+    public function process($data, $form)
+    {
+        $this->extend('onBeforeProcess', $data);
+
+        //Check payment type
+        try {
+            $paymentMethod = Convert::raw2sql($data['PaymentMethod']);
+            $paymentProcessor = PaymentFactory::factory($paymentMethod);
+        } catch (Exception $e) {
+            $this->getRequestHandler()->httpError(403, "Sorry, that is not a valid payment method. Please go back and try again");
+            return;
+        }
+
+        //Save or create a new customer/member
+        $member = Customer::currentUser() ?: singleton(Customer::class);
+        if (!$member->exists()) {
+
+            $existingCustomer = Customer::get()->filter('Email', $data['Email']);
+            if ($existingCustomer && $existingCustomer->exists()) {
+                $form->sessionMessage(
+                    _t('CheckoutPage.MEMBER_ALREADY_EXISTS', 'Sorry, a member already exists with that email address. If this is your email address, please log in first before placing your order.'),
+                    'bad'
+                );
+                $this->controller->redirectBack();
+                return false;
+            }
+
+            $member = Customer::create();
+            $form->saveInto($member);
+            $member->write();
+            $member->addToGroupByCode('customers');
+            Security::setCurrentUser($member);
+        }
+
+        //Save the order
+        $order = Cart::get_current_order();
+        $items = $order->Items();
+
+        $form->saveInto($order);
+        $order->MemberID = $member->ID;
+        $order->Status = Order::STATUS_PENDING;
+        $order->OrderedOn = DBDatetime::now()->getValue();
+        $order->write();
+
+        //Saving an update on the order
+        if ($notes = $data['Notes']) {
+            $update = new Order_Update();
+            $update->Note = $notes;
+            $update->Visible = true;
+            $update->OrderID = $order->ID;
+            $update->MemberID = $member->ID;
+            $update->write();
+        }
+
+        //Add modifiers to order
+        $order->updateModifications($data)->write();
+
+        $this->getSession()->clear('Cart.OrderID');
+
+        $order->onBeforePayment();
+
+        try {
+            $shopConfig = ShopConfig::current_shop_config();
+            $precision = $shopConfig->BaseCurrencyPrecision;
+
+            $paymentData = array(
+                'Amount' => number_format($order->Total()->getAmount(), $precision, '.', ''),
+                'Currency' => $order->Total()->getCurrency(),
+                'Reference' => $order->ID
+            );
+            $paymentProcessor->payment->OrderID = $order->ID;
+            $paymentProcessor->payment->PaidByID = $member->ID;
+
+            $paymentProcessor->setRedirectURL($order->Link());
+            $paymentProcessor->capture($paymentData);
+        } catch (\Exception $e) {
+
+            //This is where we catch gateway validation or gateway unreachable errors
+            $result = $paymentProcessor->gateway->getValidationResult();
+            $payment = $paymentProcessor->payment;
+
+            //TODO: Need to get errors and save for display on order page
+            $this->logger->notice(reset($result->getMessages()), []);
+            $this->logger->notice($e, []);
+
+
+            $this->controller->redirect($order->Link());
+        }
+    }
+
+    public function update(HTTPRequest $request)
+    {
+
+        if ($request->isPOST()) {
+
+            $member = Customer::currentUser() ?: singleton(Customer::class);
+            $order = Cart::get_current_order();
+
+            if ($request->postVar('IsStandingOrder') && $order->getClassName() !== StandingOrder::class) {
+                // cast to a standing order
+                $order = $order->newClassInstance(StandingOrder::class);
+            }
+
+            if (!$request->postVar('IsStandingOrder') && $order->getClassName() !== Order::class) {
+                // cast to a normal order
+                $order = $order->newClassInstance(Order::class);
+            }
+
+            // Update the Order 
+            $order->update($request->postVars());
+
+            $order->updateModifications($request->postVars())
+                ->write();
+
+            $form = OrderForm::create(
+                $this->controller,
+                'OrderForm'
+            )->disableSecurityToken();
+
+            // $form->validate();
+
+            return $form->renderWith('Includes/OrderFormCart');
+        }
+    }
+
+    public function populateFields()
+    {
+
+        //Populate values in the form the first time
+        if (!$this->getRequest()->getSession()->get("FormInfo.{$this->FormName()}.errors")) {
+
+            $member = Customer::currentUser() ?: singleton(Customer::class);
+            $data = array_merge(
+                $member->toMap()
+            );
+
+            $this->extend('updatePopulateFields', $data);
+            $this->loadDataFrom($data);
+        }
+    }
 }
 
 /**
@@ -462,62 +462,62 @@ class OrderForm extends Form implements LoggerAwareInterface
 class OrderForm_Validator extends RequiredFieldsValidator
 {
 
-	/**
-	 * Check that current order is valid
-	 *
-	 * @param Array $data Submitted data
-	 * @return Boolean Returns TRUE if the submitted data is valid, otherwise FALSE.
-	 */
-	public function php($data)
-	{
+    /**
+     * Check that current order is valid
+     *
+     * @param Array $data Submitted data
+     * @return Boolean Returns TRUE if the submitted data is valid, otherwise FALSE.
+     */
+    public function php($data)
+    {
 
-		$valid = parent::php($data);
-		$fields = $this->form->Fields();
+        $valid = parent::php($data);
+        $fields = $this->form->Fields();
 
-		//Check the order is valid
-		$currentOrder = Cart::get_current_order();
-		if (!$currentOrder) {
-			$this->form->sessionMessage(
-				"<div class=\"alert alert-error\">The cart seems to be empty. If this doesn't seem right, please visit <a href=\"/account\">My Account</a> and view Past Orders to retrieve your order and complete payment.</div>",
-				'bad',
-				ValidationResult::CAST_HTML
-			);
+        //Check the order is valid
+        $currentOrder = Cart::get_current_order();
+        if (!$currentOrder) {
+            $this->form->sessionMessage(
+                "<div class=\"alert alert-error\">The cart seems to be empty. If this doesn't seem right, please visit <a href=\"/account\">My Account</a> and view Past Orders to retrieve your order and complete payment.</div>",
+                'bad',
+                ValidationResult::CAST_HTML
+            );
 
-			//Have to set an error for Form::validate()
-			$this->errors[] = true;
-			$valid = false;
-		} else {
-			$validation = $currentOrder->validateForCart();
+            //Have to set an error for Form::validate()
+            $this->errors[] = true;
+            $valid = false;
+        } else {
+            $validation = $currentOrder->validateForCart();
 
-			if (!$validation->isValid()) {
+            if (!$validation->isValid()) {
 
-				$messages = $validation->getMessages();
-				$message = reset($messages);
-				$message = is_array($message) ? $message['message'] : '';
-				
-				$this->form->sessionMessage(
-					'<div class="alert alert-error">Your order has failed to process due to an unexpected error. Please visit <a href="/account">My Account</a> and view Past Orders to retrieve your order and complete payment.</div>',
-					'bad',
-					ValidationResult::CAST_HTML
-				);
+                $messages = $validation->getMessages();
+                $message = reset($messages);
+                $message = is_array($message) ? $message['message'] : '';
 
-				//Have to set an error for Form::validate()
-				$this->errors[] = true;
-				$valid = false;
-			}
-		}
-		return $valid;
-	}
+                $this->form->sessionMessage(
+                    '<div class="alert alert-error">Your order has failed to process due to an unexpected error. Please visit <a href="/account">My Account</a> and view Past Orders to retrieve your order and complete payment.</div>',
+                    'bad',
+                    ValidationResult::CAST_HTML
+                );
 
-	/**
-	 * Helper so that form fields can access the form and current form data
-	 * 
-	 * @return Form
-	 */
-	public function getForm(): Form
-	{
-		return $this->form;
-	}
+                //Have to set an error for Form::validate()
+                $this->errors[] = true;
+                $valid = false;
+            }
+        }
+        return $valid;
+    }
+
+    /**
+     * Helper so that form fields can access the form and current form data
+     * 
+     * @return Form
+     */
+    public function getForm(): Form
+    {
+        return $this->form;
+    }
 }
 
 /**
@@ -526,108 +526,108 @@ class OrderForm_Validator extends RequiredFieldsValidator
 class OrderForm_ItemField extends FormField
 {
 
-	/**
-	 * Template for rendering
-	 *
-	 * @var String
-	 */
-	protected $template = "Includes\\OrderForm_ItemField";
+    /**
+     * Template for rendering
+     *
+     * @var String
+     */
+    protected $template = "Includes\\OrderForm_ItemField";
 
-	/**
-	 * Current {@link Item} this field represents.
-	 * 
-	 * @var Item
-	 */
-	protected $item;
+    /**
+     * Current {@link Item} this field represents.
+     * 
+     * @var Item
+     */
+    protected $item;
 
-	/**
-	 * Construct the form field and set the {@link Item} it represents.
-	 * 
-	 * @param Item $item
-	 * @param Form $form
-	 */
-	public function __construct($item, $form = null)
-	{
+    /**
+     * Construct the form field and set the {@link Item} it represents.
+     * 
+     * @param Item $item
+     * @param Form $form
+     */
+    public function __construct($item, $form = null)
+    {
 
-		$this->item = $item;
-		$name = 'OrderItem' . $item->ID;
-		parent::__construct($name, null, '', null, $form);
-	}
+        $this->item = $item;
+        $name = 'OrderItem' . $item->ID;
+        parent::__construct($name, null, '', null, $form);
+    }
 
-	/**
-	 * Render the form field with the correct template.
-	 * 
-	 * @see FormField::FieldHolder()
-	 * @return String
-	 */
-	public function FieldHolder($properties = array())
-	{
-		return $this->renderWith($this->template);
-	}
+    /**
+     * Render the form field with the correct template.
+     * 
+     * @see FormField::FieldHolder()
+     * @return String
+     */
+    public function FieldHolder($properties = array())
+    {
+        return $this->renderWith($this->template);
+    }
 
-	/**
-	 * Retrieve the {@link Item} this field represents.
-	 * 
-	 * @return Item
-	 */
-	public function Item()
-	{
-		return $this->item;
-	}
+    /**
+     * Retrieve the {@link Item} this field represents.
+     * 
+     * @return Item
+     */
+    public function Item()
+    {
+        return $this->item;
+    }
 
-	/**
-	 * Set the {@link Item} this field represents.
-	 * 
-	 * @param Item $item
-	 */
-	public function setItem(Item $item)
-	{
-		$this->item = $item;
-	}
+    /**
+     * Set the {@link Item} this field represents.
+     * 
+     * @param Item $item
+     */
+    public function setItem(Item $item)
+    {
+        $this->item = $item;
+    }
 
-	/**
-	 * Validate this form field, make sure the {@link Item} exists, is in the current 
-	 * {@link Order} and the item is valid for adding to the cart.
-	 * 
-	 * @see FormField::validate()
-	 * @return ValidationResult
-	 */
-	public function validate(): ValidationResult
-	{
-		$result = ValidationResult::create();
-		$item = $this->Item();
-		$currentOrder = Cart::get_current_order();
-		$items = $currentOrder->Items();
+    /**
+     * Validate this form field, make sure the {@link Item} exists, is in the current 
+     * {@link Order} and the item is valid for adding to the cart.
+     * 
+     * @see FormField::validate()
+     * @return ValidationResult
+     */
+    public function validate(): ValidationResult
+    {
+        $result = ValidationResult::create();
+        $item = $this->Item();
+        $currentOrder = Cart::get_current_order();
+        $items = $currentOrder->Items();
 
-		//Check that item exists and is in the current order
-		if (!$item || !$item->exists() || !$items->find('ID', $item->ID)) {
+        //Check that item exists and is in the current order
+        if (!$item || !$item->exists() || !$items->find('ID', $item->ID)) {
 
-			$errorMessage = _t('Form.ITEM_IS_NOT_IN_ORDER', 'This product is not in the Order.');
-			if ($msg = $this->getCustomValidationMessage()) {
-				$errorMessage = $msg;
-			}
+            $errorMessage = _t('Form.ITEM_IS_NOT_IN_ORDER', 'This product is not in the Order.');
+            if ($msg = $this->getCustomValidationMessage()) {
+                $errorMessage = $msg;
+            }
 
-			$result->addFieldError($this->getName(), $errorMessage);
-		} else if ($item) {
+            $result->addFieldError($this->getName(), $errorMessage);
+        } else if ($item) {
 
-			$validation = $item->validateForCart();
+            $validation = $item->validateForCart();
 
-			if (!$validation->isValid()) {
+            if (!$validation->isValid()) {
 
-				$errorMessage = reset($validation->getMessages());
-				if ($msg = $this->getCustomValidationMessage()) {
-					$errorMessage = $msg;
-				}
+                $errorMessage = reset($validation->getMessages());
+                if ($msg = $this->getCustomValidationMessage()) {
+                    $errorMessage = $msg;
+                }
 
-				$validator->validationError(
-					$this->getName(),
-					$errorMessage,
-					"error"
-				);
-				$valid = false;
-			}
-		}
+                $validator->validationError(
+                    $this->getName(),
+                    $errorMessage,
+                    "error"
+                );
+                $valid = false;
+            }
+        }
 
-		return $result;
-	}
+        return $result;
+    }
 }

@@ -5,7 +5,7 @@ namespace SwipeStripe\Emails;
 use Pelago\Emogrifier\CssInliner;
 use SilverStripe\Control\Email\Email;
 use SilverStripe\Core\Injector\Injectable;
-use SilverStripe\View\ViewableData;
+use SilverStripe\Model\ModelData;
 
 /**
  * Decorator for the Email class to allow for inlined CSS
@@ -28,7 +28,7 @@ class ProcessedEmail
 	 */
 	public function renderBody(array $data = [], ?string $template = null): void
 	{
-		$viewModel = ViewableData::create();
+		$viewModel = ModelData::create();
 
 		$template ??= $this->template;
 
