@@ -12,65 +12,65 @@ use SilverStripe\Model\ModelData;
  */
 class ProcessedEmail
 {
-	use Injectable;
+    use Injectable;
 
-	protected Email $mail;
+    protected Email $mail;
 
-	protected string $template;
+    protected string $template;
 
-	public function __construct()
-	{
-		$this->mail = Email::create();
-	}
+    public function __construct()
+    {
+        $this->mail = Email::create();
+    }
 
-	/**
-	 * Runs the content through Emogrifier to merge css style inline before sending
-	 */
-	public function renderBody(array $data = [], ?string $template = null): void
-	{
-		$viewModel = ModelData::create();
+    /**
+     * Runs the content through Emogrifier to merge css style inline before sending
+     */
+    public function renderBody(array $data = [], ?string $template = null): void
+    {
+        $viewModel = ModelData::create();
 
-		$template ??= $this->template;
+        $template ??= $this->template;
 
-		if (empty($template)) {
-			throw new \InvalidArgumentException('Template not set');
-		}
+        if (empty($template)) {
+            throw new \InvalidArgumentException('Template not set');
+        }
 
-		$html = $viewModel->renderWith($template, $data);
+        $html = $viewModel->renderWith($template, $data);
 
-		$css = $data['Css'] ?? null;
+        $css = $data['Css'] ?? null;
 
-		if (!empty($css)) {
+        if (!empty($css)) {
 
-			$html = str_replace(
-				[
-					"<p>\n<table>",
-					"</table>\n</p>",
-					'&copy ',
-				],
-				[
-					"<table>",
-					"</table>",
-					'',
-				],
-				$html
-			);
+            $html = str_replace(
+                [
+                    "<p>\n<table>",
+                    "</table>\n</p>",
+                    '&copy ',
+                ],
+                [
+                    "<table>",
+                    "</table>",
+                    '',
+                ],
+                $html
+            );
 
-			$inlined = CssInliner::fromHtml($html)
-				->inlineCss($css)
-				->render();
-		}
-		
-		$this->mail->setBody($inlined);
-	}
+            $html = CssInliner::fromHtml($html)
+                ->inlineCss($css)
+                ->render();
+        }
 
-	public function send(): void
-	{
-		$this->mail->send();
-	}
+        $this->mail->setBody($html);
+    }
 
-	public function setSubject(string $subject): void
-	{
-		$this->mail->setSubject($subject);
-	}
+    public function send(): void
+    {
+        $this->mail->send();
+    }
+
+    public function setSubject(string $subject): void
+    {
+        $this->mail->setSubject($subject);
+    }
 }
