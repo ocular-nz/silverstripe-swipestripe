@@ -119,7 +119,7 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
      * @param SQLSelect $query
      * @param DataQuery $dataQuery
      */
-    public function augmentSQL(SQLSelect $query, DataQuery $dataQuery = null)
+    public function augmentSQL(SQLSelect $query, ?DataQuery $dataQuery = null)
     {
         $query->addLeftJoin("Member", "\"Member\".\"ID\" = \"Order\".\"MemberID\"", "Member");
     }
@@ -685,7 +685,7 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
      * @param DataObject $product The product to be represented by this order item
      * @param ArrayList $productOptions The product variations to be added, usually just one
      */
-    public function addItem(Product $product, Variation $variation, $quantity = 1, ArrayList $options = null)
+    public function addItem(Product $product, Variation $variation, $quantity = 1, ?ArrayList $options = null)
     {
 
         //Increment the quantity if this item exists already
