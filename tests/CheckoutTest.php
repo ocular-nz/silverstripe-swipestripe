@@ -1,4 +1,7 @@
-<?php\nnamespace SwipeStripe;
+<?php
+
+namespace SwipeStripe;
+
 /**
  * Testing {@link Order} modifiers at checkout.
  * 
@@ -27,472 +30,482 @@
  * @package swipestripe
  * @subpackage tests
  */
-class SWS_CheckoutTest extends SWS_Test {
-	
-	function setUp() {
-		parent::setUp();
+class SWS_CheckoutTest extends SWS_Test
+{
 
-		//Check that payment module is installed
-		$this->assertTrue(class_exists('Payment'), 'Payment module is installed.');
-		//$this->assertTrue(class_exists('ChequePayment'), 'Cheque Payment is installed.');
-		
-		//Need to publish a few pages because not using the draft site
-		$checkoutPage = $this->objFromFixture('CheckoutPage', 'checkout');  
-		$accountPage = $this->objFromFixture('AccountPage', 'account');
-		$cartPage = $this->objFromFixture('CartPage', 'cart');
-		
-		$this->loginAs('admin');
-		$checkoutPage->doPublish();
-		$accountPage->doPublish();
-		$cartPage->doPublish();
-		$this->logOut();
+    function setUp()
+    {
+        parent::setUp();
 
-		Config::inst()->remove('PaymentProcessor', 'supported_methods');
-		Config::inst()->update('PaymentProcessor', 'supported_methods', array('test' => array('Cheque')));
-		Config::inst()->remove('PaymentGateway', 'environment');
-		Config::inst()->update('PaymentGateway', 'environment', 'test');
-	}
+        //Check that payment module is installed
+        $this->assertTrue(class_exists('Payment'), 'Payment module is installed.');
+        //$this->assertTrue(class_exists('ChequePayment'), 'Cheque Payment is installed.');
 
-	/**
-	 * Create product and check basic attributes
-	 */
-	function testCheckoutWithPublishedProduct() {
-		
-		$productA = $this->objFromFixture('Product', 'productA');
-		$checkoutPage = $this->objFromFixture('CheckoutPage', 'checkout'); 
+        //Need to publish a few pages because not using the draft site
+        $checkoutPage = $this->objFromFixture('CheckoutPage', 'checkout');
+        $accountPage = $this->objFromFixture('AccountPage', 'account');
+        $cartPage = $this->objFromFixture('CartPage', 'cart');
 
-		$this->loginAs('admin');
-		$productA->doPublish();
-		$this->logOut();
-		
-		$this->assertTrue($productA->isPublished());
-		
-		$buyer = $this->objFromFixture('Customer', 'buyer');
-		$this->loginAs($buyer);
+        $this->loginAs('admin');
+        $checkoutPage->doPublish();
+        $accountPage->doPublish();
+        $cartPage->doPublish();
+        $this->logOut();
 
-		$this->get(Director::makeRelative($productA->Link())); 
-		$this->submitForm('ProductForm_ProductForm', null, array(
-			'Quantity' => 1
-		));
+        Config::inst()->remove('PaymentProcessor', 'supported_methods');
+        Config::inst()->update('PaymentProcessor', 'supported_methods', array('test' => array('Cheque')));
+        Config::inst()->remove('PaymentGateway', 'environment');
+        Config::inst()->update('PaymentGateway', 'environment', 'test');
+    }
 
-		$order = Cart::get_current_order();
-		$items = $order->Items();
-		
-		$this->assertEquals(1, $items->Count());
-		$this->assertEquals($productA->ID, $items->First()->Product()->ID);
-		
-		$orders = $buyer->Orders();
-		$this->assertEquals(1, $orders->Count());
-		
-		$this->get(Director::makeRelative($checkoutPage->Link()));
+    /**
+     * Create product and check basic attributes
+     */
+    function testCheckoutWithPublishedProduct()
+    {
 
-		$this->submitForm('OrderForm_OrderForm', null, array(
-			'Notes' => 'New order for test buyer.'
-		));
+        $productA = $this->objFromFixture('Product', 'productA');
+        $checkoutPage = $this->objFromFixture('CheckoutPage', 'checkout');
 
-		$orders = $buyer->Orders();
-		$this->assertEquals(2, $orders->Count());
-	}
-	
-	/**
-	 * Try to checkout an unpublished product
-	 */
-	function testCheckoutWithUnpublishedProduct() {
-		
-		$productA = $this->objFromFixture('Product', 'productA');
+        $this->loginAs('admin');
+        $productA->doPublish();
+        $this->logOut();
 
-		$this->loginAs('admin');
-		$productA->doPublish();
-		$this->logOut();
-		
-		$this->assertTrue($productA->isPublished());
+        $this->assertTrue($productA->isPublished());
 
-		//Add product to cart, buyer has one Order existing from fixture
-		$buyer = $this->objFromFixture('Customer', 'buyer');
-		$this->assertEquals(1, $buyer->Orders()->Count());
-		
-		$this->loginAs($buyer);
+        $buyer = $this->objFromFixture('Customer', 'buyer');
+        $this->loginAs($buyer);
 
-		$this->get(Director::makeRelative($productA->Link())); 
-		$this->submitForm('ProductForm_ProductForm', null, array(
-			'Quantity' => 1
-		));
+        $this->get(Director::makeRelative($productA->Link()));
+        $this->submitForm('ProductForm_ProductForm', null, array(
+            'Quantity' => 1
+        ));
 
-		$order = Cart::get_current_order();
-		$items = $order->Items();
-		
-		$this->assertEquals(1, $items->Count());
-		$this->assertEquals($productA->ID, $items->First()->Product()->ID);
-		$this->logOut();
-		
-		//Unpublish the product thats in the cart
-		$this->loginAs('admin');
-		$productA->doUnpublish();
-		$this->logOut();
-		
-		$this->assertEquals(false, $productA->isPublished());
-		$this->assertEquals(false, $order->validateForCart()->valid());
-		
-		//Log in as buyer again and try to checkout
-		$this->loginAs($this->objFromFixture('Customer', 'buyer'));
-		$checkoutPage = DataObject::get_one('CheckoutPage');
-		$this->get(Director::makeRelative($checkoutPage->Link()));
+        $order = Cart::get_current_order();
+        $items = $order->Items();
 
-		$this->submitForm('OrderForm_OrderForm', null, array(
-			'Notes' => 'This order should fail.'
-		));
-		
-		$orders = $buyer->Orders();
-		$this->assertEquals(1, $orders->Count());
-	}
-	
-	/**
-	 * Try to checkout a deleted product
-	 */
-	function testCheckoutWithDeletedProduct() {
-		
-		$productA = $this->objFromFixture('Product', 'productA');
+        $this->assertEquals(1, $items->Count());
+        $this->assertEquals($productA->ID, $items->First()->Product()->ID);
 
-		$this->loginAs('admin');
-		$productA->doPublish();
-		$this->logOut();
-		
-		$this->assertTrue($productA->isPublished());
+        $orders = $buyer->Orders();
+        $this->assertEquals(1, $orders->Count());
 
-		//Add product to cart, buyer has one Order existing from fixture
-		$buyer = $this->objFromFixture('Customer', 'buyer');
-		$this->assertEquals(1, $buyer->Orders()->Count());
-		
-		$this->loginAs($buyer);
+        $this->get(Director::makeRelative($checkoutPage->Link()));
 
-		$this->get(Director::makeRelative($productA->Link())); 
-		$this->submitForm('ProductForm_ProductForm', null, array(
-			'Quantity' => 1
-		));
+        $this->submitForm('OrderForm_OrderForm', null, array(
+            'Notes' => 'New order for test buyer.'
+        ));
 
-		$order = Cart::get_current_order();
-		$items = $order->Items();
-		
-		$this->assertEquals(1, $items->Count());
-		$this->assertEquals($productA->ID, $items->First()->Product()->ID);
-		$this->logOut();
-		
-		//Delete the product thats in the cart
-		$this->loginAs('admin');
-		$productA->delete();
-		$this->logOut();
-		
-		$this->assertEquals(false, $productA->isInDB());
-		$this->assertEquals(false, $order->validateForCart()->valid());
-		
-		//Log in as buyer again and try to checkout
-		$this->loginAs($buyer);
-		$checkoutPage = DataObject::get_one('CheckoutPage');
-		$this->get(Director::makeRelative($checkoutPage->Link()));
+        $orders = $buyer->Orders();
+        $this->assertEquals(2, $orders->Count());
+    }
 
-		$this->submitForm('OrderForm_OrderForm', null, array(
-			'Notes' => 'This order should fail.'
-		));
-		
-		$orders = $buyer->Orders();
-		$this->assertEquals(1, $orders->Count());
-	}
-	
-	/**
-	 * Try to checkout a disabled variation
-	 */
-	function testCheckoutWithDisabledVariation() {
-		
-		$shortsA = $this->objFromFixture('Product', 'shortsA');
+    /**
+     * Try to checkout an unpublished product
+     */
+    function testCheckoutWithUnpublishedProduct()
+    {
 
-		$this->loginAs('admin');
-		$shortsA->doPublish();
-		$this->logOut();
-		
-		$this->assertTrue($shortsA->isPublished());
+        $productA = $this->objFromFixture('Product', 'productA');
 
-		//Add product to cart, buyer has one Order existing from fixture
-		$buyer = $this->objFromFixture('Customer', 'buyer');
-		$this->assertEquals(1, $buyer->Orders()->Count());
-		
-		$this->loginAs($this->objFromFixture('Customer', 'buyer'));
+        $this->loginAs('admin');
+        $productA->doPublish();
+        $this->logOut();
 
-		$this->get(Director::makeRelative($shortsA->Link())); 
-		
-		$shortsAVariation = $this->objFromFixture('Variation', 'shortsSmallRedCotton');
-		$this->assertEquals('Enabled', $shortsAVariation->Status);
-		
-		$this->submitForm('ProductForm_ProductForm', null, array(
-			'Quantity' => 1,
-			'Options[1]' => $shortsAVariation->getOptionForAttribute(1)->ID,  //Small
-			'Options[2]' => $shortsAVariation->getOptionForAttribute(2)->ID, //Red
-			'Options[3]' => $shortsAVariation->getOptionForAttribute(3)->ID, //Cotton
-		));
+        $this->assertTrue($productA->isPublished());
 
-		$order = Cart::get_current_order();
-		$items = $order->Items();
-		
-		$this->assertEquals(1, $items->Count());
-		$this->assertEquals($shortsA->ID, $items->First()->Product()->ID);
-		$this->logOut();
-		
-		$this->logInAs('admin');
-		$shortsAVariation->Status = 'Disabled';
-		$shortsAVariation->write();
-		$this->logOut();
+        //Add product to cart, buyer has one Order existing from fixture
+        $buyer = $this->objFromFixture('Customer', 'buyer');
+        $this->assertEquals(1, $buyer->Orders()->Count());
 
-		$this->assertEquals('Disabled', $shortsAVariation->Status);
-		$this->assertEquals(false, $order->validateForCart()->valid());
-		
-		//Log in as buyer again and try to checkout
-		$this->loginAs($this->objFromFixture('Customer', 'buyer'));
-		$checkoutPage = DataObject::get_one('CheckoutPage');
-		$this->get(Director::makeRelative($checkoutPage->Link()));
+        $this->loginAs($buyer);
 
-		$this->submitForm('OrderForm_OrderForm', null, array(
-			'Notes' => 'This order should fail.'
-		));
-		
-		$orders = $buyer->Orders();
-		$this->assertEquals(1, $orders->Count());
-	}
-	
-	/**
-	 * Try to checkout a deleted variation
-	 */
-	function testCheckoutWithDeletedVariation() {
-		
-		$shortsA = $this->objFromFixture('Product', 'shortsA');
+        $this->get(Director::makeRelative($productA->Link()));
+        $this->submitForm('ProductForm_ProductForm', null, array(
+            'Quantity' => 1
+        ));
 
-		$this->loginAs('admin');
-		$shortsA->doPublish();
-		$this->logOut();
-		
-		$this->assertTrue($shortsA->isPublished());
+        $order = Cart::get_current_order();
+        $items = $order->Items();
 
-		//Add product to cart, buyer has one Order existing from fixture
-		$buyer = $this->objFromFixture('Customer', 'buyer');
-		$this->assertEquals(1, $buyer->Orders()->Count());
-		
-		$this->loginAs($this->objFromFixture('Customer', 'buyer'));
+        $this->assertEquals(1, $items->Count());
+        $this->assertEquals($productA->ID, $items->First()->Product()->ID);
+        $this->logOut();
 
-		$this->get(Director::makeRelative($shortsA->Link())); 
-		
-		$shortsAVariation = $this->objFromFixture('Variation', 'shortsSmallRedCotton');
-		$this->assertEquals('Enabled', $shortsAVariation->Status);
-		
-		$this->submitForm('ProductForm_ProductForm', null, array(
-			'Quantity' => 1,
-			'Options[1]' => $shortsAVariation->getOptionForAttribute(1)->ID,  //Small
-			'Options[2]' => $shortsAVariation->getOptionForAttribute(2)->ID, //Red
-			'Options[3]' => $shortsAVariation->getOptionForAttribute(3)->ID, //Cotton
-		));
+        //Unpublish the product thats in the cart
+        $this->loginAs('admin');
+        $productA->doUnpublish();
+        $this->logOut();
 
-		$order = Cart::get_current_order();
-		$items = $order->Items();
-		
-		$this->assertEquals(1, $items->Count());
-		$this->assertEquals($shortsA->ID, $items->First()->Product()->ID);
-		$this->logOut();
-		
-		$this->logInAs('admin');
-		$shortsAVariation->delete();
-		$this->logOut();
+        $this->assertEquals(false, $productA->isPublished());
+        $this->assertEquals(false, $order->validateForCart()->valid());
 
-		$this->assertEquals(false, $shortsAVariation->isInDB());
-		$this->assertEquals(false, $order->validateForCart()->valid());
-		
-		//Log in as buyer again and try to checkout
-		$this->loginAs($this->objFromFixture('Customer', 'buyer'));
-		$checkoutPage = DataObject::get_one('CheckoutPage');
-		$this->get(Director::makeRelative($checkoutPage->Link()));
+        //Log in as buyer again and try to checkout
+        $this->loginAs($this->objFromFixture('Customer', 'buyer'));
+        $checkoutPage = DataObject::get_one('CheckoutPage');
+        $this->get(Director::makeRelative($checkoutPage->Link()));
 
-		$this->submitForm('OrderForm_OrderForm', null, array(
-			'Notes' => 'This order should fail.'
-		));
-		
-		$orders = $buyer->Orders();
-		$this->assertEquals(1, $orders->Count());
-	}
-	
-	/**
-	 * Try to checkout without products added to the order
-	 */
-	function testCheckoutWithoutProducts() {
-		
-		//Add product to cart, buyer has one Order existing from fixture
-		$buyer = $this->objFromFixture('Customer', 'buyer');
-		$this->assertEquals(1, $buyer->Orders()->Count());
-		
-		//Log in as buyer again and try to checkout
-		$this->loginAs($this->objFromFixture('Customer', 'buyer'));
-		
-		$order = Cart::get_current_order();
-		$items = $order->Items();
-		$this->assertEquals(0, $items->Count());
-		
-		$this->assertEquals(false, $order->validateForCart()->valid());
-		
-		$checkoutPage = DataObject::get_one('CheckoutPage');
-		$this->get(Director::makeRelative($checkoutPage->Link()));
+        $this->submitForm('OrderForm_OrderForm', null, array(
+            'Notes' => 'This order should fail.'
+        ));
 
-		try {
-			$this->submitForm('OrderForm_OrderForm', null, array(
-				'Notes' => 'This order should fail.'
-			));
-		}
-		catch (Exception $e) {
-		}
-		
-		$orders = $buyer->Orders();
-		$this->assertEquals(1, $orders->Count());
-	}
-	
-	/**
-	 * Try to checkout with a product that requires a variation, without a variation in the cart
-	 */
-	function testCheckoutWithoutRequiredVariation() { 
-		$shortsA = $this->objFromFixture('Product', 'shortsA');
+        $orders = $buyer->Orders();
+        $this->assertEquals(1, $orders->Count());
+    }
 
-		$this->loginAs('admin');
-		$shortsA->doPublish();
-		$this->logOut();
-		
-		$this->assertTrue($shortsA->isPublished());
-		$this->assertTrue($shortsA->requiresVariation());
+    /**
+     * Try to checkout a deleted product
+     */
+    function testCheckoutWithDeletedProduct()
+    {
 
-		//Add product to cart, buyer has one Order existing from fixture
-		$buyer = $this->objFromFixture('Customer', 'buyer');
-		$this->assertEquals(1, $buyer->Orders()->Count());
-		
-		$this->loginAs($this->objFromFixture('Customer', 'buyer'));
+        $productA = $this->objFromFixture('Product', 'productA');
 
-		$this->get(Director::makeRelative($shortsA->Link())); 
-		
-		$shortsAVariation = $this->objFromFixture('Variation', 'shortsSmallRedCotton');
-		$this->assertEquals('Enabled', $shortsAVariation->Status);
-		
-		$this->submitForm('ProductForm_ProductForm', null, array(
-			'Quantity' => 1,
-			'Options[1]' => $shortsAVariation->getOptionForAttribute(1)->ID,  //Small
-			'Options[2]' => $shortsAVariation->getOptionForAttribute(2)->ID, //Red
-			'Options[3]' => $shortsAVariation->getOptionForAttribute(3)->ID, //Cotton
-		));
+        $this->loginAs('admin');
+        $productA->doPublish();
+        $this->logOut();
 
-		$order = Cart::get_current_order();
-		$items = $order->Items();
-		$variation = $order->Items()->First()->Variation();
-		
-		$this->assertEquals(1, $items->Count());
-		$this->assertEquals($shortsA->ID, $items->First()->Product()->ID);
-		$this->logOut();
-		
-		$this->logInAs('admin');
-		$variation->delete();
-		$this->logOut();
-		
-		$this->assertEquals(false, $variation->isInDB());
-		$this->assertEquals(false, $order->validateForCart()->valid());
-		
-		//Log in as buyer again and try to checkout
-		$this->loginAs($this->objFromFixture('Customer', 'buyer'));
-		$checkoutPage = DataObject::get_one('CheckoutPage');
-		$this->get(Director::makeRelative($checkoutPage->Link()));
+        $this->assertTrue($productA->isPublished());
 
-		$this->submitForm('OrderForm_OrderForm', null, array(
-			'Notes' => 'This order should fail.'
-		));
-		
-		$orders = $buyer->Orders();
-		$this->assertEquals(1, $orders->Count());
-	}
-	
-	/**
-	 * Try to submit the checkout form without some required fields
-	 * Assumes that billing FirstName is always required
-	 */
-	function testCheckoutWithoutRequiredFields() {
-		$shortsA = $this->objFromFixture('Product', 'shortsA');
-		$shortsAVariation = $this->objFromFixture('Variation', 'shortsSmallRedCotton');
-		
-		$this->loginAs('admin');
-		$shortsA->doPublish();
-		$this->logOut();
+        //Add product to cart, buyer has one Order existing from fixture
+        $buyer = $this->objFromFixture('Customer', 'buyer');
+        $this->assertEquals(1, $buyer->Orders()->Count());
 
-		$this->assertTrue($shortsA->isPublished());
-		
-		//Add product to cart, buyer has one Order existing from fixture
-		$buyer = $this->objFromFixture('Customer', 'buyer');
-		$this->assertEquals(1, $buyer->Orders()->Count());
-		
-		$this->loginAs($this->objFromFixture('Customer', 'buyer'));
+        $this->loginAs($buyer);
 
-		$this->get(Director::makeRelative($shortsA->Link()));
-		$this->submitForm('ProductForm_ProductForm', null, array(
-			'Quantity' => 1,
-			'Options[1]' => $shortsAVariation->getOptionForAttribute(1)->ID,  //Small
-			'Options[2]' => $shortsAVariation->getOptionForAttribute(2)->ID, //Red
-			'Options[3]' => $shortsAVariation->getOptionForAttribute(3)->ID, //Cotton
-		));
+        $this->get(Director::makeRelative($productA->Link()));
+        $this->submitForm('ProductForm_ProductForm', null, array(
+            'Quantity' => 1
+        ));
 
-		$order = Cart::get_current_order();
-		$items = $order->Items();
-		$variation = $order->Items()->First()->Variation();
-		
-		$this->assertEquals(1, $items->Count());
-		$this->assertEquals($shortsA->ID, $items->First()->Product()->ID);
-		$this->logOut();
+        $order = Cart::get_current_order();
+        $items = $order->Items();
 
-		$checkoutPage = DataObject::get_one('CheckoutPage');
-		$this->get(Director::makeRelative($checkoutPage->Link()));
+        $this->assertEquals(1, $items->Count());
+        $this->assertEquals($productA->ID, $items->First()->Product()->ID);
+        $this->logOut();
 
-		$this->submitForm('OrderForm_OrderForm', null, array(
-			'Billing[FirstName]' => ''
-		));
-		
-		$orders = $buyer->Orders();
-		$this->assertEquals(1, $orders->Count());
-	}
-	
-	/**
-	 * Try checking out an order without specifying a payment gateway
-	 */
-	function testCheckoutWithoutPaymentGateway() {
+        //Delete the product thats in the cart
+        $this->loginAs('admin');
+        $productA->delete();
+        $this->logOut();
 
-		$productA = $this->objFromFixture('Product', 'productA');
+        $this->assertEquals(false, $productA->isInDB());
+        $this->assertEquals(false, $order->validateForCart()->valid());
 
-		$this->loginAs('admin');
-		$productA->doPublish();
-		$this->logOut();
-		
-		$buyer = $this->objFromFixture('Customer', 'buyer');
-		$this->assertEquals(1, $buyer->Orders()->Count());
-		
-		$this->loginAs($this->objFromFixture('Customer', 'buyer'));
+        //Log in as buyer again and try to checkout
+        $this->loginAs($buyer);
+        $checkoutPage = DataObject::get_one('CheckoutPage');
+        $this->get(Director::makeRelative($checkoutPage->Link()));
 
-		$productALink = $productA->Link();
-		$this->get(Director::makeRelative($productALink)); 
-		$this->submitForm('ProductForm_ProductForm', null, array(
-			'Quantity' => 1
-		));
+        $this->submitForm('OrderForm_OrderForm', null, array(
+            'Notes' => 'This order should fail.'
+        ));
 
-		$order = Cart::get_current_order();
-		$items = $order->Items();
-		$this->assertEquals(1, $items->Count());
-		
-		$checkoutPage = DataObject::get_one('CheckoutPage');
-		$this->get(Director::makeRelative($checkoutPage->Link()));
-		
-		//Submit the form without restrictions on what can be POST'd
-		$data = $this->getFormData('OrderForm_OrderForm');
-		$data['PaymentMethod'] = '';
+        $orders = $buyer->Orders();
+        $this->assertEquals(1, $orders->Count());
+    }
 
-		$this->post(
-			Director::absoluteURL('/checkout/OrderForm'),
-			$data
-		);
+    /**
+     * Try to checkout a disabled variation
+     */
+    function testCheckoutWithDisabledVariation()
+    {
 
-		$this->assertEquals(1, $buyer->Orders()->Count());
-	}
+        $shortsA = $this->objFromFixture('Product', 'shortsA');
 
+        $this->loginAs('admin');
+        $shortsA->doPublish();
+        $this->logOut();
+
+        $this->assertTrue($shortsA->isPublished());
+
+        //Add product to cart, buyer has one Order existing from fixture
+        $buyer = $this->objFromFixture('Customer', 'buyer');
+        $this->assertEquals(1, $buyer->Orders()->Count());
+
+        $this->loginAs($this->objFromFixture('Customer', 'buyer'));
+
+        $this->get(Director::makeRelative($shortsA->Link()));
+
+        $shortsAVariation = $this->objFromFixture('Variation', 'shortsSmallRedCotton');
+        $this->assertEquals('Enabled', $shortsAVariation->Status);
+
+        $this->submitForm('ProductForm_ProductForm', null, array(
+            'Quantity' => 1,
+            'Options[1]' => $shortsAVariation->getOptionForAttribute(1)->ID,  //Small
+            'Options[2]' => $shortsAVariation->getOptionForAttribute(2)->ID, //Red
+            'Options[3]' => $shortsAVariation->getOptionForAttribute(3)->ID, //Cotton
+        ));
+
+        $order = Cart::get_current_order();
+        $items = $order->Items();
+
+        $this->assertEquals(1, $items->Count());
+        $this->assertEquals($shortsA->ID, $items->First()->Product()->ID);
+        $this->logOut();
+
+        $this->logInAs('admin');
+        $shortsAVariation->Status = 'Disabled';
+        $shortsAVariation->write();
+        $this->logOut();
+
+        $this->assertEquals('Disabled', $shortsAVariation->Status);
+        $this->assertEquals(false, $order->validateForCart()->valid());
+
+        //Log in as buyer again and try to checkout
+        $this->loginAs($this->objFromFixture('Customer', 'buyer'));
+        $checkoutPage = DataObject::get_one('CheckoutPage');
+        $this->get(Director::makeRelative($checkoutPage->Link()));
+
+        $this->submitForm('OrderForm_OrderForm', null, array(
+            'Notes' => 'This order should fail.'
+        ));
+
+        $orders = $buyer->Orders();
+        $this->assertEquals(1, $orders->Count());
+    }
+
+    /**
+     * Try to checkout a deleted variation
+     */
+    function testCheckoutWithDeletedVariation()
+    {
+
+        $shortsA = $this->objFromFixture('Product', 'shortsA');
+
+        $this->loginAs('admin');
+        $shortsA->doPublish();
+        $this->logOut();
+
+        $this->assertTrue($shortsA->isPublished());
+
+        //Add product to cart, buyer has one Order existing from fixture
+        $buyer = $this->objFromFixture('Customer', 'buyer');
+        $this->assertEquals(1, $buyer->Orders()->Count());
+
+        $this->loginAs($this->objFromFixture('Customer', 'buyer'));
+
+        $this->get(Director::makeRelative($shortsA->Link()));
+
+        $shortsAVariation = $this->objFromFixture('Variation', 'shortsSmallRedCotton');
+        $this->assertEquals('Enabled', $shortsAVariation->Status);
+
+        $this->submitForm('ProductForm_ProductForm', null, array(
+            'Quantity' => 1,
+            'Options[1]' => $shortsAVariation->getOptionForAttribute(1)->ID,  //Small
+            'Options[2]' => $shortsAVariation->getOptionForAttribute(2)->ID, //Red
+            'Options[3]' => $shortsAVariation->getOptionForAttribute(3)->ID, //Cotton
+        ));
+
+        $order = Cart::get_current_order();
+        $items = $order->Items();
+
+        $this->assertEquals(1, $items->Count());
+        $this->assertEquals($shortsA->ID, $items->First()->Product()->ID);
+        $this->logOut();
+
+        $this->logInAs('admin');
+        $shortsAVariation->delete();
+        $this->logOut();
+
+        $this->assertEquals(false, $shortsAVariation->isInDB());
+        $this->assertEquals(false, $order->validateForCart()->valid());
+
+        //Log in as buyer again and try to checkout
+        $this->loginAs($this->objFromFixture('Customer', 'buyer'));
+        $checkoutPage = DataObject::get_one('CheckoutPage');
+        $this->get(Director::makeRelative($checkoutPage->Link()));
+
+        $this->submitForm('OrderForm_OrderForm', null, array(
+            'Notes' => 'This order should fail.'
+        ));
+
+        $orders = $buyer->Orders();
+        $this->assertEquals(1, $orders->Count());
+    }
+
+    /**
+     * Try to checkout without products added to the order
+     */
+    function testCheckoutWithoutProducts()
+    {
+
+        //Add product to cart, buyer has one Order existing from fixture
+        $buyer = $this->objFromFixture('Customer', 'buyer');
+        $this->assertEquals(1, $buyer->Orders()->Count());
+
+        //Log in as buyer again and try to checkout
+        $this->loginAs($this->objFromFixture('Customer', 'buyer'));
+
+        $order = Cart::get_current_order();
+        $items = $order->Items();
+        $this->assertEquals(0, $items->Count());
+
+        $this->assertEquals(false, $order->validateForCart()->valid());
+
+        $checkoutPage = DataObject::get_one('CheckoutPage');
+        $this->get(Director::makeRelative($checkoutPage->Link()));
+
+        try {
+            $this->submitForm('OrderForm_OrderForm', null, array(
+                'Notes' => 'This order should fail.'
+            ));
+        } catch (Exception $e) {
+        }
+
+        $orders = $buyer->Orders();
+        $this->assertEquals(1, $orders->Count());
+    }
+
+    /**
+     * Try to checkout with a product that requires a variation, without a variation in the cart
+     */
+    function testCheckoutWithoutRequiredVariation()
+    {
+        $shortsA = $this->objFromFixture('Product', 'shortsA');
+
+        $this->loginAs('admin');
+        $shortsA->doPublish();
+        $this->logOut();
+
+        $this->assertTrue($shortsA->isPublished());
+        $this->assertTrue($shortsA->requiresVariation());
+
+        //Add product to cart, buyer has one Order existing from fixture
+        $buyer = $this->objFromFixture('Customer', 'buyer');
+        $this->assertEquals(1, $buyer->Orders()->Count());
+
+        $this->loginAs($this->objFromFixture('Customer', 'buyer'));
+
+        $this->get(Director::makeRelative($shortsA->Link()));
+
+        $shortsAVariation = $this->objFromFixture('Variation', 'shortsSmallRedCotton');
+        $this->assertEquals('Enabled', $shortsAVariation->Status);
+
+        $this->submitForm('ProductForm_ProductForm', null, array(
+            'Quantity' => 1,
+            'Options[1]' => $shortsAVariation->getOptionForAttribute(1)->ID,  //Small
+            'Options[2]' => $shortsAVariation->getOptionForAttribute(2)->ID, //Red
+            'Options[3]' => $shortsAVariation->getOptionForAttribute(3)->ID, //Cotton
+        ));
+
+        $order = Cart::get_current_order();
+        $items = $order->Items();
+        $variation = $order->Items()->First()->Variation();
+
+        $this->assertEquals(1, $items->Count());
+        $this->assertEquals($shortsA->ID, $items->First()->Product()->ID);
+        $this->logOut();
+
+        $this->logInAs('admin');
+        $variation->delete();
+        $this->logOut();
+
+        $this->assertEquals(false, $variation->isInDB());
+        $this->assertEquals(false, $order->validateForCart()->valid());
+
+        //Log in as buyer again and try to checkout
+        $this->loginAs($this->objFromFixture('Customer', 'buyer'));
+        $checkoutPage = DataObject::get_one('CheckoutPage');
+        $this->get(Director::makeRelative($checkoutPage->Link()));
+
+        $this->submitForm('OrderForm_OrderForm', null, array(
+            'Notes' => 'This order should fail.'
+        ));
+
+        $orders = $buyer->Orders();
+        $this->assertEquals(1, $orders->Count());
+    }
+
+    /**
+     * Try to submit the checkout form without some required fields
+     * Assumes that billing FirstName is always required
+     */
+    function testCheckoutWithoutRequiredFields()
+    {
+        $shortsA = $this->objFromFixture('Product', 'shortsA');
+        $shortsAVariation = $this->objFromFixture('Variation', 'shortsSmallRedCotton');
+
+        $this->loginAs('admin');
+        $shortsA->doPublish();
+        $this->logOut();
+
+        $this->assertTrue($shortsA->isPublished());
+
+        //Add product to cart, buyer has one Order existing from fixture
+        $buyer = $this->objFromFixture('Customer', 'buyer');
+        $this->assertEquals(1, $buyer->Orders()->Count());
+
+        $this->loginAs($this->objFromFixture('Customer', 'buyer'));
+
+        $this->get(Director::makeRelative($shortsA->Link()));
+        $this->submitForm('ProductForm_ProductForm', null, array(
+            'Quantity' => 1,
+            'Options[1]' => $shortsAVariation->getOptionForAttribute(1)->ID,  //Small
+            'Options[2]' => $shortsAVariation->getOptionForAttribute(2)->ID, //Red
+            'Options[3]' => $shortsAVariation->getOptionForAttribute(3)->ID, //Cotton
+        ));
+
+        $order = Cart::get_current_order();
+        $items = $order->Items();
+        $variation = $order->Items()->First()->Variation();
+
+        $this->assertEquals(1, $items->Count());
+        $this->assertEquals($shortsA->ID, $items->First()->Product()->ID);
+        $this->logOut();
+
+        $checkoutPage = DataObject::get_one('CheckoutPage');
+        $this->get(Director::makeRelative($checkoutPage->Link()));
+
+        $this->submitForm('OrderForm_OrderForm', null, array(
+            'Billing[FirstName]' => ''
+        ));
+
+        $orders = $buyer->Orders();
+        $this->assertEquals(1, $orders->Count());
+    }
+
+    /**
+     * Try checking out an order without specifying a payment gateway
+     */
+    function testCheckoutWithoutPaymentGateway()
+    {
+
+        $productA = $this->objFromFixture('Product', 'productA');
+
+        $this->loginAs('admin');
+        $productA->doPublish();
+        $this->logOut();
+
+        $buyer = $this->objFromFixture('Customer', 'buyer');
+        $this->assertEquals(1, $buyer->Orders()->Count());
+
+        $this->loginAs($this->objFromFixture('Customer', 'buyer'));
+
+        $productALink = $productA->Link();
+        $this->get(Director::makeRelative($productALink));
+        $this->submitForm('ProductForm_ProductForm', null, array(
+            'Quantity' => 1
+        ));
+
+        $order = Cart::get_current_order();
+        $items = $order->Items();
+        $this->assertEquals(1, $items->Count());
+
+        $checkoutPage = DataObject::get_one('CheckoutPage');
+        $this->get(Director::makeRelative($checkoutPage->Link()));
+
+        //Submit the form without restrictions on what can be POST'd
+        $data = $this->getFormData('OrderForm_OrderForm');
+        $data['PaymentMethod'] = '';
+
+        $this->post(
+            Director::absoluteURL('/checkout/OrderForm'),
+            $data
+        );
+
+        $this->assertEquals(1, $buyer->Orders()->Count());
+    }
 }
+
