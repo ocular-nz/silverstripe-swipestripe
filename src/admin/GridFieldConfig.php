@@ -25,31 +25,33 @@ use SilverStripe\Forms\GridField\GridFieldToolbarHeader;
  * @package swipestripe
  * @subpackage admin
  */
-class GridFieldConfig_Basic extends GridFieldConfig {
+class GridFieldConfig_Basic extends GridFieldConfig
+{
 
-	/**
-	 * Constructor
-	 * 
-	 * @param Int $itemsPerPage How many items on each page to display
-	 */
-	public function __construct($itemsPerPage=null) {
-		
-		$this->addComponent(new GridFieldButtonRow('before'));
-		$this->addComponent(new GridFieldAddNewButton('buttons-before-left'));
-		$this->addComponent(new GridFieldToolbarHeader());
-		$this->addComponent($sort = new GridFieldSortableHeader());
-		$this->addComponent($filter = new GridFieldFilterHeader());
-		$this->addComponent(new GridFieldDataColumns());
-		$this->addComponent(new GridFieldEditButton());
-		$this->addComponent(new GridFieldDeleteAction());
-		$this->addComponent(new GridFieldPageCount('toolbar-header-right'));
-		$this->addComponent($pagination = new GridFieldPaginator($itemsPerPage));
-		$this->addComponent(new GridFieldDetailForm());
+    /**
+     * Constructor
+     * 
+     * @param Int $itemsPerPage How many items on each page to display
+     */
+    public function __construct($itemsPerPage = null)
+    {
 
-		$sort->setThrowExceptionOnBadDataType(false);
-		$filter->setThrowExceptionOnBadDataType(false);
-		$pagination->setThrowExceptionOnBadDataType(false);
-	}
+        $this->addComponent(new GridFieldButtonRow('before'));
+        $this->addComponent(new GridFieldAddNewButton('buttons-before-left'));
+        $this->addComponent(new GridFieldToolbarHeader());
+        $this->addComponent($sort = new GridFieldSortableHeader());
+        $this->addComponent($filter = new GridFieldFilterHeader());
+        $this->addComponent(new GridFieldDataColumns());
+        $this->addComponent(new GridFieldEditButton());
+        $this->addComponent(new GridFieldDeleteAction());
+        $this->addComponent(new GridFieldPageCount('toolbar-header-right'));
+        $this->addComponent($pagination = new GridFieldPaginator($itemsPerPage));
+        $this->addComponent(new GridFieldDetailForm());
+
+        //$sort->setThrowExceptionOnBadDataType(false);
+        //$filter->setThrowExceptionOnBadDataType(false);
+        //$pagination->setThrowExceptionOnBadDataType(false);
+    }
 }
 
 /**
@@ -62,37 +64,39 @@ class GridFieldConfig_Basic extends GridFieldConfig {
  * @package swipestripe
  * @subpackage admin
  */
-class GridFieldConfig_BasicSortable extends GridFieldConfig {
+class GridFieldConfig_BasicSortable extends GridFieldConfig
+{
 
-	/**
-	 * Constructor
-	 * 
-	 * @param Int $itemsPerPage How many items on each page to display
-	 */
-	public function __construct($itemsPerPage = null) {
-		
-		$this->addComponent(new GridFieldButtonRow('before'));
-		$this->addComponent(new GridFieldAddNewButton('buttons-before-left'));
-		$this->addComponent(new GridFieldToolbarHeader());
-		$this->addComponent($sort = new GridFieldSortableHeader());
-		$this->addComponent($filter = new GridFieldFilterHeader());
-		$this->addComponent(new GridFieldDataColumns());
-		$this->addComponent(new GridFieldEditButton());
-		$this->addComponent(new GridFieldDeleteAction());
-		$this->addComponent(new GridFieldDetailForm());
+    /**
+     * Constructor
+     * 
+     * @param Int $itemsPerPage How many items on each page to display
+     */
+    public function __construct($itemsPerPage = null)
+    {
 
-		if (class_exists('GridFieldSortableRows')) {
-			$this->addComponent(new GridFieldSortableRows('SortOrder'));
-		}
+        $this->addComponent(new GridFieldButtonRow('before'));
+        $this->addComponent(new GridFieldAddNewButton('buttons-before-left'));
+        $this->addComponent(new GridFieldToolbarHeader());
+        $this->addComponent($sort = new GridFieldSortableHeader());
+        $this->addComponent($filter = new GridFieldFilterHeader());
+        $this->addComponent(new GridFieldDataColumns());
+        $this->addComponent(new GridFieldEditButton());
+        $this->addComponent(new GridFieldDeleteAction());
+        $this->addComponent(new GridFieldDetailForm());
 
-		$this->addComponent($pagination = new GridFieldPaginator($itemsPerPage));
-		$this->addComponent(new GridFieldPageCount('toolbar-header-right'));
-		$pagination->setThrowExceptionOnBadDataType(false);
+        if (class_exists('GridFieldSortableRows')) {
+            $this->addComponent(new GridFieldSortableRows('SortOrder'));
+        }
 
-		$sort->setThrowExceptionOnBadDataType(false);
-		$filter->setThrowExceptionOnBadDataType(false);
-		
-	}
+        $this->addComponent($pagination = new GridFieldPaginator($itemsPerPage));
+        $this->addComponent(new GridFieldPageCount('toolbar-header-right'));
+        //$pagination->setThrowExceptionOnBadDataType(false);
+
+        //$sort->setThrowExceptionOnBadDataType(false);
+        //$filter->setThrowExceptionOnBadDataType(false);
+
+    }
 }
 
 /**
@@ -105,31 +109,33 @@ class GridFieldConfig_BasicSortable extends GridFieldConfig {
  * @package swipestripe
  * @subpackage admin
  */
-class GridFieldConfig_HasManyRelationEditor extends GridFieldConfig {
+class GridFieldConfig_HasManyRelationEditor extends GridFieldConfig
+{
 
-	/**
-	 * Constructor
-	 * 
-	 * @param Int $itemsPerPage How many items on each page to display
-	 */
-	public function __construct($itemsPerPage = null) {
-		
-		$this->addComponent(new GridFieldButtonRow('before'));
-		$this->addComponent(new GridFieldAddNewButton('buttons-before-left'));
-		$this->addComponent(new GridFieldToolbarHeader());
-		$this->addComponent($sort = new GridFieldSortableHeader());
-		$this->addComponent($filter = new GridFieldFilterHeader());
-		$this->addComponent(new GridFieldDataColumns());
-		$this->addComponent(new GridFieldEditButton());
-		$this->addComponent(new GridFieldDeleteAction());
-		$this->addComponent($pagination = new GridFieldPaginator($itemsPerPage));
+    /**
+     * Constructor
+     * 
+     * @param Int $itemsPerPage How many items on each page to display
+     */
+    public function __construct($itemsPerPage = null)
+    {
 
-		$detailForm = new GridFieldDetailForm();
-		$detailForm->setItemRequestClass(GridFieldDetailForm_HasManyItemRequest::class);
-		$this->addComponent($detailForm);
+        $this->addComponent(new GridFieldButtonRow('before'));
+        $this->addComponent(new GridFieldAddNewButton('buttons-before-left'));
+        $this->addComponent(new GridFieldToolbarHeader());
+        $this->addComponent($sort = new GridFieldSortableHeader());
+        $this->addComponent($filter = new GridFieldFilterHeader());
+        $this->addComponent(new GridFieldDataColumns());
+        $this->addComponent(new GridFieldEditButton());
+        $this->addComponent(new GridFieldDeleteAction());
+        $this->addComponent($pagination = new GridFieldPaginator($itemsPerPage));
 
-		$sort->setThrowExceptionOnBadDataType(false);
-		$filter->setThrowExceptionOnBadDataType(false);
-		$pagination->setThrowExceptionOnBadDataType(false);
-	}
+        $detailForm = new GridFieldDetailForm();
+        $detailForm->setItemRequestClass(GridFieldDetailForm_HasManyItemRequest::class);
+        $this->addComponent($detailForm);
+
+        //$sort->setThrowExceptionOnBadDataType(false);
+        //$filter->setThrowExceptionOnBadDataType(false);
+        //	$pagination->setThrowExceptionOnBadDataType(false);
+    }
 }
