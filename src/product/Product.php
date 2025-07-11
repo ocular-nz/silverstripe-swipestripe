@@ -303,7 +303,8 @@ class Product extends Page
 		$result = new ValidationResult();
 
 		//If this is being published, check that enabled variations exist if they are required
-		$request = Controller::curr()->getRequest();
+		$controller = Controller::curr();
+		$request = $controller ? $controller->getRequest() : null;
 		$publishing = ($request && $request->getVar('action_publish')) ? true : false;
 
 		if ($publishing && $this->requiresVariation()) {
