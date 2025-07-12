@@ -9,7 +9,7 @@ class Price extends DBMoney
 
     protected ?string $symbol;
 
-    public function setSymbol(string $symbol)
+    public function setSymbol(?string $symbol)
     {
         $this->symbol = $symbol;
         return $this;

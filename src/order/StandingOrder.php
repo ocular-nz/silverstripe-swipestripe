@@ -4,6 +4,7 @@ namespace SwipeStripe\Order;
 
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use SilverStripe\Core\Validation\ValidationResult;
 use SwipeStripe\Order\Order;
 
 class StandingOrder extends Order
@@ -25,12 +26,45 @@ class StandingOrder extends Order
         'Orders' => Order::class
     ];
 
+    private static $has_one = [
+        'SavedCard' => 'App\Web\SavedCard'
+    ];
+
     private static $cascade_duplicates = [
         'Updates'
     ];
 
+    /**
+     * Validate that the saved card belongs to the same member
+     */
+    public function validate(): ValidationResult
+    {
+        $result = parent::validate();
+
+        if ($this->SavedCardID && $this->MemberID) {
+            $card = $this->SavedCard();
+            if ($card && $card->exists() && $card->MemberID !== $this->MemberID) {
+                $result->addError('SavedCard must belong to the same member as the StandingOrder');
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Get the saved card if it belongs to this order's member
+     */
+    public function getValidSavedCard()
+    {
+        $card = $this->SavedCard();
+        if ($card && $card->exists() && $card->MemberID === $this->MemberID && $card->IsActive) {
+            return $card;
+        }
+        return null;
+    }
+
     public function Items()
-	{
+    {
         // // check items in standing order are still valid 
         // // and clean up any invalid ones before returning
         // $items = parent::Items();
@@ -40,15 +74,15 @@ class StandingOrder extends Order
         //         $item->delete();
         //     }
         // }
-		
-		// return parent::Items();
+
+        // return parent::Items();
 
         // instead of deleting, let's filter out the ones that are invalid
         return parent::Items()->filterByCallback(function ($item) {
             $validation = $item->validateForCart();
             return $validation->isValid();
         });
-	}
+    }
 
     /**
      * The start date of the period is a day before the date given by the user
@@ -155,3 +189,4 @@ class StandingOrder extends Order
         return $this->Name ?: 'Standing Order #' . $this->ID;
     }
 }
+
