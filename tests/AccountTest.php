@@ -1,4 +1,5 @@
 <?php
+
 namespace SwipeStripe;
 
 use SwipeStripe\Order\Order;
@@ -13,91 +14,100 @@ use SwipeStripe\Customer\Customer;
  * @package swipestripe
  * @subpackage tests
  */
-class SWS_AccountTest extends \SWS_Test {
-	
-	public function setUp() {
-		parent::setUp();
-		
-		$this->loginAs('admin');
-		$this->objFromFixture(AccountPage::class, 'account')->doPublish();
-		$this->logOut();
-	}
+class SWS_AccountTest extends \SwipeStripe\SWS_Test
+{
 
-	public function testCustomerCanViewAccount() {
+    public function setUp()
+    {
+        parent::setUp();
 
-		$buyer = $this->objFromFixture('Customer', 'buyer');
-		$accountPage = $this->objFromFixture(AccountPage::class, 'account');
+        $this->loginAs('admin');
+        $this->objFromFixture(AccountPage::class, 'account')->doPublish();
+        $this->logOut();
+    }
 
-		$this->loginAs($buyer);
-		$this->get(Director::makeRelative($accountPage->Link()));
-		$this->assertPartialMatchBySelector('h2', array(
-			'Account Page'
-		));
-		$this->logOut();
-	}
+    public function testCustomerCanViewAccount()
+    {
 
-	public function testAdminCanViewAccount() {
+        $buyer = $this->objFromFixture('Customer', 'buyer');
+        $accountPage = $this->objFromFixture(AccountPage::class, 'account');
 
-		$accountPage = $this->objFromFixture(AccountPage::class, 'account');
+        $this->loginAs($buyer);
+        $this->get(Director::makeRelative($accountPage->Link()));
+        $this->assertPartialMatchBySelector('h2', array(
+            'Account Page'
+        ));
+        $this->logOut();
+    }
 
-		$this->loginAs('admin');
-		$this->get(Director::makeRelative($accountPage->Link()));
-		$this->assertPartialMatchBySelector('h2', array(
-			'Account Page'
-		));
-		$this->logOut();
-	}
+    public function testAdminCanViewAccount()
+    {
 
-	public function testAnonCannotViewAccount() {
+        $accountPage = $this->objFromFixture(AccountPage::class, 'account');
 
-		$accountPage = $this->objFromFixture(AccountPage::class, 'account');
+        $this->loginAs('admin');
+        $this->get(Director::makeRelative($accountPage->Link()));
+        $this->assertPartialMatchBySelector('h2', array(
+            'Account Page'
+        ));
+        $this->logOut();
+    }
 
-		$this->get(Director::makeRelative($accountPage->Link()));
-		$this->assertPartialMatchBySelector('h1', array(
-			'Log in'
-		));
-	}
+    public function testAnonCannotViewAccount()
+    {
 
-	public function testCustomerCanViewOrder() {
+        $accountPage = $this->objFromFixture(AccountPage::class, 'account');
 
-		$buyer = $this->objFromFixture(Customer::class, 'buyer');
-		$order = $this->objFromFixture(Order::class, 'orderOne');
+        $this->get(Director::makeRelative($accountPage->Link()));
+        $this->assertPartialMatchBySelector('h1', array(
+            'Log in'
+        ));
+    }
 
-		$this->loginAs($buyer);
-		$this->get(Director::makeRelative($order->Link()));
-		$this->assertTrue($this->Content() != "Action 'order' isn't allowed on class AccountPageController");
-		$this->logOut();
-	}
-	
-	public function testCustomerCannotViewOrder() {
-		
-		$buyer = $this->objFromFixture('Customer', 'buyer2');
-		$order = $this->objFromFixture('Order', 'orderOne');
+    public function testCustomerCanViewOrder()
+    {
 
-		$this->loginAs($buyer);
-		$this->get(Director::makeRelative($order->Link()));
-		$this->assertTrue($this->Content() == "You cannot view orders that do not belong to you.");
-		$this->logOut();
-	}
+        $buyer = $this->objFromFixture(Customer::class, 'buyer');
+        $order = $this->objFromFixture(Order::class, 'orderOne');
 
-	public function testAdminCanViewOrder() {
+        $this->loginAs($buyer);
+        $this->get(Director::makeRelative($order->Link()));
+        $this->assertTrue($this->Content() != "Action 'order' isn't allowed on class AccountPageController");
+        $this->logOut();
+    }
 
-		$order = $this->objFromFixture('Order', 'orderOne');
+    public function testCustomerCannotViewOrder()
+    {
 
-		$this->loginAs('admin');
-		$this->get(Director::makeRelative($order->Link()));
-		$this->assertTrue($this->Content() != "Action 'order' isn't allowed on class AccountPageController");
-		$this->logOut();
-	}
+        $buyer = $this->objFromFixture('Customer', 'buyer2');
+        $order = $this->objFromFixture('Order', 'orderOne');
 
-	public function testAnonCannotViewOrder() {
+        $this->loginAs($buyer);
+        $this->get(Director::makeRelative($order->Link()));
+        $this->assertTrue($this->Content() == "You cannot view orders that do not belong to you.");
+        $this->logOut();
+    }
 
-		$order = $this->objFromFixture('Order', 'orderOne');
+    public function testAdminCanViewOrder()
+    {
 
-		$this->get(Director::makeRelative($order->Link()));
-		$this->assertPartialMatchBySelector('h1', array(
-			'Log in'
-		));
-	}
-	
+        $order = $this->objFromFixture('Order', 'orderOne');
+
+        $this->loginAs('admin');
+        $this->get(Director::makeRelative($order->Link()));
+        $this->assertTrue($this->Content() != "Action 'order' isn't allowed on class AccountPageController");
+        $this->logOut();
+    }
+
+    public function testAnonCannotViewOrder()
+    {
+
+        $order = $this->objFromFixture('Order', 'orderOne');
+
+        $this->get(Director::makeRelative($order->Link()));
+        $this->assertPartialMatchBySelector('h1', array(
+            'Log in'
+        ));
+    }
 }
+

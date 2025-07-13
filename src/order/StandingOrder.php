@@ -149,8 +149,9 @@ class StandingOrder extends Order
             return false;
         }
 
-        if (empty($this->Member->WindcaveBillingId)) {
-            $this->logger->info('Member DPSBillingID not saved', [$this->ID]);
+        $validSavedCard = $this->getValidSavedCard();
+        if (!$validSavedCard) {
+            $this->logger->info('No valid saved card for standing order', [$this->ID]);
             return false;
         }
 
