@@ -42,7 +42,7 @@ use SwipeStripe\SWS_Test;
 class SWS_CartTest extends SWS_Test
 {
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 

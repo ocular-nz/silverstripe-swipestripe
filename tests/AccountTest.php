@@ -17,7 +17,7 @@ use SwipeStripe\Customer\Customer;
 class SWS_AccountTest extends \SwipeStripe\SWS_Test
 {
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -110,4 +110,3 @@ class SWS_AccountTest extends \SwipeStripe\SWS_Test
         ));
     }
 }
-

@@ -2,6 +2,8 @@
 
 namespace SwipeStripe;
 
+use SilverStripe\Dev\SapphireTest;
+
 /**
  * Common functions for SwipeStripe testing.
  * 
@@ -10,14 +12,14 @@ namespace SwipeStripe;
  * @package swipestripe
  * @subpackage tests
  */
-class SWS_Test extends FunctionalTest
+class SWS_Test extends SapphireTest
 {
 
     protected static $fixture_file = 'swipestripe/tests/SWS.yml';
     protected static $disable_themes = true;
     protected static $use_draft_site = false;
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -115,4 +117,3 @@ class SWS_Test extends FunctionalTest
 
     public function testSWS() {}
 }
-

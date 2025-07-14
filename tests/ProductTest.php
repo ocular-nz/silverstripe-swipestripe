@@ -37,7 +37,7 @@ class SWS_ProductTest extends SWS_Test
 
     protected static $use_draft_site = true;
 
-    function setUp()
+    function setUp(): void
     {
         parent::setUp();
     }
@@ -257,4 +257,3 @@ class SWS_ProductTest extends SWS_Test
         $this->assertTrue($errorMessage != null);
     }
 }
-

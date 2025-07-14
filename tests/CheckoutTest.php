@@ -33,7 +33,7 @@ namespace SwipeStripe;
 class SWS_CheckoutTest extends SWS_Test
 {
 
-    function setUp()
+    function setUp(): void
     {
         parent::setUp();
 
