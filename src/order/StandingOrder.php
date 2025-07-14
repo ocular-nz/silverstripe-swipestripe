@@ -5,6 +5,7 @@ namespace SwipeStripe\Order;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use SilverStripe\Core\Validation\ValidationResult;
+use SilverStripe\Control\Email\Email;
 use SwipeStripe\Order\Order;
 
 class StandingOrder extends Order
@@ -61,6 +62,91 @@ class StandingOrder extends Order
             return $card;
         }
         return null;
+    }
+
+    /**
+     * Get detailed status of payment method for this standing order
+     * 
+     * @return array ['valid' => bool, 'reason' => string, 'card' => SavedCard|null]
+     */
+    public function getPaymentMethodStatus(): array
+    {
+        $card = $this->SavedCard();
+        
+        if (!$card || !$card->exists()) {
+            return ['valid' => false, 'reason' => 'no_card', 'card' => null];
+        }
+        
+        if ($card->MemberID !== $this->MemberID) {
+            return ['valid' => false, 'reason' => 'wrong_member', 'card' => $card];
+        }
+        
+        if (!$card->IsActive) {
+            return ['valid' => false, 'reason' => 'card_inactive', 'card' => $card];
+        }
+        
+        if ($card->isExpired()) {
+            return ['valid' => false, 'reason' => 'card_expired', 'card' => $card];
+        }
+        
+        return ['valid' => true, 'reason' => 'valid', 'card' => $card];
+    }
+
+    /**
+     * Check if payment method is valid (backwards compatible)
+     */
+    public function hasValidPaymentMethod(): bool
+    {
+        return $this->getPaymentMethodStatus()['valid'];
+    }
+
+    /**
+     * Check if standing order should run based on schedule (excluding payment method)
+     */
+    public function shouldRunBasedOnSchedule(): bool
+    {
+        $latestOrderDate = Carbon::parse($this->Orders()->max('Created') ?: '1980-01-01');
+
+        $period = $this->Period();
+
+        if (empty($period)) {
+            $this->logger->error('Standing order has no valid period', [$this->ID]);
+            return false;
+        }
+
+        if (!$period->isInProgress()) {
+            $this->logger->info('Standing order not in active period', [$this->ID]);
+            return false;
+        }
+
+        if (!$this->Enabled) {
+            $this->logger->info('Standing order is disabled', [$this->ID]);
+            return false;
+        }
+
+        // the most recent recurrence date
+        $periodDate = $period->untilNow()->last();
+
+        // don't place an order if the last order placed was on or after this date, for idempotency
+        if ($periodDate < $latestOrderDate || $periodDate->isSameDay($latestOrderDate)) {
+            $this->logger->info('Standing order not yet due or already placed', [$this->ID, $periodDate->toString()]);
+            return false;
+        }
+
+        // if the day of order placement was missed, do not place, else the customer may get an unexpected order placement after unpausing the standing order
+        // $periodDate can be assumed not to be in the future, since we used the untilNow() modifier
+        if (!$periodDate->isToday()) {
+            $this->logger->info('Standing order placement was missed and the window has expired', [$this->ID, $periodDate->toString()]);
+            return false;
+        }
+
+        // don't place an order if there are no items in the order
+        if ($this->ItemCount() <= 0) {
+            $this->logger->info('Standing order skipped because it has no items', [$this->ID, $periodDate->toString()]);
+            return false;
+        }
+
+        return true;
     }
 
     public function Items()
@@ -133,56 +219,93 @@ class StandingOrder extends Order
         }
     }
 
+    /**
+     * Check if standing order should run (backwards compatible method)
+     * Combines schedule and payment method validation
+     */
     public function shouldRun(): bool
     {
-        $latestOrderDate = Carbon::parse($this->Orders()->max('Created') ?: '1980-01-01');
-
-        $period = $this->Period();
-
-        if (empty($period)) {
-            $this->logger->error('Standing order has no valid period', [$this->ID]);
+        // Check schedule first
+        if (!$this->shouldRunBasedOnSchedule()) {
             return false;
         }
 
-        if (!$period->isInProgress()) {
-            $this->logger->info('Standing order not in active period', [$this->ID]);
-            return false;
-        }
-
-        $validSavedCard = $this->getValidSavedCard();
-        if (!$validSavedCard) {
-            $this->logger->info('No valid saved card for standing order', [$this->ID]);
-            return false;
-        }
-
-        if (!$this->Enabled) {
-            $this->logger->info('Standing order is disabled', [$this->ID]);
-            return false;
-        }
-
-        // the most recent recurrence date
-        $periodDate = $period->untilNow()->last();
-
-        // don't place an order if the last order placed was on or after this date, for idempotency
-        if ($periodDate < $latestOrderDate || $periodDate->isSameDay($latestOrderDate)) {
-            $this->logger->info('Standing order not yet due or already placed', [$this->ID, $periodDate->toString()]);
-            return false;
-        }
-
-        // if the day of order placement was missed, do not place, else the customer may get an unexpected order placement after unpausing the standing order
-        // $periodDate can be assumed not to be in the future, since we used the untilNow() modifier
-        if (!$periodDate->isToday()) {
-            $this->logger->info('Standing order placement was missed and the window has expired', [$this->ID, $periodDate->toString()]);
-            return false;
-        }
-
-        // don't place an order if there are no items in the order
-        if ($this->ItemCount() <= 0) {
-            $this->logger->info('Standing order skipped because it has no items', [$this->ID, $periodDate->toString()]);
+        // Then check payment method
+        if (!$this->hasValidPaymentMethod()) {
+            $status = $this->getPaymentMethodStatus();
+            $this->logger->info('Standing order payment method invalid', [
+                'StandingOrderID' => $this->ID,
+                'Reason' => $status['reason']
+            ]);
             return false;
         }
 
         return true;
+    }
+
+    /**
+     * Send email notification to customer about standing order issues
+     */
+    public function notifyCustomer(string $type, array $context = []): void
+    {
+        $member = $this->Member();
+        if (!$member || !$member->Email) {
+            $this->logger->warning('Cannot notify customer - no email address', [
+                'StandingOrderID' => $this->ID,
+                'Type' => $type
+            ]);
+            return;
+        }
+
+        $subject = match($type) {
+            'card_expired' => 'Your standing order has been paused - Card Expired',
+            'card_declined' => 'Standing order payment failed - Card Declined', 
+            'card_error' => 'Standing order payment failed - Payment Issue',
+            'payment_failed' => 'Standing order payment failed',
+            default => 'Standing Order Notification'
+        };
+
+        $templateData = [
+            'Member' => $member,
+            'StandingOrder' => $this,
+            'Type' => $type,
+            'Context' => $context
+        ];
+
+        $email = Email::create()
+            ->setTo($member->Email)
+            ->setSubject($subject)
+            ->setHTMLTemplate('StandingOrderNotification')
+            ->setData($templateData);
+
+        try {
+            $email->send();
+            $this->logger->info('Standing order notification sent', [
+                'StandingOrderID' => $this->ID,
+                'Type' => $type,
+                'Email' => $member->Email
+            ]);
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to send standing order notification', [
+                'StandingOrderID' => $this->ID,
+                'Type' => $type,
+                'Error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Disable this standing order and log the reason
+     */
+    public function disable(string $reason = ''): void
+    {
+        $this->Enabled = false;
+        $this->write();
+        
+        $this->logger->info('Standing order disabled', [
+            'StandingOrderID' => $this->ID,
+            'Reason' => $reason
+        ]);
     }
 
     public function CartName()
