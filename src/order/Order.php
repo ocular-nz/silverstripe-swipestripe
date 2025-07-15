@@ -498,7 +498,9 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
      */
     public function onAfterPayment()
     {
-        Injector::inst()->get(HTTPRequest::class)->getSession()->clear('Cart.OrderID');
+        if (!Director::is_cli()) {
+            Injector::inst()->get(HTTPRequest::class)->getSession()->clear('Cart.OrderID');
+        }
 
         // get this flag from the DB in case the value has changed since we instantiated
         $hit = SQLSelect::create('RedirectUrlHit', '`Order`', ['ID' => $this->ID])->execute()->value();

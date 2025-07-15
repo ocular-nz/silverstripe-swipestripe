@@ -224,7 +224,7 @@ class OrderForm extends Form implements LoggerAwareInterface
     {
         $buttonText = 'Proceed to pay';
         if ($this->order->IsConfirmedStandingOrder()) {
-            $buttonText = 'Finished editing';
+            $buttonText = 'Confirm and Exit';
         }
 
         $actions = FieldList::create(
@@ -318,13 +318,17 @@ class OrderForm extends Form implements LoggerAwareInterface
     {
         $this->extend('onBeforeProcess', $data);
 
-        //Check payment type
-        try {
-            $paymentMethod = Convert::raw2sql($data['PaymentMethod']);
-            $paymentProcessor = PaymentFactory::factory($paymentMethod);
-        } catch (Exception $e) {
-            $this->getRequestHandler()->httpError(403, "Sorry, that is not a valid payment method. Please go back and try again");
-            return;
+        // Skip payment method validation for confirmed standing orders
+        $paymentProcessor = null;
+        if (!$this->order->IsConfirmedStandingOrder()) {
+            //Check payment type
+            try {
+                $paymentMethod = Convert::raw2sql($data['PaymentMethod']);
+                $paymentProcessor = PaymentFactory::factory($paymentMethod);
+            } catch (Exception $e) {
+                $this->getRequestHandler()->httpError(403, "Sorry, that is not a valid payment method. Please go back and try again");
+                return;
+            }
         }
 
         //Save or create a new customer/member

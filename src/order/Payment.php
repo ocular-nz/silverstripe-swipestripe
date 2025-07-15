@@ -18,96 +18,102 @@ use SilverStripe\Forms\TextField;
 class Payment_Extension extends Extension
 {
 
-	private static $has_one = array(
-		'Order' => Order::class // Need to add Order here for ModelAdmin
-	);
+    private static $has_one = array(
+        'Order' => Order::class // Need to add Order here for ModelAdmin
+    );
 
-	private static $summary_fields = array(
-		'Status' => 'Status',
-		'SummaryOfAmount' => 'Amount',
-		'Method' => 'Method',
-		'PaidBy.Name' => 'Customer'
-	);
+    private static $summary_fields = array(
+        'Status' => 'Status',
+        'SummaryOfAmount' => 'Amount',
+        'Method' => 'Method',
+        'PaidBy.Name' => 'Customer'
+    );
 
-	/**
-	 * Cannot create {@link Payment}s in the CMS.
-	 * 
-	 * @see DataObjectDecorator::canCreate()
-	 * @return Boolean False always
-	 */
-	function canCreate($member = null)
-	{
-		return false;
-	}
+    /**
+     * Cannot create {@link Payment}s in the CMS.
+     * 
+     * @see DataObjectDecorator::canCreate()
+     * @return Boolean False always
+     */
+    function canCreate($member = null)
+    {
+        return false;
+    }
 
-	/**
-	 * Cannot delete {@link Payment}s in the CMS.
-	 * 
-	 * @see DataObjectDecorator::canDelete()
-	 * @return Boolean False always
-	 */
-	function canDelete($member = null)
-	{
-		return false;
-	}
+    /**
+     * Cannot delete {@link Payment}s in the CMS.
+     * 
+     * @see DataObjectDecorator::canDelete()
+     * @return Boolean False always
+     */
+    function canDelete($member = null)
+    {
+        return false;
+    }
 
-	/**
-	 * Helper to get a nicely formatted amount for this {@link Payment}
-	 * 
-	 * @return String Payment amount formatted with Nice()
-	 */
-	function SummaryOfAmount()
-	{
-		return $this->owner->dbObject('Amount')->Nice();
-	}
+    /**
+     * Helper to get a nicely formatted amount for this {@link Payment}
+     * 
+     * @return String Payment amount formatted with Nice()
+     */
+    function SummaryOfAmount()
+    {
+        return $this->owner->dbObject('Amount')->Nice();
+    }
 
-	/**
-	 * Fields to display this {@link Payment} in the CMS, removed some of the 
-	 * unnecessary fields.
-	 * 
-	 * @see DataObjectDecorator::updateCMSFields()
-	 * @return FieldList
-	 */
-	function updateCMSFields(FieldList $fields)
-	{
+    /**
+     * Fields to display this {@link Payment} in the CMS, removed some of the 
+     * unnecessary fields.
+     * 
+     * @see DataObjectDecorator::updateCMSFields()
+     * @return FieldList
+     */
+    function updateCMSFields(FieldList $fields)
+    {
 
-		$fields->removeByName('OrderID');
-		$fields->removeByName('HTTPStatus');
-		$fields->removeByName('Amount');
+        $fields->removeByName('OrderID');
+        $fields->removeByName('HTTPStatus');
+        $fields->removeByName('Amount');
 
-		$str = $this->owner->dbObject('Amount')->Nice();
-		$fields->insertBefore(TextField::create('Amount_', 'Amount', $str), 'Method');
+        $str = $this->owner->dbObject('Amount')->Nice();
+        $fields->insertBefore(TextField::create('Amount_', 'Amount', $str), 'Method');
 
-		return $fields;
-	}
+        return $fields;
+    }
 
-	/**
-	 * After payment success process onAfterPayment() in {@link Order}.
-	 * 
-	 * @see Order::onAfterPayment()
-	 * @see DataObjectDecorator::onAfterWrite()
-	 */
-	function onAfterWrite()
-	{
+    /**
+     * After payment success process onAfterPayment() in {@link Order}.
+     * 
+     * @see Order::onAfterPayment()
+     * @see DataObjectDecorator::onAfterWrite()
+     */
+    function onAfterWrite()
+    {
 
-		$order = $this->owner->Order();
+        $order = $this->owner->Order();
 
-		if ($order && $order->exists()) {
-			$order->PaymentStatus = ($order->getPaid()) ? 'Paid' : 'Unpaid';
-			$order->write();
-		}
-	}
+        if ($order && $order->exists()) {
+            $order->PaymentStatus = ($order->getPaid()) ? 'Paid' : 'Unpaid';
+            $order->write();
+        }
+    }
 }
 
 class Payment_ProcessorExtension extends Extension
 {
 
-	public function onBeforeRedirect()
-	{
-		/** @var Order $order */
-		$order = $this->owner->payment->Order();
-		if ($order && $order->exists()) {
-			$order->onAfterPayment();
-		}
-	}
+    public function onBeforeRedirect()
+    {
+        /** @var Order $order */
+        $order = $this->owner->payment->Order();
+        if ($order && $order->exists()) {
+            $order->onAfterPayment();
+
+            // Dispatch PushOrderToPosJob for regular orders after successful payment
+            if (!$order->IsStandingOrder()) {
+                $job = new \App\Web\PushOrderToPosJob($order->ID);
+                \Symbiote\QueuedJobs\Services\QueuedJobService::singleton()->queueJob($job);
+            }
+        }
+    }
 }
