@@ -2,6 +2,7 @@
 
 namespace SwipeStripe\Order;
 
+use App\Web\StandingOrderNotificationEmail;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use SilverStripe\Core\Validation\ValidationResult;
@@ -72,23 +73,23 @@ class StandingOrder extends Order
     public function getPaymentMethodStatus(): array
     {
         $card = $this->SavedCard();
-        
+
         if (!$card || !$card->exists()) {
             return ['valid' => false, 'reason' => 'no_card', 'card' => null];
         }
-        
+
         if ($card->MemberID !== $this->MemberID) {
             return ['valid' => false, 'reason' => 'wrong_member', 'card' => $card];
         }
-        
+
         if (!$card->IsActive) {
             return ['valid' => false, 'reason' => 'card_inactive', 'card' => $card];
         }
-        
+
         if ($card->isExpired()) {
             return ['valid' => false, 'reason' => 'card_expired', 'card' => $card];
         }
-        
+
         return ['valid' => true, 'reason' => 'valid', 'card' => $card];
     }
 
@@ -257,28 +258,8 @@ class StandingOrder extends Order
             return;
         }
 
-        $subject = match($type) {
-            'card_expired' => 'Your standing order has been paused - Card Expired',
-            'card_declined' => 'Standing order payment failed - Card Declined', 
-            'card_error' => 'Standing order payment failed - Payment Issue',
-            'payment_failed' => 'Standing order payment failed',
-            default => 'Standing Order Notification'
-        };
-
-        $templateData = [
-            'Member' => $member,
-            'StandingOrder' => $this,
-            'Type' => $type,
-            'Context' => $context
-        ];
-
-        $email = Email::create()
-            ->setTo($member->Email)
-            ->setSubject($subject)
-            ->setHTMLTemplate('StandingOrderNotification')
-            ->setData($templateData);
-
         try {
+            $email = new StandingOrderNotificationEmail($member, $this, $type, $context);
             $email->send();
             $this->logger->info('Standing order notification sent', [
                 'StandingOrderID' => $this->ID,
@@ -301,7 +282,7 @@ class StandingOrder extends Order
     {
         $this->Enabled = false;
         $this->write();
-        
+
         $this->logger->info('Standing order disabled', [
             'StandingOrderID' => $this->ID,
             'Reason' => $reason
@@ -313,4 +294,3 @@ class StandingOrder extends Order
         return $this->Name ?: 'Standing Order #' . $this->ID;
     }
 }
-
