@@ -24,151 +24,181 @@ use SwipeStripe\Order\Order;
 class Cart extends Extension
 {
 
-	/**
-	 * Retrieve the current cart for display in the template.
-	 * 
-	 * @return Order The current order (cart)
-	 */
-	public function getCart()
-	{
-		$order = self::get_current_order();
-		$order->Items();
-		$order->Total;
+    /**
+     * Retrieve the current cart for display in the template.
+     * 
+     * @return Order The current order (cart)
+     */
+    public function getCart()
+    {
+        $order = self::get_current_order();
+        $order->Items();
+        $order->Total;
 
-		//HTTP::set_cache_age(0);
-		return $order;
-	}
+        //HTTP::set_cache_age(0);
+        return $order;
+    }
 
-	/**
-	 * Convenience method to return links to cart related page.
-	 * 
-	 * @param String $type The type of cart page a link is needed for
-	 * @return String The URL to the particular page
-	 */
-	function CartLink($type = 'Cart')
-	{
-		switch ($type) {
-			case 'Account':
-				if ($page = DataObject::get_one(AccountPage::class)) return $page->Link();
-				else break;
-			case 'Checkout':
-				if ($page = DataObject::get_one(CheckoutPage::class)) return $page->Link();
-				else break;
-			case 'Login':
-				return Director::absoluteBaseURL() . 'Security/login';
-				break;
-			case 'Logout':
-				return Director::absoluteBaseURL() . 'Security/logout?BackURL=%2F';
-				break;
-			case 'Cart':
-			default:
-				if ($page = DataObject::get_one(CartPage::class)) return $page->Link();
-				else break;
-		}
-	}
+    /**
+     * Convenience method to return links to cart related page.
+     * 
+     * @param String $type The type of cart page a link is needed for
+     * @return String The URL to the particular page
+     */
+    function CartLink($type = 'Cart')
+    {
+        switch ($type) {
+            case 'Account':
+                if ($page = DataObject::get_one(AccountPage::class)) return $page->Link();
+                else break;
+            case 'Checkout':
+                if ($page = DataObject::get_one(CheckoutPage::class)) return $page->Link();
+                else break;
+            case 'Login':
+                return Director::absoluteBaseURL() . 'Security/login';
+                break;
+            case 'Logout':
+                return Director::absoluteBaseURL() . 'Security/logout?BackURL=%2F';
+                break;
+            case 'Cart':
+            default:
+                if ($page = DataObject::get_one(CartPage::class)) return $page->Link();
+                else break;
+        }
+    }
 
-	/**
-	 * Get the current order from the session, if order does not exist create a new one.
-	 * 
-	 * @return Order The current order (cart)
-	 */
-	public static function get_current_order($persist = false)
-	{
-		$logger = Injector::inst()->get(LoggerInterface::class);
+    /**
+     * Get the current order from the session, if order does not exist create a new one.
+     * 
+     * @return Order The current order (cart)
+     */
+    public static function get_current_order($persist = false)
+    {
+        $logger = Injector::inst()->get(LoggerInterface::class);
 
-		$customer = Customer::currentUser();
+        $customer = Customer::currentUser();
 
-		if (!empty($customer)) {
-			// if logged in, get current order from customer
-			// this may be a cart or a standing order currently selected for editing
-			$order = $customer->getCurrentOrder();
+        if (!empty($customer)) {
+            // if logged in, check for session cart first (preserves items added while logged out)
+            $sessionOrder = self::getOrderFromSession();
+            $memberOrder = $customer->getCurrentOrder();
 
-			if (empty($order)) {
-				// if there's no order, attempt to migrate one from the session
-				$order = self::getOrderFromSession();
-				if (!empty($order)) {
-					$order->MemberID = $customer->ID;
-					$order->write();
-					$customer->setCurrentOrder($order);
-					$customer->write();
-					$logger->info('Moved order from session to customer', ['Order' => $order->ID, 'Customer' => $customer->ID]);
-				}
-			}
-		} else {
-			$order = self::getOrderFromSession();
-		}
+            // Prefer session cart if it has items, otherwise use member's stored cart
+            if (!empty($sessionOrder) && $sessionOrder->Items()->exists()) {
+                // Session cart has items - use it as current cart
+                $order = $sessionOrder;
 
-		// otherwise create a new one and return that
-		if (empty($order) || !$order->exists()) {
-			$order = Order::create();
+                // Only update if MemberID or CurrentOrderID need changing
+                $needsOrderUpdate = ($order->MemberID != $customer->ID);
+                $needsCustomerUpdate = ($customer->CurrentOrderID != $order->ID);
 
-			if ($persist) {
-				$order->write();
-				$logger->info('Created order', [$order->ID]);
+                if ($needsOrderUpdate) {
+                    $order->MemberID = $customer->ID;
+                    $order->write();
+                }
+                if ($needsCustomerUpdate) {
+                    $customer->setCurrentOrder($order);
+                    $customer->write();
+                }
 
-				if (empty($customer)) {
-					self::saveOrderIntoSession($order);
-					$logger->info('Saved order to session', [$order->ID]);
-				} else {
-					$order->MemberID = $customer->ID;
-					$order->write();
-					$customer->setCurrentOrder($order);
-					$customer->write();
-					$logger->info('Saved new order to customer', ['Order' => $order->ID, 'Customer' => $customer->ID]);
-				}
-			}
-		}
+                if ($needsOrderUpdate || $needsCustomerUpdate) {
+                    $logger->info('Migrated session cart with items to customer', [
+                        'SessionOrder' => $order->ID,
+                        'Customer' => $customer->ID,
+                        'Items' => $order->Items()->count()
+                    ]);
+                }
 
-		$order->updateTotal();
+                self::clearSessionCart();
+            } else if (!empty($memberOrder)) {
+                // Use existing member cart
+                $order = $memberOrder;
+            }
+        } else {
+            $order = self::getOrderFromSession();
+        }
 
-		return $order;
-	}
+        // otherwise create a new one and return that
+        if (empty($order) || !$order->exists()) {
+            $order = Order::create();
 
-	/**
-	 * We only use the session when a logged in user is not present
-	 * When logged in we use the customer's CurrentOrderID field instead
-	 */
-	protected static function saveOrderIntoSession(Order $order)
-	{
-		/** @var HTTPRequest $request */
-		$request = Injector::inst()->get(HTTPRequest::class);
-		$session = $request->getSession();
-		$session->set('Cart', [
-			'OrderID' => $order->ID
-		]);
-		$session->save($request);
-	}
+            if ($persist) {
+                $order->write();
+                $logger->info('Created order', [$order->ID]);
 
-	/**
-	 * We only use the session when a logged in user is not present
-	 * When logged in we use the customer's CurrentOrderID field instead
-	 */
-	protected static function getOrderFromSession(): ?Order
-	{
-		/** @var HTTPRequest $request */
-		$request = Injector::inst()->get(HTTPRequest::class);
-		$session = $request->getSession();
+                if (empty($customer)) {
+                    self::saveOrderIntoSession($order);
+                    $logger->info('Saved order to session', [$order->ID]);
+                } else {
+                    $order->MemberID = $customer->ID;
+                    $order->write();
+                    $customer->setCurrentOrder($order);
+                    $customer->write();
+                    $logger->info('Saved new order to customer', ['Order' => $order->ID, 'Customer' => $customer->ID]);
+                }
+            }
+        }
 
-		$orderID = $session->get('Cart.OrderID');
-		$order = null;
+        $order->updateTotal();
 
-		if ($orderID) {
-			$order = Order::get()->byID($orderID);
-		}
+        return $order;
+    }
 
-		return $order;
-	}
+    /**
+     * We only use the session when a logged in user is not present
+     * When logged in we use the customer's CurrentOrderID field instead
+     */
+    protected static function saveOrderIntoSession(Order $order)
+    {
+        /** @var HTTPRequest $request */
+        $request = Injector::inst()->get(HTTPRequest::class);
+        $session = $request->getSession();
+        $session->set('Cart', [
+            'OrderID' => $order->ID
+        ]);
+        $session->save($request);
+    }
 
-	/**
-	 * Updates timestamp LastActive on the order, called on every page request. 
-	 */
-	function onBeforeInit()
-	{
-		$request = Injector::inst()->get(HTTPRequest::class);
-		$orderID = $request->getSession()->get('Cart.OrderID');
-		if ($orderID && $order = DataObject::get_by_id(Order::class, $orderID)) {
-			$order->LastActive = DBDatetime::now()->getValue();
-			$order->write();
-		}
-	}
+    /**
+     * We only use the session when a logged in user is not present
+     * When logged in we use the customer's CurrentOrderID field instead
+     */
+    protected static function getOrderFromSession(): ?Order
+    {
+        /** @var HTTPRequest $request */
+        $request = Injector::inst()->get(HTTPRequest::class);
+        $session = $request->getSession();
+
+        $orderID = $session->get('Cart.OrderID');
+        $order = null;
+
+        if ($orderID) {
+            $order = Order::get()->byID($orderID);
+        }
+
+        return $order;
+    }
+
+    /**
+     * Updates timestamp LastActive on the order, called on every page request. 
+     */
+    function onBeforeInit()
+    {
+        $request = Injector::inst()->get(HTTPRequest::class);
+        $orderID = $request->getSession()->get('Cart.OrderID');
+        if ($orderID && $order = DataObject::get_by_id(Order::class, $orderID)) {
+            $order->LastActive = DBDatetime::now()->getValue();
+            $order->write();
+        }
+    }
+
+    /**
+     * Clear session cart after migration to prevent repeated operations
+     */
+    protected static function clearSessionCart()
+    {
+        $request = Injector::inst()->get(HTTPRequest::class);
+        $session = $request->getSession();
+        $session->clear('Cart.OrderID');
+    }
 }
