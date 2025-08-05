@@ -55,8 +55,8 @@ en:
     TOTAL: Total
     YOUR_ORDER: 'Your Order'
   CheckoutPage:
-    ACCOUNT: Account
-    ALREADY_MEMBER: 'If you are already a member please %s log in. %s'
+    ACCOUNT: Create Account
+    ALREADY_MEMBER: 'If you are already a member please %s log in %s instead.'
     DESCRIPTION: 'Generic content page'
     EMAIL: Email
     PHONE: Phone

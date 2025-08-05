@@ -9,7 +9,7 @@ use SilverStripe\Forms\TextField;
 /**
  * Mixin to augment the {@link Payment} class.
  * Payment statuses: Incomplete,Success,Failure,Pending
- * 
+ *
  * @author Frank Mullenger <frankmullenger@gmail.com>
  * @copyright Copyright (c) 2011, Frank Mullenger
  * @package swipestripe
@@ -17,7 +17,6 @@ use SilverStripe\Forms\TextField;
  */
 class Payment_Extension extends Extension
 {
-
     private static $has_one = array(
         'Order' => Order::class // Need to add Order here for ModelAdmin
     );
@@ -31,44 +30,44 @@ class Payment_Extension extends Extension
 
     /**
      * Cannot create {@link Payment}s in the CMS.
-     * 
+     *
      * @see DataObjectDecorator::canCreate()
      * @return Boolean False always
      */
-    function canCreate($member = null)
+    public function canCreate($member = null)
     {
         return false;
     }
 
     /**
      * Cannot delete {@link Payment}s in the CMS.
-     * 
+     *
      * @see DataObjectDecorator::canDelete()
      * @return Boolean False always
      */
-    function canDelete($member = null)
+    public function canDelete($member = null)
     {
         return false;
     }
 
     /**
      * Helper to get a nicely formatted amount for this {@link Payment}
-     * 
+     *
      * @return String Payment amount formatted with Nice()
      */
-    function SummaryOfAmount()
+    public function SummaryOfAmount()
     {
         return $this->owner->dbObject('Amount')->Nice();
     }
 
     /**
-     * Fields to display this {@link Payment} in the CMS, removed some of the 
+     * Fields to display this {@link Payment} in the CMS, removed some of the
      * unnecessary fields.
-     * 
+     *
      * @see DataObjectDecorator::updateCMSFields()
      * @return FieldList
      */
-    function updateCMSFields(FieldList $fields)
+    public function updateCMSFields(FieldList $fields)
     {
 
         $fields->removeByName('OrderID');
@@ -83,11 +82,11 @@ class Payment_Extension extends Extension
 
     /**
      * After payment success process onAfterPayment() in {@link Order}.
-     * 
+     *
      * @see Order::onAfterPayment()
      * @see DataObjectDecorator::onAfterWrite()
      */
-    function onAfterWrite()
+    public function onAfterWrite()
     {
 
         $order = $this->owner->Order();
@@ -101,7 +100,6 @@ class Payment_Extension extends Extension
 
 class Payment_ProcessorExtension extends Extension
 {
-
     public function onBeforeRedirect()
     {
         /** @var Order $order */
