@@ -31,301 +31,306 @@ use SwipeStripe\Form\ProductForm;
  */
 class Product extends Page
 {
+    private static $table_name = 'Product';
 
-	private static $table_name = 'Product';
+    /**
+     * Flag for denoting if this is the first time this Product is being written.
+     *
+     * @var Boolean
+     */
+    protected $firstWrite = false;
 
-	/**
-	 * Flag for denoting if this is the first time this Product is being written.
-	 * 
-	 * @var Boolean
-	 */
-	protected $firstWrite = false;
+    /**
+     * DB fields for Product.
+     *
+     * @var Array
+     */
+    private static $db = array(
+        'Price' => 'Decimal(19,8)',
+        'Currency' => 'Varchar(3)'
+    );
 
-	/**
-	 * DB fields for Product.
-	 * 
-	 * @var Array
-	 */
-	private static $db = array(
-		'Price' => 'Decimal(19,8)',
-		'Currency' => 'Varchar(3)'
-	);
+    /**
+     * Actual price in base currency, can decorate to apply discounts etc.
+     *
+     * @return Price
+     */
+    public function Amount()
+    {
 
-	/**
-	 * Actual price in base currency, can decorate to apply discounts etc.
-	 * 
-	 * @return Price
-	 */
-	public function Amount()
-	{
+        // TODO: Multi currency
+        $shopConfig = ShopConfig::current_shop_config();
 
-		// TODO: Multi currency
-		$shopConfig = ShopConfig::current_shop_config();
+        $amount = Price::create();
+        $amount->setAmount($this->Price);
+        $amount->setCurrency($shopConfig->BaseCurrency);
+        $amount->setSymbol($shopConfig->BaseCurrencySymbol);
 
-		$amount = Price::create();
-		$amount->setAmount($this->Price);
-		$amount->setCurrency($shopConfig->BaseCurrency);
-		$amount->setSymbol($shopConfig->BaseCurrencySymbol);
+        //Transform amount for applying discounts etc.
+        $this->extend('updateAmount', $amount);
 
-		//Transform amount for applying discounts etc.
-		$this->extend('updateAmount', $amount);
+        return $amount;
+    }
 
-		return $amount;
-	}
+    /**
+     * Display price, can decorate for multiple currency etc.
+     *
+     * @return Price
+     */
+    public function Price()
+    {
 
-	/**
-	 * Display price, can decorate for multiple currency etc.
-	 * 
-	 * @return Price
-	 */
-	public function Price()
-	{
+        $amount = $this->Amount();
 
-		$amount = $this->Amount();
+        //Transform price here for display in different currencies etc.
+        $this->extend('updatePrice', $amount);
 
-		//Transform price here for display in different currencies etc.
-		$this->extend('updatePrice', $amount);
+        return $amount;
+    }
 
-		return $amount;
-	}
+    /**
+     * Has many relations for Product.
+     *
+     * @var Array
+     */
+    private static $has_many = array(
+        'Attributes' => Attribute::class,
+        'Options' => Option::class,
+        'Variations' => Variation::class
+    );
 
-	/**
-	 * Has many relations for Product.
-	 * 
-	 * @var Array
-	 */
-	private static $has_many = array(
-		'Attributes' => Attribute::class,
-		'Options' => Option::class,
-		'Variations' => Variation::class
-	);
+    /**
+     * Defaults for Product
+     *
+     * @var Array
+     */
+    private static $defaults = array(
+        'ParentID' => -1
+    );
 
-	/**
-	 * Defaults for Product
-	 * 
-	 * @var Array
-	 */
-	private static $defaults = array(
-		'ParentID' => -1
-	);
+    /**
+     * Summary fields for displaying Products in the CMS
+     *
+     * @var Array
+     */
+    private static $summary_fields = array(
+        'Amount.Nice' => 'Price',
+        'Title' => 'Title'
+    );
 
-	/**
-	 * Summary fields for displaying Products in the CMS
-	 * 
-	 * @var Array
-	 */
-	private static $summary_fields = array(
-		'Amount.Nice' => 'Price',
-		'Title' => 'Title'
-	);
+    private static $searchable_fields = array(
+        'Title' => array(
+            'field' => TextField::class,
+            'filter' => PartialMatchFilter::class,
+            'title' => 'Name'
+        )
+    );
 
-	private static $searchable_fields = array(
-		'Title' => array(
-			'field' => TextField::class,
-			'filter' => PartialMatchFilter::class,
-			'title' => 'Name'
-		)
-	);
+    /**
+     * Set firstWrite flag if this is the first time this Product is written.
+     *
+     * @see SiteTree::onBeforeWrite()
+     * @see Product::onAfterWrite()
+     */
+    public function onBeforeWrite()
+    {
+        parent::onBeforeWrite();
+        if (!$this->ID) {
+            $this->firstWrite = true;
+        }
 
-	/**
-	 * Set firstWrite flag if this is the first time this Product is written.
-	 * 
-	 * @see SiteTree::onBeforeWrite()
-	 * @see Product::onAfterWrite()
-	 */
-	public function onBeforeWrite()
-	{
-		parent::onBeforeWrite();
-		if (!$this->ID) $this->firstWrite = true;
+        //Save in base currency
+        $shopConfig = ShopConfig::current_shop_config();
+        $this->Currency = $shopConfig->BaseCurrency;
+    }
 
-		//Save in base currency
-		$shopConfig = ShopConfig::current_shop_config();
-		$this->Currency = $shopConfig->BaseCurrency;
-	}
+    /**
+     * Unpublish products if they get deleted, such as in product admin area
+     *
+     * @see SiteTree::onAfterDelete()
+     */
+    public function onAfterDelete()
+    {
+        parent::onAfterDelete();
 
-	/**
-	 * Unpublish products if they get deleted, such as in product admin area
-	 * 
-	 * @see SiteTree::onAfterDelete()
-	 */
-	public function onAfterDelete()
-	{
-		parent::onAfterDelete();
+        if ($this->isPublished()) {
+            $this->doUnpublish();
+        }
+    }
 
-		if ($this->isPublished()) {
-			$this->doUnpublish();
-		}
-	}
+    /**
+     * Set some CMS fields for managing Products
+     *
+     * @see Page::getCMSFields()
+     * @return FieldList
+     */
+    public function getCMSFields()
+    {
 
-	/**
-	 * Set some CMS fields for managing Products
-	 * 
-	 * @see Page::getCMSFields()
-	 * @return FieldList
-	 */
-	public function getCMSFields()
-	{
+        $shopConfig = ShopConfig::current_shop_config();
+        $fields = parent::getCMSFields();
 
-		$shopConfig = ShopConfig::current_shop_config();
-		$fields = parent::getCMSFields();
+        //Product fields
+        $fields->addFieldToTab('Root.Main', new PriceField('Price'), 'Content');
 
-		//Product fields
-		$fields->addFieldToTab('Root.Main', new PriceField('Price'), 'Content');
+        //Replace URL Segment field
+        if ($this->ParentID == -1) {
+            $urlsegment = new SiteTreeURLSegmentField("URLSegment", 'URLSegment');
+            $baseLink = Controller::join_links(Director::absoluteBaseURL(), 'product/');
+            $url = (strlen($baseLink) > 36) ? "..." . substr($baseLink, -32) : $baseLink;
+            $urlsegment->setURLPrefix($url);
+            $fields->replaceField('URLSegment', $urlsegment);
+        }
 
-		//Replace URL Segment field
-		if ($this->ParentID == -1) {
-			$urlsegment = new SiteTreeURLSegmentField("URLSegment", 'URLSegment');
-			$baseLink = Controller::join_links(Director::absoluteBaseURL(), 'product/');
-			$url = (strlen($baseLink) > 36) ? "..." . substr($baseLink, -32) : $baseLink;
-			$urlsegment->setURLPrefix($url);
-			$fields->replaceField('URLSegment', $urlsegment);
-		}
+        if ($this->isInDB()) {
 
-		if ($this->isInDB()) {
+            //Product attributes
+            $listField = new GridField(
+                'Attributes',
+                'Attributes',
+                $this->Attributes(),
+                GridFieldConfig_BasicSortable::create()
+            );
+            $fields->addFieldToTab('Root.Attributes', $listField);
 
-			//Product attributes
-			$listField = new GridField(
-				'Attributes',
-				'Attributes',
-				$this->Attributes(),
-				GridFieldConfig_BasicSortable::create()
-			);
-			$fields->addFieldToTab('Root.Attributes', $listField);
+            //Product variations
+            $attributes = $this->Attributes();
+            if ($attributes && $attributes->exists()) {
 
-			//Product variations
-			$attributes = $this->Attributes();
-			if ($attributes && $attributes->exists()) {
+                //Remove the stock level field if there are variations, each variation has a stock field
+                $fields->removeByName('Stock');
 
-				//Remove the stock level field if there are variations, each variation has a stock field
-				$fields->removeByName('Stock');
+                $variationFieldList = array();
+                foreach ($attributes as $attribute) {
+                    $variationFieldList['AttributeValue_' . $attribute->ID] = $attribute->Title;
+                }
+                $variationFieldList = array_merge($variationFieldList, singleton(Variation::class)->summaryFields());
 
-				$variationFieldList = array();
-				foreach ($attributes as $attribute) {
-					$variationFieldList['AttributeValue_' . $attribute->ID] = $attribute->Title;
-				}
-				$variationFieldList = array_merge($variationFieldList, singleton(Variation::class)->summaryFields());
+                $config = GridFieldConfig_HasManyRelationEditor::create();
+                $dataColumns = $config->getComponentByType(GridFieldDataColumns::class);
+                $dataColumns->setDisplayFields($variationFieldList);
 
-				$config = GridFieldConfig_HasManyRelationEditor::create();
-				$dataColumns = $config->getComponentByType(GridFieldDataColumns::class);
-				$dataColumns->setDisplayFields($variationFieldList);
+                $listField = new GridField(
+                    'Variations',
+                    'Variations',
+                    $this->Variations(),
+                    $config
+                );
+                $fields->addFieldToTab('Root.Variations', $listField);
+            }
+        }
 
-				$listField = new GridField(
-					'Variations',
-					'Variations',
-					$this->Variations(),
-					$config
-				);
-				$fields->addFieldToTab('Root.Variations', $listField);
-			}
-		}
+        //Ability to edit fields added to CMS here
+        $this->extend('updateProductCMSFields', $fields);
 
-		//Ability to edit fields added to CMS here
-		$this->extend('updateProductCMSFields', $fields);
+        if ($warning = ShopConfig::base_currency_warning()) {
+            $fields->addFieldToTab('Root.Main', new LiteralField(
+                'BaseCurrencyWarning',
+                '<p class="message warning">' . $warning . '</p>'
+            ), 'Title');
+        }
 
-		if ($warning = ShopConfig::base_currency_warning()) {
-			$fields->addFieldToTab('Root.Main', new LiteralField(
-				'BaseCurrencyWarning',
-				'<p class="message warning">' . $warning . '</p>'
-			), 'Title');
-		}
+        return $fields;
+    }
 
-		return $fields;
-	}
+    /**
+     * Get the URL for this Product, products that are not part of the SiteTree are
+     * displayed by the {@link Product_Controller}.
+     *
+     * @see SiteTree::Link()
+     * @see Product_Controller::show()
+     * @return String
+     */
+    public function Link($action = null)
+    {
+        if ($this->ParentID > -1) {
+            return parent::Link($action);
+        }
+        return Controller::join_links(Director::baseURL() . 'product/', $this->RelativeLink($action));
+    }
 
-	/**
-	 * Get the URL for this Product, products that are not part of the SiteTree are 
-	 * displayed by the {@link Product_Controller}.
-	 * 
-	 * @see SiteTree::Link()
-	 * @see Product_Controller::show()
-	 * @return String
-	 */
-	public function Link($action = null)
-	{
-		if ($this->ParentID > -1) {
-			return parent::Link($action);
-		}
-		return Controller::join_links(Director::baseURL() . 'product/', $this->RelativeLink($action));
-	}
+    public function Parent()
+    {
+        return $this->getParent();
+    }
 
-	public function Parent()
-	{
-		return $this->getParent();
-	}
+    /**
+     * A product is required to be added to a cart with a variation if it has attributes.
+     * A product with attributes needs to have some enabled {@link Variation}s
+     *
+     * @return Boolean
+     */
+    public function requiresVariation()
+    {
+        $attributes = $this->Attributes();
 
-	/**
-	 * A product is required to be added to a cart with a variation if it has attributes.
-	 * A product with attributes needs to have some enabled {@link Variation}s
-	 * 
-	 * @return Boolean
-	 */
-	public function requiresVariation()
-	{
-		$attributes = $this->Attributes();
+        $this->extend('updaterequiresVariation', $attributes);
 
-		$this->extend('updaterequiresVariation', $attributes);
+        return $attributes && $attributes->exists();
+    }
 
-		return $attributes && $attributes->exists();
-	}
+    /**
+     * Get options for an Attribute of this Product.
+     *
+     * @param Int $attributeID
+     * @return ArrayList
+     */
+    public function getOptionsForAttribute($attributeID)
+    {
 
-	/**
-	 * Get options for an Attribute of this Product.
-	 * 
-	 * @param Int $attributeID
-	 * @return ArrayList
-	 */
-	public function getOptionsForAttribute($attributeID)
-	{
+        $options = new ArrayList();
+        $variations = $this->Variations();
 
-		$options = new ArrayList();
-		$variations = $this->Variations();
+        if ($variations && $variations->exists()) {
+            foreach ($variations as $variation) {
 
-		if ($variations && $variations->exists()) foreach ($variations as $variation) {
+                if ($variation->isEnabled()) {
+                    $option = $variation->getOptionForAttribute($attributeID);
+                    if ($option) {
+                        $options->push($option);
+                    }
+                }
+            }
+        }
+        $options = $options->sort('SortOrder');
+        return $options;
+    }
 
-			if ($variation->isEnabled()) {
-				$option = $variation->getOptionForAttribute($attributeID);
-				if ($option) $options->push($option);
-			}
-		}
-		$options = $options->sort('SortOrder');
-		return $options;
-	}
+    /**
+     * Validate the Product before it is saved in {@link ShopAdmin}.
+     *
+     * @see DataObject::validate()
+     * @return ValidationResult
+     */
+    public function validate(): ValidationResult
+    {
 
-	/**
-	 * Validate the Product before it is saved in {@link ShopAdmin}.
-	 * 
-	 * @see DataObject::validate()
-	 * @return ValidationResult
-	 */
-	public function validate(): ValidationResult
-	{
+        $result = new ValidationResult();
 
-		$result = new ValidationResult();
+        //If this is being published, check that enabled variations exist if they are required
+        $controller = Controller::curr();
+        $request = $controller ? $controller->getRequest() : null;
+        $publishing = ($request && $request->getVar('action_publish')) ? true : false;
 
-		//If this is being published, check that enabled variations exist if they are required
-		$controller = Controller::curr();
-		$request = $controller ? $controller->getRequest() : null;
-		$publishing = ($request && $request->getVar('action_publish')) ? true : false;
+        if ($publishing && $this->requiresVariation()) {
 
-		if ($publishing && $this->requiresVariation()) {
+            $variations = $this->Variations();
 
-			$variations = $this->Variations();
-
-			if (!in_array('Enabled', $variations->map('ID', 'Status')->toArray())) {
-				$result->addError(
-					'Cannot publish product when no variations are enabled. Please enable some product variations and try again.',
-					'VariationsDisabledError'
-				);
-			}
-		}
-		return $result;
-	}
+            if (!in_array('Enabled', $variations->map('ID', 'Status')->toArray())) {
+                $result->addError(
+                    'Cannot publish product when no variations are enabled. Please enable some product variations and try again.',
+                    'VariationsDisabledError'
+                );
+            }
+        }
+        return $result;
+    }
 }
 
 /**
- * Displays a product, add to cart form, gets options and variation price for a {@link Product} 
+ * Displays a product, add to cart form, gets options and variation price for a {@link Product}
  * via AJAX.
- * 
+ *
  * @author Frank Mullenger <frankmullenger@gmail.com>
  * @copyright Copyright (c) 2011, Frank Mullenger
  * @package swipestripe
@@ -333,71 +338,80 @@ class Product extends Page
  */
 class ProductController extends PageController
 {
+    /**
+     * Allowed actions for this controller
+     *
+     * @var Array
+     */
+    private static $allowed_actions = array(
+        'ProductForm'
+    );
 
-	/**
-	 * Allowed actions for this controller
-	 * 
-	 * @var Array
-	 */
-	private static $allowed_actions = array(
-		'ProductForm'
-	);
+    /**
+     * Include some CSS and set the dataRecord to the current Product that is being viewed.
+     *
+     * @see PageController::init()
+     */
+    protected function init()
+    {
+        parent::init();
 
-	/**
-	 * Include some CSS and set the dataRecord to the current Product that is being viewed.
-	 * 
-	 * @see PageController::init()
-	 */
-	protected function init()
-	{
-		parent::init();
+        Requirements::css('swipestripe/css/Shop.css');
 
-		Requirements::css('swipestripe/css/Shop.css');
 
-		//Get current product page for products that are not part of the site tree
-		//and do not have a ParentID set, they are accessed via this controller using
-		//Director rules
-		if ($this->dataRecord->ID == -1) {
+        // If the parent of this product is a Product, redirect to the parent product page
+        // Unless we are logged in as an admin
+        if ($this->dataRecord->Parent->ClassName === Product::class) {
+            if (!singleton(ShopConfig::class)->canView()) {
+                $this->redirect($this->dataRecord->Parent()->Link());
+            }
+        }
 
-			$params = $this->getURLParams();
 
-			if ($urlSegment = Convert::raw2sql($params['ID'])) {
+        //Get current product page for products that are not part of the site tree
+        //and do not have a ParentID set, they are accessed via this controller using
+        //Director rules
+        if ($this->dataRecord->ID == -1) {
 
-				$product = Product::get()
-					->where("\"URLSegment\" = '$urlSegment'")
-					->limit(1)
-					->first();
+            $params = $this->getURLParams();
 
-				if ($product && $product->exists()) {
-					$this->dataRecord = $product;
-					$this->failover = $this->dataRecord;
+            if ($urlSegment = Convert::raw2sql($params['ID'])) {
 
-					$this->customise(array(
-						'Product' => $this->data()
-					));
-				}
-			}
-		}
+                $product = Product::get()
+                    ->where("\"URLSegment\" = '$urlSegment'")
+                    ->limit(1)
+                    ->first();
 
-		$this->extend('onInit');
-	}
+                if ($product && $product->exists()) {
+                    $this->dataRecord = $product;
+                    $this->failover = $this->dataRecord;
 
-	/**  
-	 * Legacy function allowing access to product data via $Product variable in templates
-	 */
-	public function Product()
-	{
-		return $this->data();
-	}
+                    $this->customise(array(
+                        'Product' => $this->data()
+                    ));
+                }
+            }
+        }
 
-	public function ProductForm($quantity = null, $redirectURL = null)
-	{
+        $this->extend('onInit');
+    }
 
-		return ProductForm::create(
-			$this,
-			'ProductForm',
-			$quantity,
-			$redirectURL
-		)->disableSecurityToken();
-	}
+    /**
+     * Legacy function allowing access to product data via $Product variable in templates
+     */
+    public function Product()
+    {
+        return $this->data();
+    }
+
+    public function ProductForm($quantity = null, $redirectURL = null)
+    {
+
+        return ProductForm::create(
+            $this,
+            'ProductForm',
+            $quantity,
+            $redirectURL
+        )->disableSecurityToken();
+    }
 }
