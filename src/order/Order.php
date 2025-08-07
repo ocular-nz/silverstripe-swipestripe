@@ -54,7 +54,6 @@ use SwipeStripe\Product\Variation;
  */
 class Order extends DataObject implements PermissionProvider, LoggerAwareInterface
 {
-
     use LoggerAwareTrait;
 
     private static $dependencies = [
@@ -68,28 +67,28 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
      *
      * @var String
      */
-    const STATUS_PENDING = 'Pending';
+    public const STATUS_PENDING = 'Pending';
 
     /**
      * Order status once payment approved, order being processed before being dispatched
      *
      * @var String
      */
-    const STATUS_PROCESSING = 'Processing';
+    public const STATUS_PROCESSING = 'Processing';
 
     /**
      * Order status once Order has been sent
      *
      * @var String
      */
-    const STATUS_DISPATCHED = 'Dispatched';
+    public const STATUS_DISPATCHED = 'Dispatched';
 
     /**
      * Order status for standing orders
      *
      * @var String
      */
-    const STATUS_STANDING = 'Standing Order';
+    public const STATUS_STANDING = 'Standing Order';
 
     /**
      * DB fields for Order, such as Stauts, Payment Status etc.
@@ -190,8 +189,10 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
         //Remove cost of modifications for displaying on the cart
         $mods = $this->SubTotalModifications();
 
-        if ($mods && $mods->exists()) foreach ($mods as $mod) {
-            $amount -= $mod->Amount()->getAmount();
+        if ($mods && $mods->exists()) {
+            foreach ($mods as $mod) {
+                $amount -= $mod->Amount()->getAmount();
+            }
         }
 
         $total->setAmount($amount);
@@ -209,10 +210,10 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
     );
 
     /*
-	 * Relations for this Order
-	 *
-	 * @var Array
-	 */
+     * Relations for this Order
+     *
+     * @var Array
+     */
     private static $has_many = array(
         'Items' => Item::class,
         'Payments' => Payment::class,
@@ -290,7 +291,9 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
             return $extended;
         }
 
-        if ($member == null && !$member = Security::getCurrentUser()) return false;
+        if ($member == null && !$member = Security::getCurrentUser()) {
+            return false;
+        }
 
         $administratorPerm = Permission::check('ADMIN') && Permission::check('VIEW_ORDER', 'any', $member);
         $customerPerm = Permission::check('VIEW_ORDER', 'any', $member) && $member->ID == $this->MemberID;
@@ -361,27 +364,35 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
                 DB::get_conn()->transactionStart();
 
                 $payments = $this->Payments();
-                if ($payments && $payments->exists()) foreach ($payments as $payment) {
-                    $payment->delete();
-                    $payment->destroy();
+                if ($payments && $payments->exists()) {
+                    foreach ($payments as $payment) {
+                        $payment->delete();
+                        $payment->destroy();
+                    }
                 }
 
                 $items = $this->Items();
-                if ($items && $items->exists()) foreach ($items as $item) {
-                    $item->delete();
-                    $item->destroy();
+                if ($items && $items->exists()) {
+                    foreach ($items as $item) {
+                        $item->delete();
+                        $item->destroy();
+                    }
                 }
 
                 $modifications = $this->Modifications();
-                if ($modifications && $modifications->exists()) foreach ($modifications as $modification) {
-                    $modification->delete();
-                    $modification->destroy();
+                if ($modifications && $modifications->exists()) {
+                    foreach ($modifications as $modification) {
+                        $modification->delete();
+                        $modification->destroy();
+                    }
                 }
 
                 $updates = $this->Updates();
-                if ($updates && $updates->exists()) foreach ($updates as $update) {
-                    $update->delete();
-                    $update->destroy();
+                if ($updates && $updates->exists()) {
+                    foreach ($updates as $update) {
+                        $update->delete();
+                        $update->destroy();
+                    }
                 }
 
                 parent::delete();
@@ -445,7 +456,9 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
     public function onBeforeWrite()
     {
         parent::onBeforeWrite();
-        if (!$this->ID) $this->LastActive = DBDatetime::now()->getValue();
+        if (!$this->ID) {
+            $this->LastActive = DBDatetime::now()->getValue();
+        }
 
         //Set the base currency
         if (!$this->BaseCurrency || !$this->BaseCurrencySymbol) {
@@ -514,7 +527,7 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
         SQLUpdate::create('`Order`')->addWhere(['ID' => $this->ID])->assign('RedirectUrlHit', 1)->execute();
 
         $this->RedirectUrlHit = true;
-        $this->Status = ($this->getPaid()) ? self::STATUS_PROCESSING :  self::STATUS_PENDING;
+        $this->Status = ($this->getPaid()) ? self::STATUS_PROCESSING : self::STATUS_PENDING;
 
         $this->PaymentStatus = ($this->getPaid()) ? 'Paid' : 'Unpaid';
         if ($this->IsStandingOrder()) {
@@ -523,8 +536,15 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
         }
         $this->write();
 
-        ReceiptEmail::create($this->Member(), $this)
-            ->send();
+        try {
+            ReceiptEmail::create($this->Member(), $this)->send();
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to send receipt email', [
+                'OrderID' => $this->ID,
+                'Error' => $e->getMessage()
+            ]);
+        }
+
         // NotificationEmail::create($this->Member(), $this)
         // 	->send();
 
@@ -634,7 +654,9 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
         }
 
         //Total outstanding cannot be negative
-        if ($total < 0) $total = 0;
+        if ($total < 0) {
+            $total = 0;
+        }
 
         // TODO: Multi currency
 
@@ -656,9 +678,11 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
     {
         $paid = 0;
 
-        if ($this->Payments()) foreach ($this->Payments() as $payment) {
-            if ($payment->Status == 'Success') {
-                $paid += $payment->Amount->getAmount();
+        if ($this->Payments()) {
+            foreach ($this->Payments() as $payment) {
+                if ($payment->Status == 'Success') {
+                    $paid += $payment->Amount->getAmount();
+                }
             }
         }
 
@@ -719,9 +743,11 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
                 $item->OrderID = $this->ID;
                 $item->write();
 
-                if ($options->exists()) foreach ($options as $option) {
-                    $option->ItemID = $item->ID;
-                    $option->write();
+                if ($options->exists()) {
+                    foreach ($options as $option) {
+                        $option->ItemID = $item->ID;
+                        $option->write();
+                    }
                 }
             } catch (\Exception $e) {
 
@@ -793,18 +819,22 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
         $modifications = $this->Modifications();
         $shopConfig = ShopConfig::current_shop_config();
 
-        if ($items) foreach ($items as $item) {
-            $total += $item->Total()->Amount;
-            $subTotal += $item->Total()->Amount;
+        if ($items) {
+            foreach ($items as $item) {
+                $total += $item->Total()->Amount;
+                $subTotal += $item->Total()->Amount;
+            }
         }
 
-        if ($modifications) foreach ($modifications as $modification) {
+        if ($modifications) {
+            foreach ($modifications as $modification) {
 
-            if ($modification->SubTotalModifier) {
-                $total += $modification->Amount()->getAmount();
-                $subTotal += $modification->Amount()->getAmount();
-            } else {
-                $total += $modification->Amount()->getAmount();
+                if ($modification->SubTotalModifier) {
+                    $total += $modification->Amount()->getAmount();
+                    $subTotal += $modification->Amount()->getAmount();
+                } else {
+                    $total += $modification->Amount()->getAmount();
+                }
             }
         }
 
@@ -812,7 +842,7 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
         $this->TotalPrice = $total;
 
         //TODO: change this so doesn't write() in here
-        // don't write if order is not persisted 
+        // don't write if order is not persisted
         if ($this->ID) {
             $this->write();
         }
@@ -961,9 +991,11 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
             ->where("\"Order\".\"LastActive\" < '" . $ago->format('Y-m-d H:i:s') . "' AND \"Order\".\"Status\" = 'Cart' AND \"Payment\".\"ID\" IS NULL")
             ->leftJoin('Payment', "\"Payment\".\"OrderID\" = \"Order\".\"ID\"");
 
-        if ($orders && $orders->exists()) foreach ($orders as $order) {
-            $order->delete();
-            $order->destroy();
+        if ($orders && $orders->exists()) {
+            foreach ($orders as $order) {
+                $order->delete();
+                $order->destroy();
+            }
         }
     }
 
@@ -1008,7 +1040,6 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
 
 class Order_Update extends DataObject
 {
-
     private static $table_name = 'Order_Update';
 
     private static $singular_name = 'Update';
