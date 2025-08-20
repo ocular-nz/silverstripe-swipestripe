@@ -27,7 +27,6 @@ use SwipeStripe\Product\Variation;
  */
 class ProductForm extends Form
 {
-
     protected $product;
     protected $quantity;
     protected $redirectURL;
@@ -61,21 +60,23 @@ class ProductForm extends Form
         $variations = $this->product->Variations();
         $productPrice = $this->product->Price();
 
-        if ($variations && $variations->exists()) foreach ($variations as $variation) {
+        if ($variations && $variations->exists()) {
+            foreach ($variations as $variation) {
 
-            if ($variation->isEnabled()) {
-                $variationPrice = $variation->Price();
+                if ($variation->isEnabled()) {
+                    $variationPrice = $variation->Price();
 
-                $amount = Price::create();
-                $amount->setAmount($productPrice->getAmount() + $variationPrice->getAmount());
-                $amount->setCurrency($productPrice->getCurrency());
-                $amount->setSymbol($productPrice->getSymbol());
+                    $amount = Price::create();
+                    $amount->setAmount($productPrice->getAmount() + $variationPrice->getAmount());
+                    $amount->setCurrency($productPrice->getCurrency());
+                    $amount->setSymbol($productPrice->getSymbol());
 
-                $map[] = array(
-                    'price' => $amount->Nice(),
-                    'options' => $variation->Options()->column('ID'),
-                    'free' => _t('Product.FREE', 'Free'),
-                );
+                    $map[] = array(
+                        'price' => $amount->Nice(),
+                        'options' => $variation->Options()->column('ID'),
+                        'free' => _t('Product.FREE', 'Free'),
+                    );
+                }
             }
         }
 
@@ -108,12 +109,14 @@ class ProductForm extends Form
         $attributes = $this->product->Attributes();
         $prev = null;
 
-        if ($attributes && $attributes->exists()) foreach ($attributes as $attribute) {
+        if ($attributes && $attributes->exists()) {
+            foreach ($attributes as $attribute) {
 
-            $field = $attribute->getOptionField($prev);
-            $fields->push($field);
+                $field = $attribute->getOptionField($prev);
+                $fields->push($field);
 
-            $prev = $attribute;
+                $prev = $attribute;
+            }
         }
 
         $fields->push(ProductForm_QuantityField::create(
@@ -154,7 +157,7 @@ class ProductForm extends Form
 
     // /**
     //  * Overloaded so that form error messages are displayed.
-    //  * 
+    //  *
     //  * @see OrderFormValidator::php()
     //  * @see Form::validate()
     //  */
@@ -188,7 +191,7 @@ class ProductForm extends Form
 
     /**
      * Add an item to the current cart ({@link Order}) for a given {@link Product}.
-     * 
+     *
      * @param Array $data
      * @param Form $form
      */
@@ -204,33 +207,33 @@ class ProductForm extends Form
         );
 
         //Show feedback if redirecting back to the Product page
-        if (!$this->getRequest()->requestVar('Redirect')) {
-            $cartPage = DataObject::get_one(CartPage::class);
-            $message = _t('ProductForm.PRODUCT_ADDED', 'The product was added to your cart.');
-            if ($cartPage->exists()) {
-                $message = _t(
-                    'ProductForm.PRODUCT_ADDED_LINK',
-                    'The product was added to {openanchor}your cart{closeanchor}.',
-                    array(
-                        'openanchor' => "<a href=\"{$cartPage->Link()}\">",
-                        'closeanchor' => "</a>"
-                    )
-                );
-            }
-            $form->sessionMessage(
-                DBField::create_field(DBHTMLText::class, $message),
-                ValidationResult::TYPE_GOOD,
-                ValidationResult::CAST_HTML
-            );
-        }
+        // if (!$this->getRequest()->requestVar('Redirect')) {
+        //     $cartPage = DataObject::get_one(CartPage::class);
+        //     $message = _t('ProductForm.PRODUCT_ADDED', 'The product was added to your cart.');
+        //     if ($cartPage->exists()) {
+        //         $message = _t(
+        //             'ProductForm.PRODUCT_ADDED_LINK',
+        //             'The product was added to {openanchor}your cart{closeanchor}.',
+        //             array(
+        //                 'openanchor' => "<a href=\"{$cartPage->Link()}\">",
+        //                 'closeanchor' => "</a>"
+        //             )
+        //         );
+        //     }
+        //     $form->sessionMessage(
+        //         DBField::create_field(DBHTMLText::class, $message),
+        //         ValidationResult::TYPE_GOOD,
+        //         ValidationResult::CAST_HTML
+        //     );
+        // }
         $this->goToNextPage();
     }
 
     /**
      * Find a product based on current request - maybe shoul dbe deprecated?
-     * 
+     *
      * @see SS_HTTPRequest
-     * @return DataObject 
+     * @return DataObject
      */
     private function getProduct()
     {
@@ -247,11 +250,13 @@ class ProductForm extends Form
         $product = $this->product;
         $variations = $product->Variations();
 
-        if ($variations && $variations->exists()) foreach ($variations as $variation) {
+        if ($variations && $variations->exists()) {
+            foreach ($variations as $variation) {
 
-            $variationOptions = $variation->Options()->map('AttributeID', 'ID')->toArray();
-            if ($options == $variationOptions && $variation->isEnabled()) {
-                $productVariation = $variation;
+                $variationOptions = $variation->Options()->map('AttributeID', 'ID')->toArray();
+                if ($options == $variationOptions && $variation->isEnabled()) {
+                    $productVariation = $variation;
+                }
             }
         }
 
@@ -260,7 +265,7 @@ class ProductForm extends Form
 
     /**
      * Find the quantity based on current request
-     * 
+     *
      * @return Int
      */
     private function getQuantity()
@@ -280,7 +285,7 @@ class ProductForm extends Form
     /**
      * Send user to next page based on current request vars,
      * if no redirect is specified redirect back.
-     * 
+     *
      * TODO make this work with AJAX
      */
     private function goToNextPage()
@@ -298,12 +303,11 @@ class ProductForm extends Form
 }
 
 /**
- * Validator for {@link AddToCartForm} which validates that the product {@link Variation} is 
+ * Validator for {@link AddToCartForm} which validates that the product {@link Variation} is
  * correct for the {@link Product} being added to the cart.
  */
 class ProductForm_Validator extends RequiredFieldsValidator
 {
-
     /**
      * Check that current product variation is valid
      *
@@ -329,11 +333,13 @@ class ProductForm_Validator extends RequiredFieldsValidator
         $product = DataObject::get_by_id($data['ProductClass'], $data['ProductID']);
         $variations = ($product) ? $product->Variations() : new ArrayList();
 
-        if ($variations && $variations->exists()) foreach ($variations as $variation) {
+        if ($variations && $variations->exists()) {
+            foreach ($variations as $variation) {
 
-            $variationOptions = $variation->Options()->map('AttributeID', 'ID')->toArray();
-            if ($options == $variationOptions && $variation->isEnabled()) {
-                $productVariations->push($variation);
+                $variationOptions = $variation->Options()->map('AttributeID', 'ID')->toArray();
+                if ($options == $variationOptions && $variation->isEnabled()) {
+                    $productVariations->push($variation);
+                }
             }
         }
 
@@ -367,7 +373,7 @@ class ProductForm_Validator extends RequiredFieldsValidator
 
     /**
      * Helper so that form fields can access the form and current form data
-     * 
+     *
      * @return Form The current form
      */
     public function getForm(): Form
@@ -381,7 +387,6 @@ class ProductForm_Validator extends RequiredFieldsValidator
  */
 class ProductForm_QuantityField extends NumericField
 {
-
     public function Type()
     {
         return 'quantity';
@@ -389,7 +394,7 @@ class ProductForm_QuantityField extends NumericField
 
     /**
      * Validate the quantity is above 0.
-     * 
+     *
      * @see FormField::validate()
      * @return ValidationResult
      */
@@ -405,14 +410,14 @@ class ProductForm_QuantityField extends NumericField
             }
 
             $result->addFieldError($this->getName(), $errorMessage);
-        } else if ($quantity <= 0) {
+        } elseif ($quantity <= 0) {
             $errorMessage = _t('ProductForm.ITEM_QUANTITY_LESS_ONE', 'The quantity must be at least 1');
             if ($msg = $this->getCustomValidationMessage()) {
                 $errorMessage = $msg;
             }
 
             $result->addFieldError($this->getName(), $errorMessage);
-        } else if ($quantity > 2147483647) {
+        } elseif ($quantity > 2147483647) {
             $errorMessage = _t('ProductForm.ITEM_QUANTITY_INCORRECT', 'The quantity must be less than 2,147,483,647');
             if ($msg = $this->getCustomValidationMessage()) {
                 $errorMessage = $msg;

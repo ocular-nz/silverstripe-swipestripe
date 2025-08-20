@@ -732,6 +732,13 @@ class Order extends DataObject implements PermissionProvider, LoggerAwareInterfa
                 $item->Price = $product->Amount()->getAmount();
                 $item->Currency = $product->Amount()->getCurrency();
 
+                if (!$product->ShopID && get_class($product->getParent()) === Product::class && $product->getParent()?->exists()) {
+                    // if no ShopID, this is a weighted product, so use the base product's unit price
+                    $item->BasePrice = $product->getParent()->Amount()->getAmount();
+                } else {
+                    $item->BasePrice = $item->Price;
+                }
+
                 if ($variation && $variation->exists()) {
                     $item->VariationID = $variation->ID;
                     $item->VariationVersion = $variation->Version;
