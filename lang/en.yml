@@ -66,7 +66,7 @@ en:
     NOT_VALID_METHOD: 'Sorry, that is not a valid payment method.'
     PASSWORD: Password
     PAYMENT: Payment
-    PLEASE_CHOOSE_PASSWORD: 'Please choose a password, so you can login and check your order history in the future.'
+    PLEASE_CHOOSE_PASSWORD: 'Please choose a strong password, so you can log in and check your order history in the future.'
     PLEASE_ENTER_EMAIL_ADDRESS: 'Please enter your email address.'
     PLEASE_ENTER_PHONE_NUMBER: 'Please enter your phone number.'
     PLURALNAME: 'Checkout Pags'

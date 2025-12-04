@@ -40,12 +40,11 @@ use SwipeStripe\Order\Order_Update;
 use SwipeStripe\Order\StandingOrder;
 
 /**
- * Form for displaying on the {@link CheckoutPage} with all the necessary details 
+ * Form for displaying on the {@link CheckoutPage} with all the necessary details
  * for a visitor to complete their order and pass off to the {@link Payment} gateway class.
  */
 class OrderForm extends Form implements LoggerAwareInterface
 {
-
     use LoggerAwareTrait;
 
     private static $dependencies = [
@@ -62,9 +61,9 @@ class OrderForm extends Form implements LoggerAwareInterface
 
     /**
      * Construct the form, get the grouped fields and set the fields for this form appropriately,
-     * the fields are passed in an associative array so that the fields can be grouped into sets 
+     * the fields are passed in an associative array so that the fields can be grouped into sets
      * making it easier for the template to grab certain fields for different parts of the form.
-     * 
+     *
      * @param RequestHandler $controller
      * @param String $name
      * @param Array $groupedFields Associative array of fields grouped into sets
@@ -72,7 +71,7 @@ class OrderForm extends Form implements LoggerAwareInterface
      * @param Validator $validator
      * @param Order $currentOrder
      */
-    function __construct($controller, $name)
+    public function __construct($controller, $name)
     {
 
         parent::__construct($controller, $name, FieldList::create(), FieldList::create(), null);
@@ -117,7 +116,7 @@ class OrderForm extends Form implements LoggerAwareInterface
             $link = $this->controller->Link();
 
             $note = _t('CheckoutPage.NOTE', 'NOTE:');
-            $passwd = _t('CheckoutPage.PLEASE_CHOOSE_PASSWORD', 'Please choose a password, so you can login and check your order history in the future.');
+            $passwd = _t('CheckoutPage.PLEASE_CHOOSE_PASSWORD', 'Please choose a strong password, so you can login and check your order history in the future.');
             $mber = sprintf(
                 _t('CheckoutPage.ALREADY_MEMBER', 'If you are already a member please %s log in. %s'),
                 "<a href=\"Security/login?BackURL=$link\">",
@@ -156,28 +155,34 @@ class OrderForm extends Form implements LoggerAwareInterface
         //Order item fields
         $items = $order->Items();
         $itemFields = CompositeField::create()->setName('ItemsFields');
-        if ($items) foreach ($items as $item) {
-            $itemFields->push(new OrderForm_ItemField($item));
+        if ($items) {
+            foreach ($items as $item) {
+                $itemFields->push(new OrderForm_ItemField($item));
+            }
         }
 
         //Order modifications fields
         $subTotalModsFields = CompositeField::create()->setName('SubTotalModificationsFields');
         $subTotalMods = $order->SubTotalModifications();
 
-        if ($subTotalMods && $subTotalMods->exists()) foreach ($subTotalMods as $modification) {
-            $modFields = $modification->getFormFields();
-            foreach ($modFields as $field) {
-                $subTotalModsFields->push($field);
+        if ($subTotalMods && $subTotalMods->exists()) {
+            foreach ($subTotalMods as $modification) {
+                $modFields = $modification->getFormFields();
+                foreach ($modFields as $field) {
+                    $subTotalModsFields->push($field);
+                }
             }
         }
 
         $totalModsFields = CompositeField::create()->setName('TotalModificationsFields');
         $totalMods = $order->TotalModifications();
 
-        if ($totalMods && $totalMods->exists()) foreach ($totalMods as $modification) {
-            $modFields = $modification->getFormFields();
-            foreach ($modFields as $field) {
-                $totalModsFields->push($field);
+        if ($totalMods && $totalMods->exists()) {
+            foreach ($totalMods as $modification) {
+                $modFields = $modification->getFormFields();
+                foreach ($modFields as $field) {
+                    $totalModsFields->push($field);
+                }
             }
         }
 
@@ -285,7 +290,7 @@ class OrderForm extends Form implements LoggerAwareInterface
 
     /**
      * Helper function to return the current {@link Order}, used in the template for this form
-     * 
+     *
      * @return Order
      */
     public function Cart()
@@ -295,11 +300,11 @@ class OrderForm extends Form implements LoggerAwareInterface
 
     // /**
     //  * Overridden so that form error messages are displayed.
-    //  * 
+    //  *
     //  * The parent function also does something with the error messages.
     //  * So I'm commenting this out and if there's a problem with the error messages
     //  * we can bring this override back
-    //  * 
+    //  *
     //  * @see OrderFormValidator::php()
     //  * @see Form::validate()
     //  */
@@ -426,7 +431,7 @@ class OrderForm extends Form implements LoggerAwareInterface
                 $order = $order->newClassInstance(Order::class);
             }
 
-            // Update the Order 
+            // Update the Order
             $order->update($request->postVars());
 
             $order->updateModifications($request->postVars())
@@ -465,7 +470,6 @@ class OrderForm extends Form implements LoggerAwareInterface
  */
 class OrderForm_Validator extends RequiredFieldsValidator
 {
-
     /**
      * Check that current order is valid
      *
@@ -515,7 +519,7 @@ class OrderForm_Validator extends RequiredFieldsValidator
 
     /**
      * Helper so that form fields can access the form and current form data
-     * 
+     *
      * @return Form
      */
     public function getForm(): Form
@@ -529,7 +533,6 @@ class OrderForm_Validator extends RequiredFieldsValidator
  */
 class OrderForm_ItemField extends FormField
 {
-
     /**
      * Template for rendering
      *
@@ -539,14 +542,14 @@ class OrderForm_ItemField extends FormField
 
     /**
      * Current {@link Item} this field represents.
-     * 
+     *
      * @var Item
      */
     protected $item;
 
     /**
      * Construct the form field and set the {@link Item} it represents.
-     * 
+     *
      * @param Item $item
      * @param Form $form
      */
@@ -560,7 +563,7 @@ class OrderForm_ItemField extends FormField
 
     /**
      * Render the form field with the correct template.
-     * 
+     *
      * @see FormField::FieldHolder()
      * @return String
      */
@@ -571,7 +574,7 @@ class OrderForm_ItemField extends FormField
 
     /**
      * Retrieve the {@link Item} this field represents.
-     * 
+     *
      * @return Item
      */
     public function Item()
@@ -581,7 +584,7 @@ class OrderForm_ItemField extends FormField
 
     /**
      * Set the {@link Item} this field represents.
-     * 
+     *
      * @param Item $item
      */
     public function setItem(Item $item)
@@ -590,9 +593,9 @@ class OrderForm_ItemField extends FormField
     }
 
     /**
-     * Validate this form field, make sure the {@link Item} exists, is in the current 
+     * Validate this form field, make sure the {@link Item} exists, is in the current
      * {@link Order} and the item is valid for adding to the cart.
-     * 
+     *
      * @see FormField::validate()
      * @return ValidationResult
      */
@@ -612,7 +615,7 @@ class OrderForm_ItemField extends FormField
             }
 
             $result->addFieldError($this->getName(), $errorMessage);
-        } else if ($item) {
+        } elseif ($item) {
 
             $validation = $item->validateForCart();
 
