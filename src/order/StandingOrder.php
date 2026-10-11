@@ -18,7 +18,31 @@ class StandingOrder extends Order
         'StartDate' => 'Date',
         'Name' => 'Varchar(255)',
         'Enabled' => 'Boolean',
+        'LastFailedDate' => 'Date',
+        'LastFailureReason' => 'Varchar(50)',
+        'ConsecutiveFailures' => 'Int',
     ];
+
+    /**
+     * Latest time (24h, site timezone) on the placement day that a customer can retry a failed standing order
+     */
+    private static $retry_cutoff_time = '12:00';
+
+    /**
+     * Scheduled cycles in a row that can fail before the standing order is paused
+     */
+    private static $max_consecutive_failures = 2;
+
+    /**
+     * Days of the week a standing order can be delivered (0 = Sunday ... 6 = Saturday). Set in YAML; left null
+     * here because config merges lists, so a default here would be added to the YAML value rather than replaced.
+     */
+    private static $delivery_days = null;
+
+    /**
+     * A new start date can't be the next delivery day once this time has passed on the day before it
+     */
+    private static $start_date_cutoff_time = '09:00';
 
     private static $defaults = [
         'Frequency' => 'Weekly',
@@ -104,7 +128,7 @@ class StandingOrder extends Order
     /**
      * Check if standing order should run based on schedule (excluding payment method)
      */
-    public function shouldRunBasedOnSchedule(): bool
+    public function shouldRunBasedOnSchedule(bool $ignoreEnabled = false): bool
     {
         $latestOrderDate = Carbon::parse($this->Orders()->max('Created') ?: '1980-01-01');
 
@@ -120,7 +144,7 @@ class StandingOrder extends Order
             return false;
         }
 
-        if (!$this->Enabled) {
+        if (!$this->Enabled && !$ignoreEnabled) {
             $this->logger->info('Standing order is disabled', [$this->ID]);
             return false;
         }
@@ -148,6 +172,187 @@ class StandingOrder extends Order
         }
 
         return true;
+    }
+
+    /**
+     * The most recent placement date (the day before delivery), or null if the schedule is invalid
+     */
+    public function currentPlacementDate(): ?Carbon
+    {
+        $period = $this->Period();
+        if (empty($period) || !$period->isInProgress()) {
+            return null;
+        }
+        return $period->untilNow()->last();
+    }
+
+    /**
+     * Delivery date for the current cycle
+     */
+    public function CurrentDeliveryDate(): ?Carbon
+    {
+        return $this->currentPlacementDate()?->copy()->addDay();
+    }
+
+    /**
+     * e.g. "Friday 2 October"
+     */
+    public function CurrentDeliveryDateNice(): string
+    {
+        return $this->CurrentDeliveryDate()?->format('l j F') ?? '';
+    }
+
+    /**
+     * @return int[] days of the week (0 = Sunday ... 6 = Saturday)
+     */
+    public static function deliveryDays(): array
+    {
+        $days = array_values(array_unique(array_map('intval', (array)static::config()->get('delivery_days'))));
+        return array_values(array_intersect($days, range(0, 6))) ?: [1, 3, 5];
+    }
+
+    /**
+     * The earliest start date a customer can choose right now: the next delivery day, or the one after
+     * if the cutoff on the day before has passed. Matches the checkout date picker.
+     */
+    public static function earliestStartDate(): Carbon
+    {
+        $deliveryDays = static::deliveryDays();
+        [$hour, $minute] = array_map('intval', explode(':', (string)static::config()->get('start_date_cutoff_time')));
+
+        $next = Carbon::today();
+        do {
+            $next->addDay();
+        } while (!in_array($next->dayOfWeek, $deliveryDays));
+
+        if (Carbon::now()->gt($next->copy()->subDay()->setTime($hour, $minute))) {
+            do {
+                $next->addDay();
+            } while (!in_array($next->dayOfWeek, $deliveryDays));
+        }
+
+        return $next;
+    }
+
+    /**
+     * Whether a newly chosen start date is a delivery day that can still be met
+     */
+    public static function isValidStartDate(?string $date): bool
+    {
+        if (empty($date)) {
+            return false;
+        }
+
+        try {
+            $start = Carbon::parse($date)->startOfDay();
+        } catch (\Exception $e) {
+            return false;
+        }
+
+        return in_array($start->dayOfWeek, static::deliveryDays())
+            && $start->gte(static::earliestStartDate());
+    }
+
+    /**
+     * Record a failed placement for the current scheduled cycle, pausing the standing order once
+     * it has failed max_consecutive_failures cycles in a row
+     *
+     * @return bool true if this failure paused the standing order
+     */
+    public function recordFailure(string $reason, bool $pauseNow = false): bool
+    {
+        $this->LastFailedDate = Carbon::today()->toDateString();
+        $this->LastFailureReason = $reason;
+        $this->ConsecutiveFailures = (int)$this->ConsecutiveFailures + 1;
+
+        $paused = $this->Enabled
+            && ($pauseNow || $this->ConsecutiveFailures >= (int)static::config()->get('max_consecutive_failures'));
+        if ($paused) {
+            $this->Enabled = false;
+        }
+
+        $this->write();
+
+        if ($paused) {
+            $this->logger->info('Standing order paused after failed placement', [
+                'StandingOrderID' => $this->ID,
+                'Reason' => $reason,
+                'ConsecutiveFailures' => $this->ConsecutiveFailures
+            ]);
+        }
+
+        return $paused;
+    }
+
+    /**
+     * Forget any recorded failures, e.g. after a successful placement or when the customer pauses/resumes
+     */
+    public function clearFailure(): void
+    {
+        $this->LastFailedDate = null;
+        $this->LastFailureReason = null;
+        $this->ConsecutiveFailures = 0;
+    }
+
+    /**
+     * Customer pauses or resumes deliveries
+     */
+    public function setEnabledByCustomer(bool $enabled): void
+    {
+        $this->Enabled = $enabled;
+        if ($enabled) {
+            // start counting failures again, but keep today's failure so it can still be retried
+            $this->ConsecutiveFailures = 0;
+        } else {
+            // paused by the customer, so it's no longer a system pause
+            $this->clearFailure();
+        }
+        $this->write();
+    }
+
+    /**
+     * Paused by the system after failed payments, rather than by the customer
+     */
+    public function isSystemPaused(): bool
+    {
+        return !$this->Enabled && !empty($this->LastFailureReason);
+    }
+
+    public function RetryCutoff(): Carbon
+    {
+        [$hour, $minute] = array_map('intval', explode(':', (string)static::config()->get('retry_cutoff_time')));
+        return Carbon::today()->setTime($hour, $minute);
+    }
+
+    /**
+     * Human friendly cutoff, e.g. "12pm" or "11:30am"
+     */
+    public function RetryCutoffNice(): string
+    {
+        $cutoff = $this->RetryCutoff();
+        return $cutoff->minute ? $cutoff->format('g:ia') : $cutoff->format('ga');
+    }
+
+    /**
+     * Whether the customer can retry today's failed placement: it failed today, it's before the cutoff,
+     * and today's slot is still open
+     */
+    public function canRetry(): bool
+    {
+        if (empty($this->LastFailedDate) || !Carbon::parse($this->LastFailedDate)->isToday()) {
+            return false;
+        }
+
+        if (!Carbon::now()->lt($this->RetryCutoff())) {
+            return false;
+        }
+
+        // a customer-paused standing order stays paused; a system-paused one can be retried
+        if (!$this->Enabled && !$this->isSystemPaused()) {
+            return false;
+        }
+
+        return $this->shouldRunBasedOnSchedule(ignoreEnabled: true);
     }
 
     public function Items()

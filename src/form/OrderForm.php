@@ -431,8 +431,15 @@ class OrderForm extends Form implements LoggerAwareInterface
                 $order = $order->newClassInstance(Order::class);
             }
 
+            $vars = $request->postVars();
+
+            // an existing standing order's start date only changes when the customer submits the form
+            if ($order->hasMethod('IsConfirmedStandingOrder') && $order->IsConfirmedStandingOrder()) {
+                unset($vars['StartDate']);
+            }
+
             // Update the Order
-            $order->update($request->postVars());
+            $order->update($vars);
 
             $order->updateModifications($request->postVars())
                 ->write();
