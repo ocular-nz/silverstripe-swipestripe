@@ -21,6 +21,7 @@ class StandingOrder extends Order
         'LastFailedDate' => 'Date',
         'LastFailureReason' => 'Varchar(50)',
         'ConsecutiveFailures' => 'Int',
+        'PausedBySystem' => 'Boolean',
     ];
 
     /**
@@ -42,7 +43,7 @@ class StandingOrder extends Order
     /**
      * A new start date can't be the next delivery day once this time has passed on the day before it
      */
-    private static $start_date_cutoff_time = '09:00';
+    private static $start_date_cutoff_time = '08:45';
 
     private static $defaults = [
         'Frequency' => 'Weekly',
@@ -259,16 +260,19 @@ class StandingOrder extends Order
      *
      * @return bool true if this failure paused the standing order
      */
-    public function recordFailure(string $reason, bool $pauseNow = false): bool
+    public function recordFailure(string $reason, bool $pauseNow = false, bool $countTowardsPause = true): bool
     {
         $this->LastFailedDate = Carbon::today()->toDateString();
         $this->LastFailureReason = $reason;
-        $this->ConsecutiveFailures = (int)$this->ConsecutiveFailures + 1;
+        if ($countTowardsPause) {
+            $this->ConsecutiveFailures = (int)$this->ConsecutiveFailures + 1;
+        }
 
         $paused = $this->Enabled
             && ($pauseNow || $this->ConsecutiveFailures >= (int)static::config()->get('max_consecutive_failures'));
         if ($paused) {
             $this->Enabled = false;
+            $this->PausedBySystem = true;
         }
 
         $this->write();
@@ -292,6 +296,7 @@ class StandingOrder extends Order
         $this->LastFailedDate = null;
         $this->LastFailureReason = null;
         $this->ConsecutiveFailures = 0;
+        $this->PausedBySystem = false;
     }
 
     /**
@@ -300,12 +305,11 @@ class StandingOrder extends Order
     public function setEnabledByCustomer(bool $enabled): void
     {
         $this->Enabled = $enabled;
+        // the customer has taken over, so it's no longer a system pause
+        $this->PausedBySystem = false;
         if ($enabled) {
-            // start counting failures again, but keep today's failure so it can still be retried
+            // start counting failures again; today's failure is kept so it can still be retried
             $this->ConsecutiveFailures = 0;
-        } else {
-            // paused by the customer, so it's no longer a system pause
-            $this->clearFailure();
         }
         $this->write();
     }
@@ -315,7 +319,7 @@ class StandingOrder extends Order
      */
     public function isSystemPaused(): bool
     {
-        return !$this->Enabled && !empty($this->LastFailureReason);
+        return !$this->Enabled && $this->PausedBySystem;
     }
 
     public function RetryCutoff(): Carbon
@@ -344,6 +348,11 @@ class StandingOrder extends Order
         }
 
         if (!Carbon::now()->lt($this->RetryCutoff())) {
+            return false;
+        }
+
+        // we couldn't tell whether the bank approved it, so a retry could put a second hold on the card
+        if ($this->LastFailureReason === 'payment_error') {
             return false;
         }
 

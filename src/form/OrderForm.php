@@ -431,7 +431,10 @@ class OrderForm extends Form implements LoggerAwareInterface
                 $order = $order->newClassInstance(Order::class);
             }
 
-            $vars = $request->postVars();
+            // only fields the customer can actually edit on this form, never arbitrary order columns
+            $allowed = array_keys($this->Fields()->dataFields());
+            $this->extend('updateOrderUpdateFields', $allowed, $order);
+            $vars = array_intersect_key($request->postVars(), array_flip($allowed));
 
             // an existing standing order's start date only changes when the customer submits the form
             if ($order->hasMethod('IsConfirmedStandingOrder') && $order->IsConfirmedStandingOrder()) {
