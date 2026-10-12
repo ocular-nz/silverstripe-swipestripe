@@ -5,6 +5,7 @@ namespace SwipeStripe\Product;
 use Page;
 use PageController;
 use SilverStripe\CMS\Forms\SiteTreeURLSegmentField;
+use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Convert;
@@ -249,9 +250,13 @@ class Product extends Page
         return Controller::join_links(Director::baseURL() . 'product/', $this->RelativeLink($action));
     }
 
+    /**
+     * Cached lookup via getParent(), but keeps the has_one contract of never returning null:
+     * a product whose parent category is missing or unpublished gets an empty record
+     */
     public function Parent()
     {
-        return $this->getParent();
+        return $this->getParent() ?? SiteTree::create();
     }
 
     /**
